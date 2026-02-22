@@ -418,54 +418,63 @@ class HtmlTemplateCardEditor extends LitElement {
           border-color: var(--primary-color, #03a9f4);
         }
         .store-list {
-          max-height: 280px;
+          max-height: 320px;
           overflow-y: auto;
+          scrollbar-width: none;
+          -ms-overflow-style: none;
+        }
+        .store-list::-webkit-scrollbar {
+          display: none;
         }
         .store-item {
           display: flex;
-          justify-content: space-between;
           align-items: center;
-          padding: 10px 12px;
-          border: 1px solid var(--divider-color, #e0e0e0);
+          padding: 8px 10px;
           border-radius: 6px;
-          margin-bottom: 8px;
-          background: var(--card-background-color, #fff);
-        }
-        .store-item:hover {
-          border-color: var(--primary-color, #03a9f4);
+          border: 1px solid var(--divider-color);
+          margin-bottom: 6px;
         }
         .store-item:last-child {
           margin-bottom: 0;
         }
+        .store-item-info {
+          flex: 1;
+          min-width: 0;
+        }
         .store-item-info h4 {
           margin: 0;
-          font-size: 13px;
+          font-size: 12px;
           font-weight: 500;
           color: var(--primary-text-color);
+          display: flex;
+          align-items: center;
+          gap: 6px;
         }
         .store-item-info p {
           margin: 2px 0 0;
-          font-size: 11px;
-          color: var(--secondary-text-color);
-        }
-        .store-item-author {
-          display: inline-block;
-          margin-top: 4px;
           font-size: 10px;
           color: var(--secondary-text-color);
-          font-style: italic;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .store-item-author {
+          font-size: 9px;
+          opacity: 0.5;
         }
         .store-item-btn {
-          padding: 6px 12px;
+          padding: 4px 10px;
           border: none;
           border-radius: 4px;
           cursor: pointer;
-          font-size: 12px;
-          background: var(--primary-color, #03a9f4);
+          font-size: 10px;
+          background: var(--primary-color);
           color: #fff;
+          flex-shrink: 0;
+          margin-left: 10px;
         }
         .store-item-btn:hover {
-          opacity: 0.9;
+          opacity: 0.85;
         }
         .store-loading {
           text-align: center;
@@ -862,13 +871,10 @@ class HtmlTemplateCardEditor extends LitElement {
     return filtered.map(m => html`
       <div class="store-item">
         <div class="store-item-info">
-          <h4>${m.name}</h4>
+          <h4>${m.name}${m.author ? html`<span class="store-item-author">by ${m.author}</span>` : ''}</h4>
           <p>${m.desc}</p>
-          ${m.author ? html`<span class="store-item-author">by ${m.author}</span>` : ''}
         </div>
-        <div class="store-item-actions">
-          <button class="store-item-btn import" @click="${() => this._importModule(m)}">导入</button>
-        </div>
+        <button class="store-item-btn" @click="${() => this._importModule(m)}">导入</button>
       </div>
     `);
   }
@@ -924,7 +930,6 @@ class HtmlTemplateCardEditor extends LitElement {
       bubbles: true,
       composed: true
     }));
-    this._showStore = false;
     this.requestUpdate();
   }
 
