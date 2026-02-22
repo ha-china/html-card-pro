@@ -8,7 +8,6 @@
 **Advanced HTML Card Component for Home Assistant**
 
 [![HACS](https://img.shields.io/badge/HACS-Custom-41BDF5.svg )](https://github.com/hacs/integration )
-[![GitHub](https://img.shields.io/github/license/knoop7/html-card-pro )](LICENSE)
 
 </div>
 
