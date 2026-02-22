@@ -1,362 +1,4 @@
-import { html, LitElement } from "https://unpkg.com/lit-element@2.4.0/lit-element.js?module";
-const _globalLoadedScripts = window._htmlProCardScripts || (window._htmlProCardScripts = new Set());
-
-if (!document.getElementById('html-pro-card-overlay')) {
-  const overlay = document.createElement('div');
-  overlay.id = 'html-pro-card-overlay';
-  overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:2147483647;overflow:hidden;';
-  document.body.appendChild(overlay);
-}
-window._htmlProCardOverlay = document.getElementById('html-pro-card-overlay');
-
-if (!window._htmlProCardRoots) {
-  window._htmlProCardRoots = new Set();
-  const origGetById = document.getElementById.bind(document);
-  const origQS = document.querySelector.bind(document);
-  const origQSA = document.querySelectorAll.bind(document);
-  document.getElementById = function(id) {
-    for (const root of window._htmlProCardRoots) {
-      const el = root.querySelector('#' + id);
-      if (el) return el;
-    }
-    return origGetById(id);
-  };
-  document.querySelector = function(sel) {
-    for (const root of window._htmlProCardRoots) {
-      const el = root.querySelector(sel);
-      if (el) return el;
-    }
-    return origQS(sel);
-  };
-  document.querySelectorAll = function(sel) {
-    const results = [];
-    for (const root of window._htmlProCardRoots) {
-      results.push(...root.querySelectorAll(sel));
-    }
-    if (results.length > 0) return results;
-    return origQSA(sel);
-  };
-}
-
-if (!customElements.get('ha-htmlcard-textarea')) {
-  customElements.define('ha-htmlcard-textarea', class extends HTMLElement {
-    constructor() {
-      super();
-      this.attachShadow({ mode: 'open' });
-      this._value = '';
-      this.shadowRoot.innerHTML = `
-        <style>
-          :host { display: block; }
-          textarea {
-            width: 100%;
-            height: 400px;
-            padding: 12px;
-            border: 1px solid var(--divider-color, #e0e0e0);
-            border-radius: 8px;
-            background: var(--card-background-color, #fff);
-            color: var(--primary-text-color, #333);
-            font-family: 'SF Mono', 'Consolas', 'Monaco', monospace;
-            font-size: 13px;
-            line-height: 1.6;
-            resize: vertical;
-            box-sizing: border-box;
-            tab-size: 2;
-          }
-          textarea:focus {
-            outline: none;
-            border-color: var(--primary-color, #03a9f4);
-            box-shadow: 0 0 0 2px rgba(3, 169, 244, 0.15);
-          }
-          textarea::-webkit-scrollbar { width: 8px; height: 8px; }
-          textarea::-webkit-scrollbar-track { background: transparent; border-radius: 4px; }
-          textarea::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.2); border-radius: 4px; }
-          textarea::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.3); }
-        </style>
-        <textarea spellcheck="false"></textarea>
-      `;
-      this._input = this.shadowRoot.querySelector('textarea');
-      this._input.addEventListener('input', () => {
-        this._value = this._input.value;
-        this.dispatchEvent(new CustomEvent('change', { detail: { value: this._value }, bubbles: true, composed: true }));
-      });
-      this._input.addEventListener('keydown', (e) => {
-        if (e.key === 'Tab') {
-          e.preventDefault();
-          const start = this._input.selectionStart;
-          const end = this._input.selectionEnd;
-          this._input.value = this._input.value.substring(0, start) + '  ' + this._input.value.substring(end);
-          this._input.selectionStart = this._input.selectionEnd = start + 2;
-          this._value = this._input.value;
-          this.dispatchEvent(new CustomEvent('change', { detail: { value: this._value }, bubbles: true, composed: true }));
-        }
-      });
-    }
-    set value(val) {
-      this._value = val || '';
-      if (this._input.value !== this._value) this._input.value = this._value;
-    }
-    get value() { return this._value; }
-  });
-}
-
-if (!customElements.get('ha-htmlcard-textfield')) {
-  customElements.define('ha-htmlcard-textfield', class extends HTMLElement {
-    constructor() {
-      super();
-      this.attachShadow({ mode: 'open' });
-      this.shadowRoot.innerHTML = `
-        <style>
-          :host {
-            display: block;
-          }
-          input {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid var(--divider-color, #e0e0e0);
-            border-radius: 4px;
-            background: var(--card-background-color, #fff);
-            color: var(--primary-text-color, #000);
-          }
-        </style>
-        <input type="text" />
-      `;
-      this._input = this.shadowRoot.querySelector('input');
-      this._input.addEventListener('input', () => {
-        this.dispatchEvent(new CustomEvent('change', {
-          detail: { value: this._input.value },
-          bubbles: true,
-          composed: true
-        }));
-      });
-    }
-    
-    set value(val) {
-      this._input.value = val;
-    }
-    
-    get value() {
-      return this._input.value;
-    }
-    
-    set type(val) {
-      this._input.type = val;
-    }
-  });
-}
-
-if (!customElements.get('ha-htmlcard-switch')) {
-  customElements.define('ha-htmlcard-switch', class extends HTMLElement {
-    constructor() {
-      super();
-      this.attachShadow({ mode: 'open' });
-      this.shadowRoot.innerHTML = `
-        <style>
-          :host {
-            display: inline-block;
-          }
-          label {
-            position: relative;
-            display: inline-block;
-            width: 40px;
-            height: 24px;
-          }
-          input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-          }
-          span {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: #ccc;
-            transition: .4s;
-            border-radius: 24px;
-          }
-          span:before {
-            position: absolute;
-            content: "";
-            height: 16px;
-            width: 16px;
-            left: 4px;
-            bottom: 4px;
-            background-color: white;
-            transition: .4s;
-            border-radius: 50%;
-          }
-          input:checked + span {
-            background-color: var(--primary-color, #03a9f4);
-          }
-          input:checked + span:before {
-            transform: translateX(16px);
-          }
-        </style>
-        <label>
-          <input type="checkbox" />
-          <span></span>
-        </label>
-      `;
-      this._input = this.shadowRoot.querySelector('input');
-      this._input.addEventListener('change', () => {
-        this.dispatchEvent(new CustomEvent('change', {
-          detail: { checked: this._input.checked },
-          bubbles: true,
-          composed: true
-        }));
-      });
-    }
-    
-    set checked(val) {
-      this._input.checked = val;
-    }
-    
-    get checked() {
-      return this._input.checked;
-    }
-  });
-}
-
-if (!customElements.get('ha-htmlcard-formfield')) {
-  customElements.define('ha-htmlcard-formfield', class extends HTMLElement {
-    constructor() {
-      super();
-      this.attachShadow({ mode: 'open' });
-      this.shadowRoot.innerHTML = `
-        <style>
-          :host {
-            display: flex;
-            align-items: center;
-            padding: 4px 0;
-          }
-          label {
-            padding-left: 8px;
-            color: var(--primary-text-color, #000);
-          }
-        </style>
-        <slot></slot>
-        <label><slot name="label"></slot></label>
-      `;
-    }
-  });
-}
-
-const I18N = {
-  zh: {
-    htmlContent: 'HTML 内容',
-    options: '选项设置',
-    scripts: '外部脚本',
-    store: '模块商店',
-    disableParse: '纯HTML模式',
-    disableParseDesc: '默认关闭(使用Jinja2)，开启后直接渲染HTML',
-    updateInterval: '更新间隔 (ms)',
-    updateIntervalDesc: '0 为禁用自动更新',
-    ignoreLineBreaks: '忽略换行',
-    ignoreLineBreaksDesc: '忽略HTML中的换行符',
-    addScript: '添加',
-    scriptPlaceholder: '输入脚本 URL',
-    searchPlaceholder: '搜索模块...',
-    import: '导入',
-    delete: '删除',
-    loading: '加载中...',
-    noModules: '暂无模块',
-    noCustomModules: '暂无自定义模块',
-    confirmDelete: '确定删除此模块?',
-    customModule: '自定义模块',
-    headerDesc: '高级 HTML 卡片编辑器，支持 Jinja2 模板语法',
-    headerDesc2: '可使用 Home Assistant 状态、属性和服务调用',
-    realtime: '实时更新',
-    extScripts: '外部脚本',
-    customStyle: '自定义样式'
-  },
-  en: {
-    htmlContent: 'HTML Content',
-    options: 'Options',
-    scripts: 'External Scripts',
-    store: 'Module Store',
-    disableParse: 'Pure HTML Mode',
-    disableParseDesc: 'Off by default (uses Jinja2), enable to render HTML directly',
-    updateInterval: 'Update Interval (ms)',
-    updateIntervalDesc: '0 to disable auto update',
-    ignoreLineBreaks: 'Ignore Line Breaks',
-    ignoreLineBreaksDesc: 'Ignore line breaks in HTML',
-    addScript: 'Add',
-    scriptPlaceholder: 'Enter script URL',
-    searchPlaceholder: 'Search modules...',
-    import: 'Import',
-    delete: 'Delete',
-    loading: 'Loading...',
-    noModules: 'No modules',
-    noCustomModules: 'No custom modules',
-    confirmDelete: 'Delete this module?',
-    customModule: 'Custom Module',
-    headerDesc: 'Advanced HTML card editor with Jinja2 template',
-    headerDesc2: 'Use Home Assistant states, attributes and services',
-    realtime: 'Realtime',
-    extScripts: 'Scripts',
-    customStyle: 'Custom CSS'
-  }
-};
-
-class HtmlTemplateCardEditor extends LitElement {
-  static get properties() {
-    return {
-      _config: { type: Object },
-      hass: { type: Object },
-      _showStore: { type: Boolean },
-      _showHtml: { type: Boolean },
-      _showOptions: { type: Boolean },
-      _showScripts: { type: Boolean },
-      _storeModules: { type: Array },
-      _savedModules: { type: Array },
-      _storeLoading: { type: Boolean },
-      _storeSearch: { type: String }
-    };
-  }
-
-  get _lang() {
-    return this.hass?.language?.startsWith('zh') ? 'zh' : 'en';
-  }
-
-  _t(key) {
-    return I18N[this._lang]?.[key] || I18N.en[key] || key;
-  }
-
-  constructor() {
-    super();
-    this._showStore = false;
-    this._showHtml = true;
-    this._showOptions = false;
-    this._showScripts = false;
-    this._storeModules = [];
-    this._savedModules = this._loadSavedModules();
-    this._storeLoading = false;
-    this._storeSearch = '';
-  }
-
-  _loadSavedModules() {
-    try {
-      const saved = localStorage.getItem('html-pro-card-modules');
-      return saved ? JSON.parse(saved) : [];
-    } catch { return []; }
-  }
-
-  _saveSavedModules() {
-    localStorage.setItem('html-pro-card-modules', JSON.stringify(this._savedModules));
-  }
-
-  setConfig(config) {
-    this._config = config;
-  }
-
-  render() {
-    if (!this._config) {
-      return html``;
-    }
-
-    return html`
+import{html,LitElement}from"https://unpkg.com/lit-element@2.4.0/lit-element.js?module";const _globalLoadedScripts=window._htmlProCardScripts||(window._htmlProCardScripts=new Set);if(!document.getElementById("html-pro-card-overlay")){const t=document.createElement("div");t.id="html-pro-card-overlay",t.style.cssText="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:2147483647;overflow:hidden;",document.body.appendChild(t)}if(window._htmlProCardOverlay=document.getElementById("html-pro-card-overlay"),!window._htmlProCardRoots){window._htmlProCardRoots=new Set;const t=document.getElementById.bind(document),e=document.querySelector.bind(document),s=document.querySelectorAll.bind(document);document.getElementById=function(e){for(const t of window._htmlProCardRoots){const s=t.querySelector("#"+e);if(s)return s}return t(e)},document.querySelector=function(t){for(const e of window._htmlProCardRoots){const s=e.querySelector(t);if(s)return s}return e(t)},document.querySelectorAll=function(t){const e=[];for(const s of window._htmlProCardRoots)e.push(...s.querySelectorAll(t));return e.length>0?e:s(t)}}customElements.get("ha-htmlcard-textarea")||customElements.define("ha-htmlcard-textarea",class extends HTMLElement{constructor(){super(),this.attachShadow({mode:"open"}),this._value="",this.shadowRoot.innerHTML="\n        <style>\n          :host { display: block; }\n          textarea {\n            width: 100%;\n            height: 400px;\n            padding: 12px;\n            border: 1px solid var(--divider-color, #e0e0e0);\n            border-radius: 8px;\n            background: var(--card-background-color, #fff);\n            color: var(--primary-text-color, #333);\n            font-family: 'SF Mono', 'Consolas', 'Monaco', monospace;\n            font-size: 13px;\n            line-height: 1.6;\n            resize: vertical;\n            box-sizing: border-box;\n            tab-size: 2;\n          }\n          textarea:focus {\n            outline: none;\n            border-color: var(--primary-color, #03a9f4);\n            box-shadow: 0 0 0 2px rgba(3, 169, 244, 0.15);\n          }\n          textarea::-webkit-scrollbar { width: 8px; height: 8px; }\n          textarea::-webkit-scrollbar-track { background: transparent; border-radius: 4px; }\n          textarea::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.2); border-radius: 4px; }\n          textarea::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.3); }\n        </style>\n        <textarea spellcheck=\"false\"></textarea>\n      ",this._input=this.shadowRoot.querySelector("textarea"),this._input.addEventListener("input",()=>{this._value=this._input.value,this.dispatchEvent(new CustomEvent("change",{detail:{value:this._value},bubbles:!0,composed:!0}))}),this._input.addEventListener("keydown",t=>{if("Tab"===t.key){t.preventDefault();const e=this._input.selectionStart,s=this._input.selectionEnd;this._input.value=this._input.value.substring(0,e)+"  "+this._input.value.substring(s),this._input.selectionStart=this._input.selectionEnd=e+2,this._value=this._input.value,this.dispatchEvent(new CustomEvent("change",{detail:{value:this._value},bubbles:!0,composed:!0}))}})}set value(t){this._value=t||"",this._input.value!==this._value&&(this._input.value=this._value)}get value(){return this._value}}),customElements.get("ha-htmlcard-textfield")||customElements.define("ha-htmlcard-textfield",class extends HTMLElement{constructor(){super(),this.attachShadow({mode:"open"}),this.shadowRoot.innerHTML='\n        <style>\n          :host {\n            display: block;\n          }\n          input {\n            width: 100%;\n            padding: 8px;\n            border: 1px solid var(--divider-color, #e0e0e0);\n            border-radius: 4px;\n            background: var(--card-background-color, #fff);\n            color: var(--primary-text-color, #000);\n          }\n        </style>\n        <input type="text" />\n      ',this._input=this.shadowRoot.querySelector("input"),this._input.addEventListener("input",()=>{this.dispatchEvent(new CustomEvent("change",{detail:{value:this._input.value},bubbles:!0,composed:!0}))})}set value(t){this._input.value=t}get value(){return this._input.value}set type(t){this._input.type=t}}),customElements.get("ha-htmlcard-switch")||customElements.define("ha-htmlcard-switch",class extends HTMLElement{constructor(){super(),this.attachShadow({mode:"open"}),this.shadowRoot.innerHTML='\n        <style>\n          :host {\n            display: inline-block;\n          }\n          label {\n            position: relative;\n            display: inline-block;\n            width: 40px;\n            height: 24px;\n          }\n          input {\n            opacity: 0;\n            width: 0;\n            height: 0;\n          }\n          span {\n            position: absolute;\n            cursor: pointer;\n            top: 0;\n            left: 0;\n            right: 0;\n            bottom: 0;\n            background-color: #ccc;\n            transition: .4s;\n            border-radius: 24px;\n          }\n          span:before {\n            position: absolute;\n            content: "";\n            height: 16px;\n            width: 16px;\n            left: 4px;\n            bottom: 4px;\n            background-color: white;\n            transition: .4s;\n            border-radius: 50%;\n          }\n          input:checked + span {\n            background-color: var(--primary-color, #03a9f4);\n          }\n          input:checked + span:before {\n            transform: translateX(16px);\n          }\n        </style>\n        <label>\n          <input type="checkbox" />\n          <span></span>\n        </label>\n      ',this._input=this.shadowRoot.querySelector("input"),this._input.addEventListener("change",()=>{this.dispatchEvent(new CustomEvent("change",{detail:{checked:this._input.checked},bubbles:!0,composed:!0}))})}set checked(t){this._input.checked=t}get checked(){return this._input.checked}}),customElements.get("ha-htmlcard-formfield")||customElements.define("ha-htmlcard-formfield",class extends HTMLElement{constructor(){super(),this.attachShadow({mode:"open"}),this.shadowRoot.innerHTML='\n        <style>\n          :host {\n            display: flex;\n            align-items: center;\n            padding: 4px 0;\n          }\n          label {\n            padding-left: 8px;\n            color: var(--primary-text-color, #000);\n          }\n        </style>\n        <slot></slot>\n        <label><slot name="label"></slot></label>\n      '}});const I18N={zh:{htmlContent:"HTML 内容",options:"选项设置",scripts:"外部脚本",store:"模块商店",disableParse:"纯HTML模式",disableParseDesc:"默认关闭(使用Jinja2)，开启后直接渲染HTML",updateInterval:"更新间隔 (ms)",updateIntervalDesc:"0 为禁用自动更新",ignoreLineBreaks:"忽略换行",ignoreLineBreaksDesc:"忽略HTML中的换行符",addScript:"添加",scriptPlaceholder:"输入脚本 URL",searchPlaceholder:"搜索模块...",import:"导入",delete:"删除",loading:"加载中...",noModules:"暂无模块",noCustomModules:"暂无自定义模块",confirmDelete:"确定删除此模块?",customModule:"自定义模块",headerDesc:"高级 HTML 卡片编辑器，支持 Jinja2 模板语法",headerDesc2:"可使用 Home Assistant 状态、属性和服务调用",realtime:"实时更新",extScripts:"外部脚本",customStyle:"自定义样式"},en:{htmlContent:"HTML Content",options:"Options",scripts:"External Scripts",store:"Module Store",disableParse:"Pure HTML Mode",disableParseDesc:"Off by default (uses Jinja2), enable to render HTML directly",updateInterval:"Update Interval (ms)",updateIntervalDesc:"0 to disable auto update",ignoreLineBreaks:"Ignore Line Breaks",ignoreLineBreaksDesc:"Ignore line breaks in HTML",addScript:"Add",scriptPlaceholder:"Enter script URL",searchPlaceholder:"Search modules...",import:"Import",delete:"Delete",loading:"Loading...",noModules:"No modules",noCustomModules:"No custom modules",confirmDelete:"Delete this module?",customModule:"Custom Module",headerDesc:"Advanced HTML card editor with Jinja2 template",headerDesc2:"Use Home Assistant states, attributes and services",realtime:"Realtime",extScripts:"Scripts",customStyle:"Custom CSS"}};class HtmlTemplateCardEditor extends LitElement{static get properties(){return{_config:{type:Object},hass:{type:Object},_showStore:{type:Boolean},_showHtml:{type:Boolean},_showOptions:{type:Boolean},_showScripts:{type:Boolean},_storeModules:{type:Array},_savedModules:{type:Array},_storeLoading:{type:Boolean},_storeSearch:{type:String}}}get _lang(){return this.hass?.language?.startsWith("zh")?"zh":"en"}_t(t){return I18N[this._lang]?.[t]||I18N.en[t]||t}constructor(){super(),this._showStore=!1,this._showHtml=!0,this._showOptions=!1,this._showScripts=!1,this._storeModules=[],this._savedModules=this._loadSavedModules(),this._storeLoading=!1,this._storeSearch=""}_loadSavedModules(){try{const t=localStorage.getItem("html-pro-card-modules");return t?JSON.parse(t):[]}catch{return[]}}_saveSavedModules(){localStorage.setItem("html-pro-card-modules",JSON.stringify(this._savedModules))}setConfig(t){this._config=t}render(){return this._config?html`
       <style>
         .card-config {
           padding: 16px;
@@ -617,41 +259,41 @@ class HtmlTemplateCardEditor extends LitElement {
             <svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2V3H12V9H11V10H9V11H8V12H7V13H5V12H4V11H3V9H2V15H3V16H4V17H5V18H6V22H8V21H7V20H8V19H9V18H10V19H11V22H13V21H12V17H13V16H14V15H15V12H16V13H17V11H15V9H20V8H17V7H22V3H21V2M14 3H15V4H14Z"/></svg>
           </div>
           <div class="header-desc">
-            ${this._t('headerDesc')}<br>
-            ${this._t('headerDesc2')}
+            ${this._t("headerDesc")}<br>
+            ${this._t("headerDesc2")}
           </div>
           <div class="header-features">
             <div class="header-feature">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg>
-              ${this._t('realtime')}
+              ${this._t("realtime")}
             </div>
             <div class="header-feature">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
-              ${this._t('extScripts')}
+              ${this._t("extScripts")}
             </div>
             <div class="header-feature">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
-              ${this._t('customStyle')}
+              ${this._t("customStyle")}
             </div>
           </div>
         </div>
         <!-- HTML 内容 -->
         <div class="collapse-panel">
-          <div class="collapse-header ${this._showHtml ? 'expanded' : ''}" @click="${() => { this._showHtml = !this._showHtml; this.requestUpdate(); }}">
+          <div class="collapse-header ${this._showHtml?"expanded":""}" @click="${()=>{this._showHtml=!this._showHtml,this.requestUpdate()}}">
             <div class="collapse-header-left">
               <svg class="collapse-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="16 18 22 12 16 6"></polyline>
                 <polyline points="8 6 2 12 8 18"></polyline>
               </svg>
-              <span class="collapse-title">${this._t('htmlContent')}</span>
+              <span class="collapse-title">${this._t("htmlContent")}</span>
             </div>
-            <span class="collapse-arrow ${this._showHtml ? 'expanded' : ''}"></span>
+            <span class="collapse-arrow ${this._showHtml?"expanded":""}"></span>
           </div>
-          <div class="collapse-body ${this._showHtml ? 'expanded' : ''}">
+          <div class="collapse-body ${this._showHtml?"expanded":""}">
             <div class="collapse-content">
               <ha-htmlcard-textarea
                 class="editor-control"
-                .value="${this._config.content || ''}"
+                .value="${this._config.content||""}"
                 @change="${this._handleContentChange}"
               ></ha-htmlcard-textarea>
             </div>
@@ -660,47 +302,47 @@ class HtmlTemplateCardEditor extends LitElement {
 
         <!-- 选项设置 -->
         <div class="collapse-panel">
-          <div class="collapse-header ${this._showOptions ? 'expanded' : ''}" @click="${() => { this._showOptions = !this._showOptions; this.requestUpdate(); }}">
+          <div class="collapse-header ${this._showOptions?"expanded":""}" @click="${()=>{this._showOptions=!this._showOptions,this.requestUpdate()}}">
             <div class="collapse-header-left">
               <svg class="collapse-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="12" cy="12" r="3"></circle>
                 <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
               </svg>
-              <span class="collapse-title">${this._t('options')}</span>
+              <span class="collapse-title">${this._t("options")}</span>
             </div>
-            <span class="collapse-arrow ${this._showOptions ? 'expanded' : ''}"></span>
+            <span class="collapse-arrow ${this._showOptions?"expanded":""}"></span>
           </div>
-          <div class="collapse-body ${this._showOptions ? 'expanded' : ''}">
+          <div class="collapse-body ${this._showOptions?"expanded":""}">
             <div class="collapse-content">
               <div class="option-row">
                 <div>
-                  <div class="option-label">${this._t('disableParse')}</div>
-                  <div class="option-desc">${this._t('disableParseDesc')}</div>
+                  <div class="option-label">${this._t("disableParse")}</div>
+                  <div class="option-desc">${this._t("disableParseDesc")}</div>
                 </div>
                 <ha-htmlcard-switch
-                  .checked="${this._config.do_not_parse || false}"
+                  .checked="${this._config.do_not_parse||!1}"
                   @change="${this._handleParseChange}"
                 ></ha-htmlcard-switch>
               </div>
               <div class="option-row">
                 <div>
-                  <div class="option-label">${this._t('ignoreLineBreaks')}</div>
-                  <div class="option-desc">${this._t('ignoreLineBreaksDesc')}</div>
+                  <div class="option-label">${this._t("ignoreLineBreaks")}</div>
+                  <div class="option-desc">${this._t("ignoreLineBreaksDesc")}</div>
                 </div>
                 <ha-htmlcard-switch
-                  .checked="${this._config.ignore_line_breaks || false}"
+                  .checked="${this._config.ignore_line_breaks||!1}"
                   @change="${this._handleLineBreaksChange}"
                 ></ha-htmlcard-switch>
               </div>
               <div class="option-row">
                 <div>
-                  <div class="option-label">${this._t('updateInterval')}</div>
-                  <div class="option-desc">${this._t('updateIntervalDesc')}</div>
+                  <div class="option-label">${this._t("updateInterval")}</div>
+                  <div class="option-desc">${this._t("updateIntervalDesc")}</div>
                 </div>
                 <ha-htmlcard-textfield
                   type="number"
                   class="interval-input"
-                  .value="${this._config.update_interval || 0}"
+                  .value="${this._config.update_interval||0}"
                   @change="${this._handleIntervalChange}"
                 ></ha-htmlcard-textfield>
               </div>
@@ -710,7 +352,7 @@ class HtmlTemplateCardEditor extends LitElement {
 
         <!-- 外部脚本 -->
         <div class="collapse-panel">
-          <div class="collapse-header ${this._showScripts ? 'expanded' : ''}" @click="${() => { this._showScripts = !this._showScripts; this.requestUpdate(); }}">
+          <div class="collapse-header ${this._showScripts?"expanded":""}" @click="${()=>{this._showScripts=!this._showScripts,this.requestUpdate()}}">
             <div class="collapse-header-left">
               <svg class="collapse-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -719,29 +361,29 @@ class HtmlTemplateCardEditor extends LitElement {
                 <line x1="16" y1="17" x2="8" y2="17"></line>
                 <polyline points="10 9 9 9 8 9"></polyline>
               </svg>
-              <span class="collapse-title">${this._t('scripts')}</span>
+              <span class="collapse-title">${this._t("scripts")}</span>
             </div>
-            <span class="collapse-arrow ${this._showScripts ? 'expanded' : ''}"></span>
+            <span class="collapse-arrow ${this._showScripts?"expanded":""}"></span>
           </div>
-          <div class="collapse-body ${this._showScripts ? 'expanded' : ''}">
+          <div class="collapse-body ${this._showScripts?"expanded":""}">
             <div class="collapse-content">
               <div class="script-input-container">
                 <ha-textfield
                   type="url"
-                  placeholder="${this._t('scriptPlaceholder')}"
-                  .value="${this._newScriptUrl || ''}"
-                  @change="${e => this._newScriptUrl = e.target.value}"
+                  placeholder="${this._t("scriptPlaceholder")}"
+                  .value="${this._newScriptUrl||""}"
+                  @change="${t=>this._newScriptUrl=t.target.value}"
                 ></ha-textfield>
-                <mwc-button @click="${this._addScript}">${this._t('addScript')}</mwc-button>
+                <mwc-button @click="${this._addScript}">${this._t("addScript")}</mwc-button>
               </div>
-              ${(this._config.scripts || []).map((script, index) => html`
+              ${(this._config.scripts||[]).map((t,e)=>html`
                 <div class="script-item">
                   <ha-textfield
                     type="url"
-                    .value="${script}"
-                    @change="${e => this._updateScript(index, e.target.value)}"
+                    .value="${t}"
+                    @change="${t=>this._updateScript(e,t.target.value)}"
                   ></ha-textfield>
-                  <mwc-icon-button @click="${() => this._removeScript(index)}">
+                  <mwc-icon-button @click="${()=>this._removeScript(e)}">
                     <ha-icon icon="mdi:delete"></ha-icon>
                   </mwc-icon-button>
                 </div>
@@ -752,873 +394,47 @@ class HtmlTemplateCardEditor extends LitElement {
 
         <!-- 模块商店 -->
         <div class="collapse-panel">
-          <div class="collapse-header ${this._showStore ? 'expanded' : ''}" @click="${this._toggleStore}">
+          <div class="collapse-header ${this._showStore?"expanded":""}" @click="${this._toggleStore}">
             <div class="collapse-header-left">
               <svg class="collapse-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
                 <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
                 <line x1="12" y1="22.08" x2="12" y2="12"></line>
               </svg>
-              <span class="collapse-title">${this._t('store')}</span>
+              <span class="collapse-title">${this._t("store")}</span>
             </div>
-            <span class="collapse-arrow ${this._showStore ? 'expanded' : ''}"></span>
+            <span class="collapse-arrow ${this._showStore?"expanded":""}"></span>
           </div>
-          <div class="collapse-body ${this._showStore ? 'expanded' : ''}">
+          <div class="collapse-body ${this._showStore?"expanded":""}">
             <div class="collapse-content">
               <div class="store-search">
-                <input type="text" placeholder="${this._t('searchPlaceholder')}" .value="${this._storeSearch}" @input="${e => { this._storeSearch = e.target.value; this.requestUpdate(); }}">
+                <input type="text" placeholder="${this._t("searchPlaceholder")}" .value="${this._storeSearch}" @input="${t=>{this._storeSearch=t.target.value,this.requestUpdate()}}">
               </div>
               <div class="store-list">
-                ${this._storeLoading ? html`<div class="store-loading">${this._t('loading')}</div>` : this._renderOnlineModules()}
+                ${this._storeLoading?html`<div class="store-loading">${this._t("loading")}</div>`:this._renderOnlineModules()}
               </div>
             </div>
           </div>
         </div>
         </div>
       </div>
-    `;
-  }
-
-  _handleContentChange(e) {
-    if (!this._config) return;
-    
-    const newConfig = {
-      ...this._config,
-      content: e.detail.value
-    };
-    
-    this.dispatchEvent(new CustomEvent('config-changed', {
-      detail: { config: newConfig },
-      bubbles: true,
-      composed: true
-    }));
-  }
-
-  _handleParseChange(e) {
-    this._valueChanged('do_not_parse', e.target.checked);
-  }
-
-  _handleLineBreaksChange(e) {
-    this._valueChanged('ignore_line_breaks', e.target.checked);
-  }
-
-  _handleIntervalChange(e) {
-    const value = parseInt(e.target.value) || 0;
-    this._valueChanged('update_interval', value);
-  }
-
-  _valueChanged(key, value) {
-    if (!this._config) return;
-    
-    const newConfig = {
-      ...this._config,
-      [key]: value,
-    };
-    
-    this.dispatchEvent(new CustomEvent('config-changed', {
-      detail: { config: newConfig },
-      bubbles: true,
-      composed: true
-    }));
-  }
-
-  _addScript() {
-    if (!this._newScriptUrl) return;
-    
-    const scripts = [...(this._config.scripts || []), this._newScriptUrl];
-    this._valueChanged('scripts', scripts);
-    this._newScriptUrl = '';
-    this.requestUpdate();
-  }
-
-  _updateScript(index, value) {
-    const scripts = [...(this._config.scripts || [])];
-    scripts[index] = value;
-    this._valueChanged('scripts', scripts);
-  }
-
-  _removeScript(index) {
-    const scripts = [...(this._config.scripts || [])];
-    scripts.splice(index, 1);
-    this._valueChanged('scripts', scripts);
-  }
-
-  _toggleStore() {
-    this._showStore = !this._showStore;
-    if (this._showStore && this._storeModules.length === 0) {
-      this._loadOnlineModules();
-    }
-    this.requestUpdate();
-  }
-
-  _switchTab(tab) {
-    this._storeTab = tab;
-    if (tab === 'online' && this._storeModules.length === 0) {
-      this._loadOnlineModules();
-    }
-    this.requestUpdate();
-  }
-
-  _parseYaml(text) {
-    const lines = text.split('\n');
-    const result = {};
-    let currentKey = null;
-    let multilineValue = [];
-    let inMultiline = false;
-    
-    for (const line of lines) {
-      if (inMultiline) {
-        if (line.startsWith('  ') || line.trim() === '') {
-          multilineValue.push(line.slice(2) || '');
-        } else {
-          result[currentKey] = multilineValue.join('\n').trim();
-          inMultiline = false;
-          multilineValue = [];
-        }
-      }
-      
-      if (!inMultiline) {
-        const match = line.match(/^(\w+):\s*(.*)$/);
-        if (match) {
-          currentKey = match[1];
-          const value = match[2];
-          if (value === '|') {
-            inMultiline = true;
-            multilineValue = [];
-          } else {
-            result[currentKey] = value.replace(/^["']|["']$/g, '');
-          }
-        }
-      }
-    }
-    
-    if (inMultiline && currentKey) {
-      result[currentKey] = multilineValue.join('\n').trim();
-    }
-    
-    return result;
-  }
-
-  async _loadOnlineModules() {
-    this._storeLoading = true;
-    this.requestUpdate();
-    const baseUrl = 'https://raw.githubusercontent.com/knoop7/html-card-pro/main';
-    try {
-      const res = await fetch(`${baseUrl}/modules.json`);
-      if (res.ok) {
-        const index = await res.json();
-        this._storeModules = index.map(m => ({
-          ...m,
-          _file: m.file,
-          _baseUrl: baseUrl
-        }));
-      } else {
-        this._storeModules = this._getBuiltinModules();
-      }
-    } catch {
-      this._storeModules = this._getBuiltinModules();
-    }
-    this._storeLoading = false;
-    this.requestUpdate();
-  }
-
-  _getBuiltinModules() {
-    return [];
-  }
-
-  _renderOnlineModules() {
-    const filtered = this._storeModules.filter(m => 
-      !this._storeSearch || m.name.toLowerCase().includes(this._storeSearch.toLowerCase()) || m.desc.toLowerCase().includes(this._storeSearch.toLowerCase())
-    );
-    if (filtered.length === 0) {
-      return html`<div class="store-loading">${this._t('noModules')}</div>`;
-    }
-    return filtered.map(m => html`
+    `:html``}_handleContentChange(t){if(!this._config)return;const e={...this._config,content:t.detail.value};this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:e},bubbles:!0,composed:!0}))}_handleParseChange(t){this._valueChanged("do_not_parse",t.target.checked)}_handleLineBreaksChange(t){this._valueChanged("ignore_line_breaks",t.target.checked)}_handleIntervalChange(t){const e=parseInt(t.target.value)||0;this._valueChanged("update_interval",e)}_valueChanged(t,e){if(!this._config)return;const s={...this._config,[t]:e};this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:s},bubbles:!0,composed:!0}))}_addScript(){if(!this._newScriptUrl)return;const t=[...this._config.scripts||[],this._newScriptUrl];this._valueChanged("scripts",t),this._newScriptUrl="",this.requestUpdate()}_updateScript(t,e){const s=[...this._config.scripts||[]];s[t]=e,this._valueChanged("scripts",s)}_removeScript(t){const e=[...this._config.scripts||[]];e.splice(t,1),this._valueChanged("scripts",e)}_toggleStore(){this._showStore=!this._showStore,this._showStore&&0===this._storeModules.length&&this._loadOnlineModules(),this.requestUpdate()}_switchTab(t){this._storeTab=t,"online"===t&&0===this._storeModules.length&&this._loadOnlineModules(),this.requestUpdate()}_parseYaml(t){const e=t.split("\n"),s={};let i=null,o=[],n=!1;for(const t of e)if(n&&(t.startsWith("  ")||""===t.trim()?o.push(t.slice(2)||""):(s[i]=o.join("\n").trim(),n=!1,o=[])),!n){const e=t.match(/^(\w+):\s*(.*)$/);if(e){i=e[1];const t=e[2];"|"===t?(n=!0,o=[]):s[i]=t.replace(/^["']|["']$/g,"")}}return n&&i&&(s[i]=o.join("\n").trim()),s}async _loadOnlineModules(){this._storeLoading=!0,this.requestUpdate();const t="https://raw.githubusercontent.com/knoop7/html-card-pro/main";try{const e=await fetch(`${t}/modules.json`);if(e.ok){const s=await e.json();this._storeModules=s.map(e=>({...e,_file:e.file,_baseUrl:t}))}else this._storeModules=this._getBuiltinModules()}catch{this._storeModules=this._getBuiltinModules()}this._storeLoading=!1,this.requestUpdate()}_getBuiltinModules(){return[]}_renderOnlineModules(){const t=this._storeModules.filter(t=>!this._storeSearch||t.name.toLowerCase().includes(this._storeSearch.toLowerCase())||t.desc.toLowerCase().includes(this._storeSearch.toLowerCase()));return 0===t.length?html`<div class="store-loading">${this._t("noModules")}</div>`:t.map(t=>html`
       <div class="store-item">
         <div class="store-item-info">
-          <h4>${m.name}${m.author ? html`<span class="store-item-author">by ${m.author}</span>` : ''}</h4>
-          <p>${m.desc}</p>
+          <h4>${t.name}${t.author?html`<span class="store-item-author">by ${t.author}</span>`:""}</h4>
+          <p>${t.desc}</p>
         </div>
-        <button class="store-item-btn" @click="${() => this._importModule(m)}">${this._t('import')}</button>
+        <button class="store-item-btn" @click="${()=>this._importModule(t)}">${this._t("import")}</button>
       </div>
-    `);
-  }
-
-  _renderSavedModules() {
-    const filtered = this._savedModules.filter(m => 
-      !this._storeSearch || m.name.toLowerCase().includes(this._storeSearch.toLowerCase())
-    );
-    if (filtered.length === 0) {
-      return html`<div class="store-loading">${this._t('noCustomModules')}</div>`;
-    }
-    return filtered.map((m, i) => html`
+    `)}_renderSavedModules(){const t=this._savedModules.filter(t=>!this._storeSearch||t.name.toLowerCase().includes(this._storeSearch.toLowerCase()));return 0===t.length?html`<div class="store-loading">${this._t("noCustomModules")}</div>`:t.map((t,e)=>html`
       <div class="store-item">
         <div class="store-item-info">
-          <h4>${m.name}</h4>
-          <p>${m.desc || this._t('customModule')}</p>
+          <h4>${t.name}</h4>
+          <p>${t.desc||this._t("customModule")}</p>
         </div>
         <div class="store-item-actions">
-          <button class="store-item-btn import" @click="${() => this._importModule(m)}">${this._t('import')}</button>
-          <button class="store-item-btn delete" @click="${() => this._deleteModule(i)}">${this._t('delete')}</button>
+          <button class="store-item-btn import" @click="${()=>this._importModule(t)}">${this._t("import")}</button>
+          <button class="store-item-btn delete" @click="${()=>this._deleteModule(e)}">${this._t("delete")}</button>
         </div>
       </div>
-    `);
-  }
-
-  async _importModule(m) {
-    if (!this._config) return;
-    
-    let content = m.content;
-    
-    if (m._file && m._baseUrl) {
-      try {
-        const res = await fetch(`${m._baseUrl}/${m._file}`);
-        if (res.ok) {
-          const yamlText = await res.text();
-          const parsed = this._parseYaml(yamlText);
-          content = parsed.content || '';
-        }
-      } catch (e) {
-        console.error('Failed to load module:', e);
-        return;
-      }
-    }
-    
-    const newConfig = {
-      ...this._config,
-      content: content,
-      do_not_parse: content.includes('<script>'),
-      ignore_line_breaks: true
-    };
-    this.dispatchEvent(new CustomEvent('config-changed', {
-      detail: { config: newConfig },
-      bubbles: true,
-      composed: true
-    }));
-    this.requestUpdate();
-  }
-
-  _deleteModule(index) {
-    if (!confirm(this._t('confirmDelete'))) return;
-    this._savedModules = this._savedModules.filter((_, i) => i !== index);
-    this._saveSavedModules();
-    this.requestUpdate();
-  }
-}
-
-customElements.define("html-pro-card-editor", HtmlTemplateCardEditor);
-
-class HtmlTemplateCard extends HTMLElement {
-  static get properties() {
-    return {
-      hass: { type: Object },
-      _config: { type: Object },
-    };
-  }
-
-  static async getConfigElement() {
-    return document.createElement('html-pro-card-editor');
-  }
-
-  static preProcessScripts(config) {
-    if (typeof config.scripts === 'string') config.scripts = config.scripts.split('\n').filter(url => url.trim() !== '');
-    return config;
-  }
-
-  static getStubConfig() {
-    return {
-      content: `<style>
-.pro{padding:20px}
-.pro-h{display:flex;align-items:center;gap:12px;margin-bottom:16px}
-.pro-icon{width:36px;height:36px;color:var(--primary-color)}
-.pro-t{font-size:16px;font-weight:600;color:var(--primary-text-color)}
-.pro-c{font-size:12px;color:var(--secondary-text-color);line-height:1.6}
-.pro-f{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
-.pro-tag{padding:4px 8px;font-size:10px;background:var(--primary-color);color:#fff;border-radius:4px;opacity:0.9}
-</style>
-<div class="pro">
-<div class="pro-h">
-<svg class="pro-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2V3H12V9H11V10H9V11H8V12H7V13H5V12H4V11H3V9H2V15H3V16H4V17H5V18H6V22H8V21H7V20H8V19H9V18H10V19H11V22H13V21H12V17H13V16H14V15H15V12H16V13H17V11H15V9H20V8H17V7H22V3H21V2M14 3H15V4H14Z"/></svg>
-<span class="pro-t">Html Pro Card</span>
-</div>
-<div class="pro-c" id="pro-desc"></div>
-<div class="pro-f" id="pro-tags"></div>
-</div>
-<script>
-var isZh = (navigator.language || '').startsWith('zh') || (document.documentElement.lang || '').startsWith('zh');
-var desc = isZh ? '是一款专为 Home Assistant 设计的高级 HTML 卡片组件。它支持完整的 Jinja2 模板语法，让您可以动态获取任意实体的状态、属性和历史数据。通过内置的服务调用接口，您可以直接在卡片中控制灯光、开关、空调等设备。卡片支持自定义 CSS 样式和外部 JavaScript 脚本，让您能够创建独一无二的交互式仪表盘。' : 'is an advanced HTML card component designed for Home Assistant. It supports full Jinja2 template syntax, allowing you to dynamically access any entity state, attributes and history. With built-in service calls, you can control lights, switches, climate devices directly. Custom CSS and external JS scripts enable unique interactive dashboards.';
-var tags = isZh ? ['Jinja2', '实时更新', '服务调用', '自定义样式'] : ['Jinja2', 'Realtime', 'Services', 'Custom CSS'];
-$('#pro-desc').textContent = desc;
-$('#pro-tags').innerHTML = tags.map(t => '<span class="pro-tag">' + t + '</span>').join('');
-</script>`,
-      update_interval: 10000,
-      do_not_parse: false,
-      ignore_line_breaks: true,
-      scripts: []
-    };
-  }
-
-  connectedCallback() {
-    this._createRootElement();
-    this._setupEventListeners();
-    if (this._config && this._hass) {
-      this._processAndRender();
-    }
-  }
-
-  disconnectedCallback() {
-    if (this._timeUpdateInterval) {
-      clearInterval(this._timeUpdateInterval);
-      this._timeUpdateInterval = null;
-    }
-    this._removeEventListeners();
-  }
-
-  _createRootElement() {
-    if (this._rootElement) this.removeChild(this._rootElement);
-    this._rootElement = document.createElement('ha-card');
-    this.appendChild(this._rootElement);
-  }
-
-  _setupEventListeners() {
-    if (!this._rootElement) return;
-    let pressTimer;
-    let longPressTriggered = false;
-    const elements = this._rootElement.querySelectorAll('.light-status');
-    elements.forEach(element => {
-      element.addEventListener('touchstart', e => {
-        longPressTriggered = false;
-        pressTimer = setTimeout(() => {
-          longPressTriggered = true;
-          const entityId = element.dataset.entity;
-          if (entityId) this._showMoreInfo(entityId);
-        }, 500);
-      });
-      element.addEventListener('touchend', () => {
-        clearTimeout(pressTimer);
-        if (!longPressTriggered) {
-          const entityId = element.dataset.entity;
-          if (entityId) this._toggle(entityId);
-        }
-      });
-      element.addEventListener('touchmove', () => clearTimeout(pressTimer));
-      element.addEventListener('mousedown', () => {
-        longPressTriggered = false;
-        pressTimer = setTimeout(() => {
-          longPressTriggered = true;
-          const entityId = element.dataset.entity;
-          if (entityId) this._showMoreInfo(entityId);
-        }, 500);
-      });
-      element.addEventListener('mouseup', () => {
-        clearTimeout(pressTimer);
-        if (!longPressTriggered) {
-          const entityId = element.dataset.entity;
-          if (entityId) this._toggle(entityId);
-        }
-      });
-      element.addEventListener('mouseleave', () => clearTimeout(pressTimer));
-    });
-    const brightnessSliders = this._rootElement.querySelectorAll('input[type="range"]');
-    brightnessSliders.forEach(slider => {
-      let timeoutId;
-      slider.oninput = e => {
-        e.stopPropagation();
-        if (timeoutId) clearTimeout(timeoutId);
-        timeoutId = setTimeout(() => {
-          const entityId = slider.dataset.entity;
-          if (entityId) {
-            const brightness = Math.round((slider.value * 255) / 100);
-            this._hass.callService('light', 'turn_on', { entity_id: entityId, brightness: brightness });
-          }
-        }, 150);
-      };
-    });
-    this._rootElement.addEventListener('touchstart', this._handleTouchStart.bind(this), { passive: true });
-    this._rootElement.addEventListener('touchend', this._handleTouchEnd.bind(this));
-    this._rootElement.addEventListener('touchcancel', this._handleTouchEnd.bind(this));
-    this._rootElement.addEventListener('mousedown', this._handleMouseDown.bind(this));
-    this._rootElement.addEventListener('mouseup', this._handleMouseUp.bind(this));
-    this._rootElement.addEventListener('click', this._handleClick.bind(this));
-  }
-
-  _removeEventListeners() {
-    if (!this._rootElement) return;
-    const elements = this._rootElement.querySelectorAll('.light-status');
-    elements.forEach(element => element.replaceWith(element.cloneNode(true)));
-    const sliders = this._rootElement.querySelectorAll('input[type="range"]');
-    sliders.forEach(slider => slider.oninput = null);
-    this._rootElement.removeEventListener('touchstart', this._handleTouchStart.bind(this));
-    this._rootElement.removeEventListener('touchend', this._handleTouchEnd.bind(this));
-    this._rootElement.removeEventListener('touchcancel', this._handleTouchEnd.bind(this));
-    this._rootElement.removeEventListener('mousedown', this._handleMouseDown.bind(this));
-    this._rootElement.removeEventListener('mouseup', this._handleMouseUp.bind(this));
-    this._rootElement.removeEventListener('click', this._handleClick.bind(this));
-  }
-
-  _handleTouchStart(e) {
-    const target = e.target.closest('[data-long-press]');
-    if (!target) return;
-    const entityId = target.dataset.entity;
-    if (!entityId) return;
-    this._longPressTimeout = setTimeout(() => {
-      this._showMoreInfo(entityId);
-      this._longPressTimeout = null;
-    }, 500);
-  }
-
-  _handleTouchEnd() {
-    if (this._longPressTimeout) {
-      clearTimeout(this._longPressTimeout);
-      this._longPressTimeout = null;
-    }
-  }
-
-  _handleMouseDown(e) {
-    const target = e.target.closest('[data-long-press]');
-    if (!target) return;
-    const entityId = target.dataset.entity;
-    if (!entityId) return;
-    this._longPressTimeout = setTimeout(() => {
-      this._showMoreInfo(entityId);
-      this._longPressTimeout = null;
-    }, 500);
-  }
-
-  _handleMouseUp() {
-    if (this._longPressTimeout) {
-      clearTimeout(this._longPressTimeout);
-      this._longPressTimeout = null;
-    }
-  }
-
-  _handleClick(e) {
-    const actionTarget = e.target.closest('[data-action]');
-    if (actionTarget) {
-      const entityId = actionTarget.dataset.entity;
-      const action = actionTarget.dataset.action;
-      if (entityId && action === 'toggle') this._toggle(entityId);
-      return;
-    }
-    if (this._longPressTimeout) {
-      clearTimeout(this._longPressTimeout);
-      this._longPressTimeout = null;
-      return;
-    }
-  }
-
-  _showMoreInfo(entityId) {
-    if (!entityId || !this._hass.states[entityId]) return;
-    const event = new CustomEvent('hass-more-info', {
-      detail: { entityId },
-      bubbles: true,
-      composed: true
-    });
-    this.dispatchEvent(event);
-  }
-
-  _toggle(entityId) {
-    if (!entityId || !this._hass.states[entityId]) return;
-    const domain = entityId.split('.')[0];
-    const toggleDomains = ['light', 'switch', 'fan', 'input_boolean', 'automation', 'script', 'cover', 'lock', 'media_player'];
-    if (toggleDomains.includes(domain)) {
-      this._hass.callService(domain, 'toggle', { entity_id: entityId });
-    } else {
-      this._fireMoreInfo(entityId);
-    }
-  }
-  
-  _fireMoreInfo(entityId) {
-    const event = new CustomEvent('hass-more-info', {
-      bubbles: true,
-      composed: true,
-      detail: { entityId }
-    });
-    this.dispatchEvent(event);
-  }
-
-  set hass(hass) {
-    const oldHass = this._hass;
-    this._hass = hass;
-    if (!this._config) return;
-    if (!this._entities) this._calculateEntities();
-    const shouldUpdate = this._shouldUpdate(oldHass);
-    if (shouldUpdate) {
-      if (this._config.do_not_parse) {
-        this._updateStates();
-      } else {
-        this._processAndRender();
-      }
-    }
-  }
-
-  _setupTimeUpdate() {
-    if (this._timeUpdateInterval) clearInterval(this._timeUpdateInterval);
-    if (this._config.update_interval && this._config.update_interval > 0) {
-      const interval = Math.max(this._config.update_interval, 1000);
-      this._timeUpdateInterval = setInterval(() => {
-        if (this._config.do_not_parse) {
-          this._updateStates();
-        } else {
-          this._processAndRender();
-        }
-      }, interval);
-    }
-  }
-
-  _processAndRender() {
-    if (!this._rootElement || !this._config || !this._hass) return;
-    if (this._renderDebounce) clearTimeout(this._renderDebounce);
-    this._renderDebounce = setTimeout(() => {
-      try {
-        this._renderContent();
-      } catch {
-        this._renderFallback();
-      }
-    }, 50);
-  }
-
-  _renderContent() {
-    let content = this._config.content || '';
-    if (!this._config.ignore_line_breaks) {
-      content = content.replace(/\r?\n|\r/g, "");
-    }
-    if (this._config.do_not_parse) {
-      this._render(content);
-    } else {
-      if (this._templateSubscription) {
-        this._templateSubscription();
-        this._templateSubscription = null;
-      }
-      this._hass.connection.subscribeMessage(msg => {
-        try {
-          this._render(msg.result);
-        } catch {
-          this._renderFallback();
-        }
-      }, { type: "render_template", template: content }).then(unsub => {
-        this._templateSubscription = unsub;
-      }).catch(() => {
-        this._renderFallback();
-      });
-    }
-  }
-
-  async _loadExternalScripts(scripts) {
-    const promises = scripts.map(url => this._loadScript(url));
-    return Promise.all(promises);
-  }
-
-  async _loadScript(url) {
-    if (_globalLoadedScripts.has(url)) return;
-    _globalLoadedScripts.add(url);
-    await new Promise((resolve, reject) => {
-      const script = document.createElement('script');
-      script.async = true;
-      script.src = url;
-      script.onload = resolve;
-      script.onerror = () => {
-        _globalLoadedScripts.delete(url);
-        reject(new Error('Failed: ' + url));
-      };
-      document.body.appendChild(script);
-    });
-  }
-
-  _render(content) {
-    if (!this._rootElement || !this._hass) return;
-    try {
-      while (this._rootElement.lastChild) this._rootElement.removeChild(this._rootElement.lastChild);
-      window.hassTemplateCard = { hass: this._hass, config: this._config, root: this._rootElement };
-      window._htmlProCardRoots.add(this._rootElement);
-      this._rootElement.innerHTML = content;
-      this._rendered = true;
-      this._setupClickHandlers(this._rootElement);
-      const hasScripts = this._config.scripts && Array.isArray(this._config.scripts) && this._config.scripts.length > 0;
-      if (hasScripts) {
-        this._loadExternalScripts(this._config.scripts).then(() => {
-          setTimeout(() => this._executeInlineScripts(), 200);
-        }).catch(() => {
-          setTimeout(() => this._executeInlineScripts(), 200);
-        });
-      } else {
-        setTimeout(() => this._executeInlineScripts(), 0);
-      }
-      this.dispatchEvent(new CustomEvent('content-rendered', {
-        bubbles: true,
-        composed: true,
-        detail: { hass: this._hass, config: this._config }
-      }));
-    } catch {
-      this._renderFallback();
-    }
-  }
-
-  _executeInlineScripts() {
-    if (!this._rootElement) return;
-    const scripts = Array.from(this._rootElement.querySelectorAll('script'));
-    const root = this._rootElement;
-    const self = this;
-    const overlay = window._htmlProCardOverlay;
-    scripts.forEach(oldScript => {
-      if (oldScript.src) {
-        const s = document.createElement('script');
-        s.src = oldScript.src;
-        document.body.appendChild(s);
-        return;
-      }
-      const code = oldScript.textContent.trim();
-      if (!code) return;
-      setTimeout(() => {
-        try {
-          const fn = new Function('root', '$', '$$', 'hass', 'config', 'overlay', code);
-          fn(root, s => root.querySelector(s), s => root.querySelectorAll(s), self._hass, self._config, overlay);
-        } catch(e) {}
-      }, 100);
-    });
-  }
-
-  _setupClickHandlers(card) {
-    const self = this;
-    card.querySelectorAll('[data-entity]').forEach(el => {
-      const entityId = el.dataset.entity;
-      const [domain] = entityId.split('.');
-      el.querySelectorAll('[data-action]').forEach(btn => {
-        btn.onclick = e => {
-          e.stopPropagation();
-          const action = btn.dataset.action;
-          if (action === 'toggle') self._callService(entityId, 'toggle');
-          else if (action === 'turn_on') self._callService(entityId, 'turn_on');
-          else if (action === 'turn_off') self._callService(entityId, 'turn_off');
-          else if (action === 'more-info') self._showMoreInfo(entityId);
-          else self._hass.callService(domain, action, { entity_id: entityId });
-        };
-      });
-      el.querySelectorAll('input[type="range"]').forEach(slider => {
-        slider.oninput = e => e.stopPropagation();
-        slider.onchange = e => {
-          e.stopPropagation();
-          const val = parseFloat(e.target.value);
-          if (slider.dataset.brightness !== undefined) {
-            self._hass.callService('light', 'turn_on', { entity_id: entityId, brightness: Math.round(val * 255 / 100) });
-          } else if (slider.dataset.temperature !== undefined) {
-            self._hass.callService('climate', 'set_temperature', { entity_id: entityId, temperature: val });
-          } else if (slider.dataset.volume !== undefined) {
-            self._hass.callService('media_player', 'volume_set', { entity_id: entityId, volume_level: val / 100 });
-          } else if (slider.dataset.position !== undefined) {
-            self._hass.callService('cover', 'set_cover_position', { entity_id: entityId, position: val });
-          } else if (slider.dataset.speed !== undefined) {
-            self._hass.callService('fan', 'set_percentage', { entity_id: entityId, percentage: val });
-          }
-          setTimeout(() => self._updateStates(), 100);
-        };
-      });
-      el.querySelectorAll('select[data-option]').forEach(select => {
-        select.onchange = e => {
-          e.stopPropagation();
-          self._hass.callService('input_select', 'select_option', { entity_id: entityId, option: e.target.value });
-          setTimeout(() => self._updateStates(), 100);
-        };
-      });
-      el.querySelectorAll('input[type="number"][data-value]').forEach(input => {
-        input.onchange = e => {
-          e.stopPropagation();
-          self._hass.callService('input_number', 'set_value', { entity_id: entityId, value: parseFloat(e.target.value) });
-          setTimeout(() => self._updateStates(), 100);
-        };
-      });
-    });
-  }
-
-  _callService(entityId, action) {
-    if (!this._hass) return;
-    const [domain] = entityId.split('.');
-    const state = this._hass.states[entityId];
-    let service = action;
-    if (action === 'toggle' && state) {
-      service = state.state === 'on' ? 'turn_off' : 'turn_on';
-    }
-    this._hass.callService(domain, service, { entity_id: entityId });
-    setTimeout(() => this._updateStates(), 100);
-  }
-
-  _onClick(event) {
-    event.stopPropagation();
-    const entityId = event.currentTarget.dataset.entity;
-    if (!entityId) return;
-    const action = event.currentTarget.dataset.action;
-    if (action === 'toggle') {
-      this._toggle(entityId);
-      return;
-    }
-    if (!this._longPressTimeout) this._toggle(entityId);
-  }
-
-  _onTouchStart(event) {
-    const entityId = event.currentTarget.dataset.entity;
-    if (!entityId) return;
-    this._longPressTimeout = setTimeout(() => {
-      this._showMoreInfo(entityId);
-      this._longPressTimeout = null;
-    }, 500);
-  }
-
-  _onTouchEnd() {
-    if (this._longPressTimeout) {
-      clearTimeout(this._longPressTimeout);
-      this._longPressTimeout = null;
-    }
-  }
-
-  _onMouseDown(event) {
-    const entityId = event.currentTarget.dataset.entity;
-    if (!entityId) return;
-    this._longPressTimeout = setTimeout(() => {
-      this._showMoreInfo(entityId);
-      this._longPressTimeout = null;
-    }, 500);
-  }
-
-  _onMouseUp() {
-    if (this._longPressTimeout) {
-      clearTimeout(this._longPressTimeout);
-      this._longPressTimeout = null;
-    }
-  }
-
-  _toggle(entityId) {
-    if (!this._hass) return;
-    const state = this._hass.states[entityId];
-    if (!state) return;
-    let service = 'toggle';
-    if (state.state === 'on') service = 'turn_off';
-    else if (state.state === 'off') service = 'turn_on';
-    const [domain] = entityId.split('.');
-    this._hass.callService(domain, service, { entity_id: entityId });
-  }
-
-  _showMoreInfo(entityId) {
-    const event = new Event('hass-more-info', {
-      bubbles: true,
-      composed: true
-    });
-    event.detail = { entityId };
-    this.dispatchEvent(event);
-  }
-
-  _renderFallback() {
-    if (!this._rootElement || !this._hass) return;
-    const entities = this._entities || [];
-    const content = entities.map(entityId => {
-      const state = this._hass.states[entityId];
-      if (!state) return '';
-      return `<div class="entity" data-entity="${entityId}"><div class="entity-name">${state.attributes.friendly_name || entityId}</div><div class="state-text">${state.state}</div></div>`;
-    }).join('');
-    this._rootElement.innerHTML = content;
-    this._processStyles();
-    this._setupEventListeners();
-  }
-
-  _updateStates() {
-    if (!this._entities || !this._hass || !this._rootElement) return;
-    try {
-      this._entities.forEach(entityId => {
-        const stateObj = this._hass.states[entityId];
-        if (!stateObj) return;
-        const elements = this._rootElement.querySelectorAll(`[data-entity="${entityId}"]`);
-        elements.forEach(el => {
-          try {
-            el.dataset.state = stateObj.state;
-            el.querySelectorAll('[data-state-text]').forEach(e => e.textContent = stateObj.state);
-            el.querySelectorAll('[data-attr]').forEach(e => {
-              const attr = e.dataset.attr;
-              e.textContent = stateObj.attributes[attr] ?? '';
-            });
-            el.querySelectorAll('[data-brightness]').forEach(e => {
-              const b = stateObj.attributes.brightness;
-              if (e.tagName === 'INPUT') e.value = b ? Math.round(b * 100 / 255) : 0;
-              else e.textContent = b ? Math.round(b * 100 / 255) + '%' : '0%';
-            });
-            el.querySelectorAll('[data-temperature]').forEach(e => {
-              e.textContent = stateObj.attributes.temperature ?? stateObj.attributes.current_temperature ?? '';
-            });
-            el.querySelectorAll('[data-friendly-name]').forEach(e => {
-              e.textContent = stateObj.attributes.friendly_name || entityId;
-            });
-          } catch { }
-        });
-      });
-    } catch { }
-  }
-
-  _shouldUpdate(oldHass) {
-    if (!this._rendered) return true;
-    if (!oldHass) return false;
-    if (this._config.always_update) return true;
-    if (!this._entities || this._entities.length === 0) return false;
-    return this._entities.some(entity => {
-      const oldState = oldHass.states[entity];
-      const newState = this._hass.states[entity];
-      if (!oldState || !newState) return false;
-      if (oldState.state !== newState.state) return true;
-      if (JSON.stringify(oldState.attributes) !== JSON.stringify(newState.attributes)) return true;
-      return false;
-    });
-  }
-
-  setConfig(config) {
-    const oldConfig = this._config;
-    const defaultConfig = {
-      content: '',
-      update_interval: 10000,
-      do_not_parse: false,
-      ignore_line_breaks: true,
-      scripts: []
-    };
-    config = { ...defaultConfig, ...config };
-    config = this.constructor.preProcessScripts(config);
-    if (!config.content) throw new Error("Content must be defined");
-    if (config.scripts && !Array.isArray(config.scripts)) throw new Error("Scripts must be an array");
-    const configChanged = !oldConfig || oldConfig.content !== config.content || oldConfig.do_not_parse !== config.do_not_parse;
-    this._config = config;
-    if (configChanged) {
-      this._rendered = false;
-      if (this._hass && this._rootElement) {
-        this._processAndRender();
-      }
-    }
-    this._calculateEntities();
-    if (!this._rootElement) this._createRootElement();
-    this._setupEventListeners();
-    this._setupTimeUpdate();
-  }
-
-  _calculateEntities() {
-    this._entities = new Set();
-    if (this._config.entities?.length) this._config.entities.forEach(entity => this._entities.add(entity));
-    const entityRegex = /\b(?:light|switch|sensor|climate|media_player)\.[a-zA-Z0-9_]+\b/g;
-    const matches = this._config.content.match(entityRegex) || [];
-    matches.forEach(entity => this._entities.add(entity));
-    this._entities = Array.from(this._entities);
-  }
-
-  _processStyles() {
-    const style = document.createElement('style');
-    style.textContent = '[data-entity]{cursor:pointer;-webkit-tap-highlight-color:transparent}input[type="range"]{-webkit-appearance:none;width:100%;background:transparent}input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none}';
-    this._rootElement.insertBefore(style, this._rootElement.firstChild);
-  }
-
-  getCardSize() {
-    return 1;
-  }
-}
-
-customElements.define("html-pro-card", HtmlTemplateCard);
-
-window.customCards = window.customCards || [];
-window.customCards.push({
-  type: "html-pro-card",
-  name: "HTML Pro Card",
-  preview: true,
-  description: "Advanced HTML card with Jinja2 template support"
-});
+    `)}async _importModule(t){if(!this._config)return;let e=t.content;if(t._file&&t._baseUrl)try{const s=await fetch(`${t._baseUrl}/${t._file}`);if(s.ok){const t=await s.text();e=this._parseYaml(t).content||""}}catch(t){return void console.error("Failed to load module:",t)}const s={...this._config,content:e,do_not_parse:e.includes("<script>"),ignore_line_breaks:!0};this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:s},bubbles:!0,composed:!0})),this.requestUpdate()}_deleteModule(t){confirm(this._t("confirmDelete"))&&(this._savedModules=this._savedModules.filter((e,s)=>s!==t),this._saveSavedModules(),this.requestUpdate())}}customElements.define("html-pro-card-editor",HtmlTemplateCardEditor);class HtmlTemplateCard extends HTMLElement{static get properties(){return{hass:{type:Object},_config:{type:Object}}}static async getConfigElement(){return document.createElement("html-pro-card-editor")}static preProcessScripts(t){return"string"==typeof t.scripts&&(t.scripts=t.scripts.split("\n").filter(t=>""!==t.trim())),t}static getStubConfig(){return{content:"<style>\n.pro{padding:20px}\n.pro-h{display:flex;align-items:center;gap:12px;margin-bottom:16px}\n.pro-icon{width:36px;height:36px;color:var(--primary-color)}\n.pro-t{font-size:16px;font-weight:600;color:var(--primary-text-color)}\n.pro-c{font-size:12px;color:var(--secondary-text-color);line-height:1.6}\n.pro-f{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}\n.pro-tag{padding:4px 8px;font-size:10px;background:var(--primary-color);color:#fff;border-radius:4px;opacity:0.9}\n</style>\n<div class=\"pro\">\n<div class=\"pro-h\">\n<svg class=\"pro-icon\" viewBox=\"0 0 24 24\" fill=\"currentColor\"><path d=\"M13 2V3H12V9H11V10H9V11H8V12H7V13H5V12H4V11H3V9H2V15H3V16H4V17H5V18H6V22H8V21H7V20H8V19H9V18H10V19H11V22H13V21H12V17H13V16H14V15H15V12H16V13H17V11H15V9H20V8H17V7H22V3H21V2M14 3H15V4H14Z\"/></svg>\n<span class=\"pro-t\">Html Pro Card</span>\n</div>\n<div class=\"pro-c\" id=\"pro-desc\"></div>\n<div class=\"pro-f\" id=\"pro-tags\"></div>\n</div>\n<script>\nvar isZh = (navigator.language || '').startsWith('zh') || (document.documentElement.lang || '').startsWith('zh');\nvar desc = isZh ? '是一款专为 Home Assistant 设计的高级 HTML 卡片组件。它支持完整的 Jinja2 模板语法，让您可以动态获取任意实体的状态、属性和历史数据。通过内置的服务调用接口，您可以直接在卡片中控制灯光、开关、空调等设备。卡片支持自定义 CSS 样式和外部 JavaScript 脚本，让您能够创建独一无二的交互式仪表盘。' : 'is an advanced HTML card component designed for Home Assistant. It supports full Jinja2 template syntax, allowing you to dynamically access any entity state, attributes and history. With built-in service calls, you can control lights, switches, climate devices directly. Custom CSS and external JS scripts enable unique interactive dashboards.';\nvar tags = isZh ? ['Jinja2', '实时更新', '服务调用', '自定义样式'] : ['Jinja2', 'Realtime', 'Services', 'Custom CSS'];\n$('#pro-desc').textContent = desc;\n$('#pro-tags').innerHTML = tags.map(t => '<span class=\"pro-tag\">' + t + '</span>').join('');\n<\/script>",update_interval:1e4,do_not_parse:!1,ignore_line_breaks:!0,scripts:[]}}connectedCallback(){this._createRootElement(),this._setupEventListeners(),this._config&&this._hass&&this._processAndRender()}disconnectedCallback(){this._timeUpdateInterval&&(clearInterval(this._timeUpdateInterval),this._timeUpdateInterval=null),this._removeEventListeners()}_createRootElement(){this._rootElement&&this.removeChild(this._rootElement),this._rootElement=document.createElement("ha-card"),this.appendChild(this._rootElement)}_setupEventListeners(){if(!this._rootElement)return;let t,e=!1;this._rootElement.querySelectorAll(".light-status").forEach(s=>{s.addEventListener("touchstart",i=>{e=!1,t=setTimeout(()=>{e=!0;const t=s.dataset.entity;t&&this._showMoreInfo(t)},500)}),s.addEventListener("touchend",()=>{if(clearTimeout(t),!e){const t=s.dataset.entity;t&&this._toggle(t)}}),s.addEventListener("touchmove",()=>clearTimeout(t)),s.addEventListener("mousedown",()=>{e=!1,t=setTimeout(()=>{e=!0;const t=s.dataset.entity;t&&this._showMoreInfo(t)},500)}),s.addEventListener("mouseup",()=>{if(clearTimeout(t),!e){const t=s.dataset.entity;t&&this._toggle(t)}}),s.addEventListener("mouseleave",()=>clearTimeout(t))});this._rootElement.querySelectorAll('input[type="range"]').forEach(t=>{let e;t.oninput=s=>{s.stopPropagation(),e&&clearTimeout(e),e=setTimeout(()=>{const e=t.dataset.entity;if(e){const s=Math.round(255*t.value/100);this._hass.callService("light","turn_on",{entity_id:e,brightness:s})}},150)}}),this._rootElement.addEventListener("touchstart",this._handleTouchStart.bind(this),{passive:!0}),this._rootElement.addEventListener("touchend",this._handleTouchEnd.bind(this)),this._rootElement.addEventListener("touchcancel",this._handleTouchEnd.bind(this)),this._rootElement.addEventListener("mousedown",this._handleMouseDown.bind(this)),this._rootElement.addEventListener("mouseup",this._handleMouseUp.bind(this)),this._rootElement.addEventListener("click",this._handleClick.bind(this))}_removeEventListeners(){if(!this._rootElement)return;this._rootElement.querySelectorAll(".light-status").forEach(t=>t.replaceWith(t.cloneNode(!0)));this._rootElement.querySelectorAll('input[type="range"]').forEach(t=>t.oninput=null),this._rootElement.removeEventListener("touchstart",this._handleTouchStart.bind(this)),this._rootElement.removeEventListener("touchend",this._handleTouchEnd.bind(this)),this._rootElement.removeEventListener("touchcancel",this._handleTouchEnd.bind(this)),this._rootElement.removeEventListener("mousedown",this._handleMouseDown.bind(this)),this._rootElement.removeEventListener("mouseup",this._handleMouseUp.bind(this)),this._rootElement.removeEventListener("click",this._handleClick.bind(this))}_handleTouchStart(t){const e=t.target.closest("[data-long-press]");if(!e)return;const s=e.dataset.entity;s&&(this._longPressTimeout=setTimeout(()=>{this._showMoreInfo(s),this._longPressTimeout=null},500))}_handleTouchEnd(){this._longPressTimeout&&(clearTimeout(this._longPressTimeout),this._longPressTimeout=null)}_handleMouseDown(t){const e=t.target.closest("[data-long-press]");if(!e)return;const s=e.dataset.entity;s&&(this._longPressTimeout=setTimeout(()=>{this._showMoreInfo(s),this._longPressTimeout=null},500))}_handleMouseUp(){this._longPressTimeout&&(clearTimeout(this._longPressTimeout),this._longPressTimeout=null)}_handleClick(t){const e=t.target.closest("[data-action]");if(e){const t=e.dataset.entity,s=e.dataset.action;return void(t&&"toggle"===s&&this._toggle(t))}if(this._longPressTimeout)return clearTimeout(this._longPressTimeout),void(this._longPressTimeout=null)}_showMoreInfo(t){if(!t||!this._hass.states[t])return;const e=new CustomEvent("hass-more-info",{detail:{entityId:t},bubbles:!0,composed:!0});this.dispatchEvent(e)}_toggle(t){if(!t||!this._hass.states[t])return;const e=t.split(".")[0];["light","switch","fan","input_boolean","automation","script","cover","lock","media_player"].includes(e)?this._hass.callService(e,"toggle",{entity_id:t}):this._fireMoreInfo(t)}_fireMoreInfo(t){const e=new CustomEvent("hass-more-info",{bubbles:!0,composed:!0,detail:{entityId:t}});this.dispatchEvent(e)}set hass(t){const e=this._hass;if(this._hass=t,!this._config)return;this._entities||this._calculateEntities();this._shouldUpdate(e)&&(this._config.do_not_parse?this._updateStates():this._processAndRender())}_setupTimeUpdate(){if(this._timeUpdateInterval&&clearInterval(this._timeUpdateInterval),this._config.update_interval&&this._config.update_interval>0){const t=Math.max(this._config.update_interval,1e3);this._timeUpdateInterval=setInterval(()=>{this._config.do_not_parse?this._updateStates():this._processAndRender()},t)}}_processAndRender(){this._rootElement&&this._config&&this._hass&&(this._renderDebounce&&clearTimeout(this._renderDebounce),this._renderDebounce=setTimeout(()=>{try{this._renderContent()}catch{this._renderFallback()}},50))}_renderContent(){let t=this._config.content||"";this._config.ignore_line_breaks||(t=t.replace(/\r?\n|\r/g,"")),this._config.do_not_parse?this._render(t):(this._templateSubscription&&(this._templateSubscription(),this._templateSubscription=null),this._hass.connection.subscribeMessage(t=>{try{this._render(t.result)}catch{this._renderFallback()}},{type:"render_template",template:t}).then(t=>{this._templateSubscription=t}).catch(()=>{this._renderFallback()}))}async _loadExternalScripts(t){const e=t.map(t=>this._loadScript(t));return Promise.all(e)}async _loadScript(t){_globalLoadedScripts.has(t)||(_globalLoadedScripts.add(t),await new Promise((e,s)=>{const i=document.createElement("script");i.async=!0,i.src=t,i.onload=e,i.onerror=()=>{_globalLoadedScripts.delete(t),s(new Error("Failed: "+t))},document.body.appendChild(i)}))}_render(t){if(this._rootElement&&this._hass)try{if(this._lastContent===t&&this._rendered)return;if(this._lastContent=t,window.hassTemplateCard={hass:this._hass,config:this._config,root:this._rootElement},window._htmlProCardRoots.add(this._rootElement),this._rendered){const e=document.createElement("div");e.innerHTML=t,this._morphDOM(this._rootElement,e)}else{this._rootElement.innerHTML=t,this._rendered=!0,this._setupClickHandlers(this._rootElement);this._config.scripts&&Array.isArray(this._config.scripts)&&this._config.scripts.length>0?this._loadExternalScripts(this._config.scripts).then(()=>{setTimeout(()=>this._executeInlineScripts(),200)}).catch(()=>{setTimeout(()=>this._executeInlineScripts(),200)}):setTimeout(()=>this._executeInlineScripts(),0)}this.dispatchEvent(new CustomEvent("content-rendered",{bubbles:!0,composed:!0,detail:{hass:this._hass,config:this._config}}))}catch{this._renderFallback()}}_morphDOM(t,e){const s=Array.from(t.childNodes),i=Array.from(e.childNodes);for(let e=0;e<Math.max(s.length,i.length);e++){const o=s[e],n=i[e];n?o?o.nodeType!==n.nodeType||o.nodeName!==n.nodeName?t.replaceChild(n.cloneNode(!0),o):3===o.nodeType?o.textContent!==n.textContent&&(o.textContent=n.textContent):1===o.nodeType&&(this._updateAttributes(o,n),this._morphDOM(o,n)):t.appendChild(n.cloneNode(!0)):o&&t.removeChild(o)}}_updateAttributes(t,e){const s=Array.from(t.attributes),i=Array.from(e.attributes);s.forEach(s=>{e.hasAttribute(s.name)||t.removeAttribute(s.name)}),i.forEach(e=>{t.getAttribute(e.name)!==e.value&&t.setAttribute(e.name,e.value)})}_executeInlineScripts(){if(!this._rootElement)return;const t=Array.from(this._rootElement.querySelectorAll("script")),e=this._rootElement,s=this,i=window._htmlProCardOverlay;t.forEach(t=>{if(t.src){const e=document.createElement("script");return e.src=t.src,void document.body.appendChild(e)}const o=t.textContent.trim();o&&setTimeout(()=>{try{new Function("root","$","$$","hass","config","overlay",o)(e,t=>e.querySelector(t),t=>e.querySelectorAll(t),s._hass,s._config,i)}catch(t){}},100)})}_setupClickHandlers(t){const e=this;t.querySelectorAll("[data-entity]").forEach(t=>{const s=t.dataset.entity,[i]=s.split(".");t.querySelectorAll("[data-action]").forEach(t=>{t.onclick=o=>{o.stopPropagation();const n=t.dataset.action;"toggle"===n?e._callService(s,"toggle"):"turn_on"===n?e._callService(s,"turn_on"):"turn_off"===n?e._callService(s,"turn_off"):"more-info"===n?e._showMoreInfo(s):e._hass.callService(i,n,{entity_id:s})}}),t.querySelectorAll('input[type="range"]').forEach(t=>{t.oninput=t=>t.stopPropagation(),t.onchange=i=>{i.stopPropagation();const o=parseFloat(i.target.value);void 0!==t.dataset.brightness?e._hass.callService("light","turn_on",{entity_id:s,brightness:Math.round(255*o/100)}):void 0!==t.dataset.temperature?e._hass.callService("climate","set_temperature",{entity_id:s,temperature:o}):void 0!==t.dataset.volume?e._hass.callService("media_player","volume_set",{entity_id:s,volume_level:o/100}):void 0!==t.dataset.position?e._hass.callService("cover","set_cover_position",{entity_id:s,position:o}):void 0!==t.dataset.speed&&e._hass.callService("fan","set_percentage",{entity_id:s,percentage:o}),setTimeout(()=>e._updateStates(),100)}}),t.querySelectorAll("select[data-option]").forEach(t=>{t.onchange=t=>{t.stopPropagation(),e._hass.callService("input_select","select_option",{entity_id:s,option:t.target.value}),setTimeout(()=>e._updateStates(),100)}}),t.querySelectorAll('input[type="number"][data-value]').forEach(t=>{t.onchange=t=>{t.stopPropagation(),e._hass.callService("input_number","set_value",{entity_id:s,value:parseFloat(t.target.value)}),setTimeout(()=>e._updateStates(),100)}})})}_callService(t,e){if(!this._hass)return;const[s]=t.split("."),i=this._hass.states[t];let o=e;"toggle"===e&&i&&(o="on"===i.state?"turn_off":"turn_on"),this._hass.callService(s,o,{entity_id:t}),setTimeout(()=>this._updateStates(),100)}_onClick(t){t.stopPropagation();const e=t.currentTarget.dataset.entity;if(!e)return;"toggle"!==t.currentTarget.dataset.action&&this._longPressTimeout||this._toggle(e)}_onTouchStart(t){const e=t.currentTarget.dataset.entity;e&&(this._longPressTimeout=setTimeout(()=>{this._showMoreInfo(e),this._longPressTimeout=null},500))}_onTouchEnd(){this._longPressTimeout&&(clearTimeout(this._longPressTimeout),this._longPressTimeout=null)}_onMouseDown(t){const e=t.currentTarget.dataset.entity;e&&(this._longPressTimeout=setTimeout(()=>{this._showMoreInfo(e),this._longPressTimeout=null},500))}_onMouseUp(){this._longPressTimeout&&(clearTimeout(this._longPressTimeout),this._longPressTimeout=null)}_toggle(t){if(!this._hass)return;const e=this._hass.states[t];if(!e)return;let s="toggle";"on"===e.state?s="turn_off":"off"===e.state&&(s="turn_on");const[i]=t.split(".");this._hass.callService(i,s,{entity_id:t})}_showMoreInfo(t){const e=new Event("hass-more-info",{bubbles:!0,composed:!0});e.detail={entityId:t},this.dispatchEvent(e)}_renderFallback(){if(!this._rootElement||!this._hass)return;const t=(this._entities||[]).map(t=>{const e=this._hass.states[t];return e?`<div class="entity" data-entity="${t}"><div class="entity-name">${e.attributes.friendly_name||t}</div><div class="state-text">${e.state}</div></div>`:""}).join("");this._rootElement.innerHTML=t,this._processStyles(),this._setupEventListeners()}_updateStates(){if(this._entities&&this._hass&&this._rootElement)try{this._entities.forEach(t=>{const e=this._hass.states[t];if(!e)return;this._rootElement.querySelectorAll(`[data-entity="${t}"]`).forEach(s=>{try{s.dataset.state=e.state,s.querySelectorAll("[data-state-text]").forEach(t=>t.textContent=e.state),s.querySelectorAll("[data-attr]").forEach(t=>{const s=t.dataset.attr;t.textContent=e.attributes[s]??""}),s.querySelectorAll("[data-brightness]").forEach(t=>{const s=e.attributes.brightness;"INPUT"===t.tagName?t.value=s?Math.round(100*s/255):0:t.textContent=s?Math.round(100*s/255)+"%":"0%"}),s.querySelectorAll("[data-temperature]").forEach(t=>{t.textContent=e.attributes.temperature??e.attributes.current_temperature??""}),s.querySelectorAll("[data-friendly-name]").forEach(s=>{s.textContent=e.attributes.friendly_name||t})}catch{}})})}catch{}}_shouldUpdate(t){return!this._rendered||!!t&&(!!this._config.always_update||!(!this._entities||0===this._entities.length)&&this._entities.some(e=>{const s=t.states[e],i=this._hass.states[e];return!(!s||!i)&&(s.state!==i.state||JSON.stringify(s.attributes)!==JSON.stringify(i.attributes))}))}setConfig(t){const e=this._config;if(t={content:"",update_interval:1e4,do_not_parse:!1,ignore_line_breaks:!0,scripts:[],...t},!(t=this.constructor.preProcessScripts(t)).content)throw new Error("Content must be defined");if(t.scripts&&!Array.isArray(t.scripts))throw new Error("Scripts must be an array");const s=!e||e.content!==t.content||e.do_not_parse!==t.do_not_parse;this._config=t,s&&(this._rendered=!1,this._hass&&this._rootElement&&this._processAndRender()),this._calculateEntities(),this._rootElement||this._createRootElement(),this._setupEventListeners(),this._setupTimeUpdate()}_calculateEntities(){this._entities=new Set,this._config.entities?.length&&this._config.entities.forEach(t=>this._entities.add(t));(this._config.content.match(/\b(?:light|switch|sensor|climate|media_player)\.[a-zA-Z0-9_]+\b/g)||[]).forEach(t=>this._entities.add(t)),this._entities=Array.from(this._entities)}_processStyles(){const t=document.createElement("style");t.textContent='[data-entity]{cursor:pointer;-webkit-tap-highlight-color:transparent}input[type="range"]{-webkit-appearance:none;width:100%;background:transparent}input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none}',this._rootElement.insertBefore(t,this._rootElement.firstChild)}getCardSize(){return 1}}customElements.define("html-pro-card",HtmlTemplateCard),window.customCards=window.customCards||[],window.customCards.push({type:"html-pro-card",name:"HTML Pro Card",preview:!0,description:"Advanced HTML card with Jinja2 template support"});
