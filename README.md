@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="./dino.png" width="64" height="64" alt="dino">
+<img src="./dino.svg" width="64" height="64" alt="dino">
 
 # HTML Pro Card
 
