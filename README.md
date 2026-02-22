@@ -1,10 +1,6 @@
 <div align="center">
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/knoop7/html-card-pro/main/dino.svg">
-  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/knoop7/html-card-pro/main/dino.svg">
-  <img src="./dino.svg" width="80" height="80" alt="HTML Pro Card">
-</picture>
+![dino](./dino.svg)
 
 # HTML Pro Card
 
