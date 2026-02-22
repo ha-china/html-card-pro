@@ -1,0 +1,133 @@
+type: custom:html-pro-card
+scripts:
+  - https://unpkg.com/leaflet@1.9.4/dist/leaflet.js
+content: |
+  <style>
+    @import url("https://unpkg.com/leaflet@1.9.4/dist/leaflet.css");
+    .map-card-container {
+      position: relative;
+      width: 100%;
+      height: 300px;
+      border-radius: var(--ha-card-border-radius);
+      overflow: hidden;
+      border: 1px solid rgba(var(--rgb-primary-color), 0.3);
+      background: #000;
+    }
+    #map-canvas {
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+    .map-overlay {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 100;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(8px);
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid var(--primary-color);
+      max-width: 150px;
+    }
+    .person-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 5px;
+      font-size: 12px;
+      color: #fff;
+      cursor: pointer;
+    }
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #00ff00;
+      box-shadow: 0 0 8px #00ff00;
+    }
+    .custom-marker {
+      background: var(--primary-color);
+      border: 2px solid #fff;
+      border-radius: 50%;
+      box-shadow: 0 0 15px var(--primary-color);
+      animation: pulse-marker 2s infinite;
+    }
+    @keyframes pulse-marker {
+      0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(var(--rgb-primary-color), 0.7); }
+      70% { transform: scale(1.1); box-shadow: 0 0 0 10px rgba(var(--rgb-primary-color), 0); }
+      100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(var(--rgb-primary-color), 0); }
+    }
+    .scanline {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 2px;
+      background: rgba(var(--rgb-primary-color), 0.2);
+      z-index: 99;
+      pointer-events: none;
+      animation: scan 4s linear infinite;
+    }
+    @keyframes scan {
+      0% { top: 0%; }
+      100% { top: 100%; }
+    }
+  </style>
+  <div class="map-card-container">
+    <div id="map-canvas"></div>
+    <div class="scanline"></div>
+    <div class="map-overlay" id="person-list">
+      <div style="font-size: 10px; color: var(--primary-color); margin-bottom: 8px; font-weight: bold;">🛰️ SATELLITE_TRACKING</div>
+    </div>
+  </div>
+  <script>
+    let map;
+    let markers = {};
+    function initMap() {
+      if (map) return;
+      const mapEl = root.querySelector('#map-canvas');
+      map = L.map(mapEl, {
+        zoomControl: false,
+        attributionControl: false
+      }).setView([0, 0], 2);
+      L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        maxZoom: 19
+      }).addTo(map);
+      mapEl.style.filter = "brightness(0.8) contrast(1.2) saturate(0.8)";
+    }
+    function trackPeople() {
+      const people = Object.keys(hass.states).filter(id => id.startsWith('person.'));
+      const listEl = root.querySelector('#person-list');
+      people.forEach(entityId => {
+        const stateObj = hass.states[entityId];
+        const lat = stateObj.attributes.latitude;
+        const lon = stateObj.attributes.longitude;
+        const name = stateObj.attributes.friendly_name;
+        if (lat && lon) {
+          if (!markers[entityId]) {
+            const icon = L.divIcon({ className: 'custom-marker', iconSize: [12, 12] });
+            markers[entityId] = L.marker([lat, lon], { icon }).addTo(map)
+              .bindPopup(`<b>${name}</b><br>Status: ${stateObj.state}`);
+            const item = document.createElement('div');
+            item.className = 'person-status';
+            item.innerHTML = `<div class="status-dot"></div><span>${name}</span>`;
+            item.onclick = () => map.flyTo([lat, lon], 15);
+            listEl.appendChild(item);
+          } else {
+            markers[entityId].setLatLng([lat, lon]);
+          }
+        }
+      });
+      if (people.length > 0 && map.getZoom() < 3) {
+        const first = hass.states[people[0]];
+        if(first.attributes.latitude) {
+          map.setView([first.attributes.latitude, first.attributes.longitude], 12);
+        }
+      }
+    }
+    setTimeout(() => {
+      initMap();
+      trackPeople();
+    }, 500);
+    window.addEventListener('hass-changed', () => {
+      if (map) trackPeople();
+    });
+  </script>

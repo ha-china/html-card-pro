@@ -110,5 +110,12 @@
     "desc": "用户信息展示卡片",
     "author": "knoop7",
     "file": "modules/avatar-card.yaml"
+  },
+  {
+    "id": "satellite-map",
+    "name": "卫星追踪地图",
+    "desc": "赛博朋克风格人员定位追踪",
+    "author": "knoop7",
+    "file": "modules/satellite-map.yaml"
   }
 ]
