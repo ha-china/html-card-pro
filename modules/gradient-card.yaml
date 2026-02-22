@@ -1,0 +1,29 @@
+id: gradient-card
+name: 渐变卡片
+desc: 漂亮的渐变背景卡片
+author: knoop7
+version: 1.0
+content: |
+  <style>
+    .gradient-card {
+      padding: 32px;
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      border-radius: 20px;
+      color: #fff;
+      text-align: center;
+      box-shadow: 0 10px 40px rgba(240,147,251,0.3);
+    }
+    .gradient-card h2 {
+      margin: 0 0 8px;
+      font-size: 24px;
+      font-weight: 600;
+    }
+    .gradient-card p {
+      margin: 0;
+      opacity: 0.9;
+    }
+  </style>
+  <div class="gradient-card">
+    <h2>欢迎回家</h2>
+    <p>今天是美好的一天</p>
+  </div>

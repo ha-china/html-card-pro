@@ -1,0 +1,73 @@
+id: avatar-card
+name: 头像卡片
+desc: 用户信息展示卡片
+author: knoop7
+version: 1.0
+content: |
+  <style>
+    .avatar-card {
+      padding: 24px;
+      background: #fff;
+      border-radius: 16px;
+      text-align: center;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+    .avatar-img {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      margin: 0 auto 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      color: #fff;
+    }
+    .avatar-name {
+      font-size: 18px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 4px;
+    }
+    .avatar-role {
+      font-size: 12px;
+      color: #999;
+    }
+    .avatar-stats {
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid #eee;
+    }
+    .avatar-stat-value {
+      font-size: 18px;
+      font-weight: bold;
+      color: #333;
+    }
+    .avatar-stat-label {
+      font-size: 11px;
+      color: #999;
+    }
+  </style>
+  <div class="avatar-card">
+    <div class="avatar-img">👤</div>
+    <div class="avatar-name">智能家居</div>
+    <div class="avatar-role">管理员</div>
+    <div class="avatar-stats">
+      <div>
+        <div class="avatar-stat-value">128</div>
+        <div class="avatar-stat-label">设备</div>
+      </div>
+      <div>
+        <div class="avatar-stat-value">24</div>
+        <div class="avatar-stat-label">场景</div>
+      </div>
+      <div>
+        <div class="avatar-stat-value">7</div>
+        <div class="avatar-stat-label">房间</div>
+      </div>
+    </div>
+  </div>

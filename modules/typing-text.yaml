@@ -1,0 +1,33 @@
+id: typing-text
+name: 打字效果
+desc: 模拟打字机动画
+author: knoop7
+version: 1.0
+content: |
+  <style>
+    .typing-container {
+      padding: 40px;
+      background: #1a1a2e;
+      border-radius: 16px;
+      text-align: center;
+    }
+    .typing-text {
+      font-family: monospace;
+      font-size: 24px;
+      color: #0f0;
+      border-right: 3px solid #0f0;
+      white-space: nowrap;
+      overflow: hidden;
+      animation: typing 3s steps(20) infinite, blink 0.5s step-end infinite alternate;
+    }
+    @keyframes typing {
+      0%, 100% { width: 0; }
+      50%, 90% { width: 20ch; }
+    }
+    @keyframes blink {
+      50% { border-color: transparent; }
+    }
+  </style>
+  <div class="typing-container">
+    <div class="typing-text">Welcome Home...</div>
+  </div>

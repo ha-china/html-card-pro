@@ -1,0 +1,34 @@
+id: neon-button
+name: 霓虹按钮
+desc: 发光霓虹效果按钮
+author: knoop7
+version: 1.0
+content: |
+  <style>
+    .neon-container {
+      padding: 40px;
+      background: #1a1a2e;
+      border-radius: 16px;
+      text-align: center;
+    }
+    .neon-btn {
+      padding: 16px 48px;
+      font-size: 18px;
+      font-weight: bold;
+      color: #0ff;
+      background: transparent;
+      border: 2px solid #0ff;
+      border-radius: 8px;
+      cursor: pointer;
+      text-shadow: 0 0 10px #0ff, 0 0 20px #0ff, 0 0 40px #0ff;
+      box-shadow: 0 0 10px #0ff, inset 0 0 10px rgba(0,255,255,0.1);
+      transition: all 0.3s ease;
+    }
+    .neon-btn:hover {
+      background: rgba(0,255,255,0.1);
+      box-shadow: 0 0 20px #0ff, 0 0 40px #0ff, inset 0 0 20px rgba(0,255,255,0.2);
+    }
+  </style>
+  <div class="neon-container">
+    <button class="neon-btn">CLICK ME</button>
+  </div>

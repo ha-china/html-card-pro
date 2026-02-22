@@ -1,0 +1,114 @@
+[
+  {
+    "id": "mdi-test",
+    "name": "MDI图标测试",
+    "desc": "调用HA内部MDI图标",
+    "author": "knoop7",
+    "file": "modules/mdi-test.yaml"
+  },
+  {
+    "id": "sakura",
+    "name": "樱花雨",
+    "desc": "樱花飘落动画效果",
+    "author": "knoop7",
+    "file": "modules/sakura.yaml"
+  },
+  {
+    "id": "clock",
+    "name": "数字时钟",
+    "desc": "实时时间显示",
+    "author": "knoop7",
+    "file": "modules/clock.yaml"
+  },
+  {
+    "id": "weather",
+    "name": "天气卡片",
+    "desc": "天气实体状态展示",
+    "author": "knoop7",
+    "file": "modules/weather.yaml"
+  },
+  {
+    "id": "gradient-card",
+    "name": "渐变卡片",
+    "desc": "漂亮的渐变背景卡片",
+    "author": "knoop7",
+    "file": "modules/gradient-card.yaml"
+  },
+  {
+    "id": "neon-button",
+    "name": "霓虹按钮",
+    "desc": "发光霓虹效果按钮",
+    "author": "knoop7",
+    "file": "modules/neon-button.yaml"
+  },
+  {
+    "id": "glass-card",
+    "name": "玻璃卡片",
+    "desc": "毛玻璃效果卡片",
+    "author": "knoop7",
+    "file": "modules/glass-card.yaml"
+  },
+  {
+    "id": "progress-bar",
+    "name": "进度条",
+    "desc": "动态进度条展示",
+    "author": "knoop7",
+    "file": "modules/progress-bar.yaml"
+  },
+  {
+    "id": "flip-card",
+    "name": "翻转卡片",
+    "desc": "悬停翻转效果卡片",
+    "author": "knoop7",
+    "file": "modules/flip-card.yaml"
+  },
+  {
+    "id": "pulse-dot",
+    "name": "脉冲圆点",
+    "desc": "呼吸脉冲动画效果",
+    "author": "knoop7",
+    "file": "modules/pulse-dot.yaml"
+  },
+  {
+    "id": "wave-bg",
+    "name": "波浪背景",
+    "desc": "动态波浪背景效果",
+    "author": "knoop7",
+    "file": "modules/wave-bg.yaml"
+  },
+  {
+    "id": "stat-card",
+    "name": "统计卡片",
+    "desc": "数据统计展示卡片",
+    "author": "knoop7",
+    "file": "modules/stat-card.yaml"
+  },
+  {
+    "id": "typing-text",
+    "name": "打字效果",
+    "desc": "模拟打字机动画",
+    "author": "knoop7",
+    "file": "modules/typing-text.yaml"
+  },
+  {
+    "id": "circular-progress",
+    "name": "圆形进度",
+    "desc": "圆环进度条展示",
+    "author": "knoop7",
+    "file": "modules/circular-progress.yaml"
+  },
+  {
+    "id": "countdown",
+    "name": "倒计时",
+    "desc": "动态倒计时显示",
+    "author": "knoop7",
+    "file": "modules/countdown.yaml"
+  },
+  {
+    "id": "avatar-card",
+    "name": "头像卡片",
+    "desc": "用户信息展示卡片",
+    "author": "knoop7",
+    "file": "modules/avatar-card.yaml"
+  }
+]
