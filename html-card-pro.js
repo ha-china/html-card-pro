@@ -243,6 +243,63 @@ if (!customElements.get('ha-htmlcard-formfield')) {
   });
 }
 
+const I18N = {
+  zh: {
+    htmlContent: 'HTML 内容',
+    options: '选项设置',
+    scripts: '外部脚本',
+    store: '模块商店',
+    disableParse: '纯HTML模式',
+    disableParseDesc: '默认关闭(使用Jinja2)，开启后直接渲染HTML',
+    updateInterval: '更新间隔 (ms)',
+    updateIntervalDesc: '0 为禁用自动更新',
+    ignoreLineBreaks: '忽略换行',
+    ignoreLineBreaksDesc: '忽略HTML中的换行符',
+    addScript: '添加',
+    scriptPlaceholder: '输入脚本 URL',
+    searchPlaceholder: '搜索模块...',
+    import: '导入',
+    delete: '删除',
+    loading: '加载中...',
+    noModules: '暂无模块',
+    noCustomModules: '暂无自定义模块',
+    confirmDelete: '确定删除此模块?',
+    customModule: '自定义模块',
+    headerDesc: '高级 HTML 卡片编辑器，支持 Jinja2 模板语法',
+    headerDesc2: '可使用 Home Assistant 状态、属性和服务调用',
+    realtime: '实时更新',
+    extScripts: '外部脚本',
+    customStyle: '自定义样式'
+  },
+  en: {
+    htmlContent: 'HTML Content',
+    options: 'Options',
+    scripts: 'External Scripts',
+    store: 'Module Store',
+    disableParse: 'Pure HTML Mode',
+    disableParseDesc: 'Off by default (uses Jinja2), enable to render HTML directly',
+    updateInterval: 'Update Interval (ms)',
+    updateIntervalDesc: '0 to disable auto update',
+    ignoreLineBreaks: 'Ignore Line Breaks',
+    ignoreLineBreaksDesc: 'Ignore line breaks in HTML',
+    addScript: 'Add',
+    scriptPlaceholder: 'Enter script URL',
+    searchPlaceholder: 'Search modules...',
+    import: 'Import',
+    delete: 'Delete',
+    loading: 'Loading...',
+    noModules: 'No modules',
+    noCustomModules: 'No custom modules',
+    confirmDelete: 'Delete this module?',
+    customModule: 'Custom Module',
+    headerDesc: 'Advanced HTML card editor with Jinja2 template',
+    headerDesc2: 'Use Home Assistant states, attributes and services',
+    realtime: 'Realtime',
+    extScripts: 'Scripts',
+    customStyle: 'Custom CSS'
+  }
+};
+
 class HtmlTemplateCardEditor extends LitElement {
   static get properties() {
     return {
@@ -257,6 +314,14 @@ class HtmlTemplateCardEditor extends LitElement {
       _storeLoading: { type: Boolean },
       _storeSearch: { type: String }
     };
+  }
+
+  get _lang() {
+    return this.hass?.language?.startsWith('zh') ? 'zh' : 'en';
+  }
+
+  _t(key) {
+    return I18N[this._lang]?.[key] || I18N.en[key] || key;
   }
 
   constructor() {
@@ -552,21 +617,21 @@ class HtmlTemplateCardEditor extends LitElement {
             <svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2V3H12V9H11V10H9V11H8V12H7V13H5V12H4V11H3V9H2V15H3V16H4V17H5V18H6V22H8V21H7V20H8V19H9V18H10V19H11V22H13V21H12V17H13V16H14V15H15V12H16V13H17V11H15V9H20V8H17V7H22V3H21V2M14 3H15V4H14Z"/></svg>
           </div>
           <div class="header-desc">
-            高级 HTML 卡片编辑器，支持 Jinja2 模板语法<br>
-            可使用 Home Assistant 状态、属性和服务调用
+            ${this._t('headerDesc')}<br>
+            ${this._t('headerDesc2')}
           </div>
           <div class="header-features">
             <div class="header-feature">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg>
-              实时更新
+              ${this._t('realtime')}
             </div>
             <div class="header-feature">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
-              外部脚本
+              ${this._t('extScripts')}
             </div>
             <div class="header-feature">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
-              自定义样式
+              ${this._t('customStyle')}
             </div>
           </div>
         </div>
@@ -578,7 +643,7 @@ class HtmlTemplateCardEditor extends LitElement {
                 <polyline points="16 18 22 12 16 6"></polyline>
                 <polyline points="8 6 2 12 8 18"></polyline>
               </svg>
-              <span class="collapse-title">HTML 内容</span>
+              <span class="collapse-title">${this._t('htmlContent')}</span>
             </div>
             <span class="collapse-arrow ${this._showHtml ? 'expanded' : ''}"></span>
           </div>
@@ -601,7 +666,7 @@ class HtmlTemplateCardEditor extends LitElement {
                 <circle cx="12" cy="12" r="3"></circle>
                 <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
               </svg>
-              <span class="collapse-title">选项设置</span>
+              <span class="collapse-title">${this._t('options')}</span>
             </div>
             <span class="collapse-arrow ${this._showOptions ? 'expanded' : ''}"></span>
           </div>
@@ -609,8 +674,8 @@ class HtmlTemplateCardEditor extends LitElement {
             <div class="collapse-content">
               <div class="option-row">
                 <div>
-                  <div class="option-label">禁用模板解析</div>
-                  <div class="option-desc">不使用模板功能可提高性能</div>
+                  <div class="option-label">${this._t('disableParse')}</div>
+                  <div class="option-desc">${this._t('disableParseDesc')}</div>
                 </div>
                 <ha-htmlcard-switch
                   .checked="${this._config.do_not_parse || false}"
@@ -619,8 +684,8 @@ class HtmlTemplateCardEditor extends LitElement {
               </div>
               <div class="option-row">
                 <div>
-                  <div class="option-label">忽略换行</div>
-                  <div class="option-desc">忽略HTML中的换行符</div>
+                  <div class="option-label">${this._t('ignoreLineBreaks')}</div>
+                  <div class="option-desc">${this._t('ignoreLineBreaksDesc')}</div>
                 </div>
                 <ha-htmlcard-switch
                   .checked="${this._config.ignore_line_breaks || false}"
@@ -629,8 +694,8 @@ class HtmlTemplateCardEditor extends LitElement {
               </div>
               <div class="option-row">
                 <div>
-                  <div class="option-label">更新间隔 (ms)</div>
-                  <div class="option-desc">0 为禁用自动更新</div>
+                  <div class="option-label">${this._t('updateInterval')}</div>
+                  <div class="option-desc">${this._t('updateIntervalDesc')}</div>
                 </div>
                 <ha-htmlcard-textfield
                   type="number"
@@ -654,7 +719,7 @@ class HtmlTemplateCardEditor extends LitElement {
                 <line x1="16" y1="17" x2="8" y2="17"></line>
                 <polyline points="10 9 9 9 8 9"></polyline>
               </svg>
-              <span class="collapse-title">外部脚本</span>
+              <span class="collapse-title">${this._t('scripts')}</span>
             </div>
             <span class="collapse-arrow ${this._showScripts ? 'expanded' : ''}"></span>
           </div>
@@ -663,11 +728,11 @@ class HtmlTemplateCardEditor extends LitElement {
               <div class="script-input-container">
                 <ha-textfield
                   type="url"
-                  placeholder="输入脚本 URL"
+                  placeholder="${this._t('scriptPlaceholder')}"
                   .value="${this._newScriptUrl || ''}"
                   @change="${e => this._newScriptUrl = e.target.value}"
                 ></ha-textfield>
-                <mwc-button @click="${this._addScript}">添加</mwc-button>
+                <mwc-button @click="${this._addScript}">${this._t('addScript')}</mwc-button>
               </div>
               ${(this._config.scripts || []).map((script, index) => html`
                 <div class="script-item">
@@ -694,17 +759,17 @@ class HtmlTemplateCardEditor extends LitElement {
                 <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
                 <line x1="12" y1="22.08" x2="12" y2="12"></line>
               </svg>
-              <span class="collapse-title">模块商店</span>
+              <span class="collapse-title">${this._t('store')}</span>
             </div>
             <span class="collapse-arrow ${this._showStore ? 'expanded' : ''}"></span>
           </div>
           <div class="collapse-body ${this._showStore ? 'expanded' : ''}">
             <div class="collapse-content">
               <div class="store-search">
-                <input type="text" placeholder="搜索模块..." .value="${this._storeSearch}" @input="${e => { this._storeSearch = e.target.value; this.requestUpdate(); }}">
+                <input type="text" placeholder="${this._t('searchPlaceholder')}" .value="${this._storeSearch}" @input="${e => { this._storeSearch = e.target.value; this.requestUpdate(); }}">
               </div>
               <div class="store-list">
-                ${this._storeLoading ? html`<div class="store-loading">加载中...</div>` : this._renderOnlineModules()}
+                ${this._storeLoading ? html`<div class="store-loading">${this._t('loading')}</div>` : this._renderOnlineModules()}
               </div>
             </div>
           </div>
@@ -866,7 +931,7 @@ class HtmlTemplateCardEditor extends LitElement {
       !this._storeSearch || m.name.toLowerCase().includes(this._storeSearch.toLowerCase()) || m.desc.toLowerCase().includes(this._storeSearch.toLowerCase())
     );
     if (filtered.length === 0) {
-      return html`<div class="store-loading">暂无模块</div>`;
+      return html`<div class="store-loading">${this._t('noModules')}</div>`;
     }
     return filtered.map(m => html`
       <div class="store-item">
@@ -874,7 +939,7 @@ class HtmlTemplateCardEditor extends LitElement {
           <h4>${m.name}${m.author ? html`<span class="store-item-author">by ${m.author}</span>` : ''}</h4>
           <p>${m.desc}</p>
         </div>
-        <button class="store-item-btn" @click="${() => this._importModule(m)}">导入</button>
+        <button class="store-item-btn" @click="${() => this._importModule(m)}">${this._t('import')}</button>
       </div>
     `);
   }
@@ -884,17 +949,17 @@ class HtmlTemplateCardEditor extends LitElement {
       !this._storeSearch || m.name.toLowerCase().includes(this._storeSearch.toLowerCase())
     );
     if (filtered.length === 0) {
-      return html`<div class="store-loading">暂无自定义模块</div>`;
+      return html`<div class="store-loading">${this._t('noCustomModules')}</div>`;
     }
     return filtered.map((m, i) => html`
       <div class="store-item">
         <div class="store-item-info">
           <h4>${m.name}</h4>
-          <p>${m.desc || '自定义模块'}</p>
+          <p>${m.desc || this._t('customModule')}</p>
         </div>
         <div class="store-item-actions">
-          <button class="store-item-btn import" @click="${() => this._importModule(m)}">导入</button>
-          <button class="store-item-btn delete" @click="${() => this._deleteModule(i)}">删除</button>
+          <button class="store-item-btn import" @click="${() => this._importModule(m)}">${this._t('import')}</button>
+          <button class="store-item-btn delete" @click="${() => this._deleteModule(i)}">${this._t('delete')}</button>
         </div>
       </div>
     `);
@@ -934,7 +999,7 @@ class HtmlTemplateCardEditor extends LitElement {
   }
 
   _deleteModule(index) {
-    if (!confirm('确定删除此模块?')) return;
+    if (!confirm(this._t('confirmDelete'))) return;
     this._savedModules = this._savedModules.filter((_, i) => i !== index);
     this._saveSavedModules();
     this.requestUpdate();
@@ -955,41 +1020,6 @@ class HtmlTemplateCard extends HTMLElement {
     return document.createElement('html-pro-card-editor');
   }
 
-  static get editorSchema() {
-    return {
-      type: 'object',
-      required: ['content'],
-      properties: {
-        content: {
-          type: 'string',
-          title: 'HTML内容',
-          default: '<div class="grid p-4"><div class="entity" data-entity="light.example">示例实体</div></div>'
-        },
-        update_interval: {
-          type: 'number',
-          title: '更新间隔',
-          default: 1000
-        },
-        do_not_parse: {
-          type: 'boolean',
-          title: '禁用模板解析',
-          default: false
-        },
-        ignore_line_breaks: {
-          type: 'boolean',
-          title: '忽略换行',
-          default: false
-        },
-        scripts: {
-          type: 'array',
-          title: '外部脚本',
-          items: { type: 'string' },
-          default: []
-        }
-      }
-    };
-  }
-
   static preProcessScripts(config) {
     if (typeof config.scripts === 'string') config.scripts = config.scripts.split('\n').filter(url => url.trim() !== '');
     return config;
@@ -998,17 +1028,29 @@ class HtmlTemplateCard extends HTMLElement {
   static getStubConfig() {
     return {
       content: `<style>
-.mag{padding:24px;text-align:center}
-.mag-icon{width:40px;height:40px;margin:0 auto 12px}
-.mag-icon svg{width:100%;height:100%;stroke:#333}
-.mag-t{font-size:18px;font-weight:700;letter-spacing:-0.5px;color:#222}
-.mag-d{font-size:12px;color:#888;margin-top:4px}
+.pro{padding:20px}
+.pro-h{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.pro-icon{width:36px;height:36px;color:var(--primary-color)}
+.pro-t{font-size:16px;font-weight:600;color:var(--primary-text-color)}
+.pro-c{font-size:12px;color:var(--secondary-text-color);line-height:1.6}
+.pro-f{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.pro-tag{padding:4px 8px;font-size:10px;background:var(--primary-color);color:#fff;border-radius:4px;opacity:0.9}
 </style>
-<div class="mag">
-<div class="mag-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div>
-<div class="mag-t">Html Pro Card</div>
-<div class="mag-d">Jinja2 · HA States · Custom JS</div>
-</div>`,
+<div class="pro">
+<div class="pro-h">
+<svg class="pro-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2V3H12V9H11V10H9V11H8V12H7V13H5V12H4V11H3V9H2V15H3V16H4V17H5V18H6V22H8V21H7V20H8V19H9V18H10V19H11V22H13V21H12V17H13V16H14V15H15V12H16V13H17V11H15V9H20V8H17V7H22V3H21V2M14 3H15V4H14Z"/></svg>
+<span class="pro-t">Html Pro Card</span>
+</div>
+<div class="pro-c" id="pro-desc"></div>
+<div class="pro-f" id="pro-tags"></div>
+</div>
+<script>
+var isZh = (navigator.language || '').startsWith('zh') || (document.documentElement.lang || '').startsWith('zh');
+var desc = isZh ? '是一款专为 Home Assistant 设计的高级 HTML 卡片组件。它支持完整的 Jinja2 模板语法，让您可以动态获取任意实体的状态、属性和历史数据。通过内置的服务调用接口，您可以直接在卡片中控制灯光、开关、空调等设备。卡片支持自定义 CSS 样式和外部 JavaScript 脚本，让您能够创建独一无二的交互式仪表盘。' : 'is an advanced HTML card component designed for Home Assistant. It supports full Jinja2 template syntax, allowing you to dynamically access any entity state, attributes and history. With built-in service calls, you can control lights, switches, climate devices directly. Custom CSS and external JS scripts enable unique interactive dashboards.';
+var tags = isZh ? ['Jinja2', '实时更新', '服务调用', '自定义样式'] : ['Jinja2', 'Realtime', 'Services', 'Custom CSS'];
+$('#pro-desc').textContent = desc;
+$('#pro-tags').innerHTML = tags.map(t => '<span class="pro-tag">' + t + '</span>').join('');
+</script>`,
       update_interval: 10000,
       do_not_parse: false,
       ignore_line_breaks: true,
@@ -1201,14 +1243,26 @@ class HtmlTemplateCard extends HTMLElement {
     if (!this._config) return;
     if (!this._entities) this._calculateEntities();
     const shouldUpdate = this._shouldUpdate(oldHass);
-    if (shouldUpdate) this._processAndRender();
+    if (shouldUpdate) {
+      if (this._config.do_not_parse) {
+        this._updateStates();
+      } else {
+        this._processAndRender();
+      }
+    }
   }
 
   _setupTimeUpdate() {
     if (this._timeUpdateInterval) clearInterval(this._timeUpdateInterval);
-    if (this._config.update_interval && this._config.update_interval > 0 && !this._config.do_not_parse) {
+    if (this._config.update_interval && this._config.update_interval > 0) {
       const interval = Math.max(this._config.update_interval, 1000);
-      this._timeUpdateInterval = setInterval(() => this._processAndRender(), interval);
+      this._timeUpdateInterval = setInterval(() => {
+        if (this._config.do_not_parse) {
+          this._updateStates();
+        } else {
+          this._processAndRender();
+        }
+      }, interval);
     }
   }
 
@@ -1236,15 +1290,11 @@ class HtmlTemplateCard extends HTMLElement {
         this._templateSubscription();
         this._templateSubscription = null;
       }
-      let firstRender = true;
       this._hass.connection.subscribeMessage(msg => {
-        if (firstRender || this._config.always_update) {
-          firstRender = false;
-          try {
-            this._render(msg.result);
-          } catch {
-            this._renderFallback();
-          }
+        try {
+          this._render(msg.result);
+        } catch {
+          this._renderFallback();
         }
       }, { type: "render_template", template: content }).then(unsub => {
         this._templateSubscription = unsub;
@@ -1329,19 +1379,67 @@ class HtmlTemplateCard extends HTMLElement {
   }
 
   _setupClickHandlers(card) {
-    const elements = card.querySelectorAll('[data-entity]');
-    elements.forEach(element => {
-      element.removeEventListener('click', this._onClick);
-      element.removeEventListener('touchstart', this._onTouchStart);
-      element.removeEventListener('touchend', this._onTouchEnd);
-      element.removeEventListener('mousedown', this._onMouseDown);
-      element.removeEventListener('mouseup', this._onMouseUp);
-      element.addEventListener('click', this._onClick.bind(this));
-      element.addEventListener('touchstart', this._onTouchStart.bind(this));
-      element.addEventListener('touchend', this._onTouchEnd.bind(this));
-      element.addEventListener('mousedown', this._onMouseDown.bind(this));
-      element.addEventListener('mouseup', this._onMouseUp.bind(this));
+    const self = this;
+    card.querySelectorAll('[data-entity]').forEach(el => {
+      const entityId = el.dataset.entity;
+      const [domain] = entityId.split('.');
+      el.querySelectorAll('[data-action]').forEach(btn => {
+        btn.onclick = e => {
+          e.stopPropagation();
+          const action = btn.dataset.action;
+          if (action === 'toggle') self._callService(entityId, 'toggle');
+          else if (action === 'turn_on') self._callService(entityId, 'turn_on');
+          else if (action === 'turn_off') self._callService(entityId, 'turn_off');
+          else if (action === 'more-info') self._showMoreInfo(entityId);
+          else self._hass.callService(domain, action, { entity_id: entityId });
+        };
+      });
+      el.querySelectorAll('input[type="range"]').forEach(slider => {
+        slider.oninput = e => e.stopPropagation();
+        slider.onchange = e => {
+          e.stopPropagation();
+          const val = parseFloat(e.target.value);
+          if (slider.dataset.brightness !== undefined) {
+            self._hass.callService('light', 'turn_on', { entity_id: entityId, brightness: Math.round(val * 255 / 100) });
+          } else if (slider.dataset.temperature !== undefined) {
+            self._hass.callService('climate', 'set_temperature', { entity_id: entityId, temperature: val });
+          } else if (slider.dataset.volume !== undefined) {
+            self._hass.callService('media_player', 'volume_set', { entity_id: entityId, volume_level: val / 100 });
+          } else if (slider.dataset.position !== undefined) {
+            self._hass.callService('cover', 'set_cover_position', { entity_id: entityId, position: val });
+          } else if (slider.dataset.speed !== undefined) {
+            self._hass.callService('fan', 'set_percentage', { entity_id: entityId, percentage: val });
+          }
+          setTimeout(() => self._updateStates(), 100);
+        };
+      });
+      el.querySelectorAll('select[data-option]').forEach(select => {
+        select.onchange = e => {
+          e.stopPropagation();
+          self._hass.callService('input_select', 'select_option', { entity_id: entityId, option: e.target.value });
+          setTimeout(() => self._updateStates(), 100);
+        };
+      });
+      el.querySelectorAll('input[type="number"][data-value]').forEach(input => {
+        input.onchange = e => {
+          e.stopPropagation();
+          self._hass.callService('input_number', 'set_value', { entity_id: entityId, value: parseFloat(e.target.value) });
+          setTimeout(() => self._updateStates(), 100);
+        };
+      });
     });
+  }
+
+  _callService(entityId, action) {
+    if (!this._hass) return;
+    const [domain] = entityId.split('.');
+    const state = this._hass.states[entityId];
+    let service = action;
+    if (action === 'toggle' && state) {
+      service = state.state === 'on' ? 'turn_off' : 'turn_on';
+    }
+    this._hass.callService(domain, service, { entity_id: entityId });
+    setTimeout(() => this._updateStates(), 100);
   }
 
   _onClick(event) {
@@ -1425,23 +1523,28 @@ class HtmlTemplateCard extends HTMLElement {
     if (!this._entities || !this._hass || !this._rootElement) return;
     try {
       this._entities.forEach(entityId => {
-        const state = this._hass.states[entityId];
-        if (!state) return;
+        const stateObj = this._hass.states[entityId];
+        if (!stateObj) return;
         const elements = this._rootElement.querySelectorAll(`[data-entity="${entityId}"]`);
-        elements.forEach(element => {
+        elements.forEach(el => {
           try {
-            const stateText = element.querySelector('.state-text');
-            if (stateText) stateText.textContent = state.state;
-            const toggleBtn = element.querySelector('.toggle-btn');
-            if (toggleBtn) {
-              toggleBtn.dataset.state = state.state;
-              toggleBtn.textContent = state.state === 'on' ? '关闭' : '开启';
-            }
-            const slider = element.querySelector('input[type="range"]');
-            if (slider) {
-              const brightness = state.attributes.brightness;
-              slider.value = brightness ? Math.round((brightness * 100) / 255) : (state.state === 'on' ? 100 : 0);
-            }
+            el.dataset.state = stateObj.state;
+            el.querySelectorAll('[data-state-text]').forEach(e => e.textContent = stateObj.state);
+            el.querySelectorAll('[data-attr]').forEach(e => {
+              const attr = e.dataset.attr;
+              e.textContent = stateObj.attributes[attr] ?? '';
+            });
+            el.querySelectorAll('[data-brightness]').forEach(e => {
+              const b = stateObj.attributes.brightness;
+              if (e.tagName === 'INPUT') e.value = b ? Math.round(b * 100 / 255) : 0;
+              else e.textContent = b ? Math.round(b * 100 / 255) + '%' : '0%';
+            });
+            el.querySelectorAll('[data-temperature]').forEach(e => {
+              e.textContent = stateObj.attributes.temperature ?? stateObj.attributes.current_temperature ?? '';
+            });
+            el.querySelectorAll('[data-friendly-name]').forEach(e => {
+              e.textContent = stateObj.attributes.friendly_name || entityId;
+            });
           } catch { }
         });
       });
@@ -1451,14 +1554,15 @@ class HtmlTemplateCard extends HTMLElement {
   _shouldUpdate(oldHass) {
     if (!this._rendered) return true;
     if (!oldHass) return false;
-    if (this._config.do_not_parse) return false;
     if (this._config.always_update) return true;
     if (!this._entities || this._entities.length === 0) return false;
     return this._entities.some(entity => {
       const oldState = oldHass.states[entity];
       const newState = this._hass.states[entity];
       if (!oldState || !newState) return false;
-      return oldState.state !== newState.state;
+      if (oldState.state !== newState.state) return true;
+      if (JSON.stringify(oldState.attributes) !== JSON.stringify(newState.attributes)) return true;
+      return false;
     });
   }
 
@@ -1516,5 +1620,5 @@ window.customCards.push({
   type: "html-pro-card",
   name: "HTML Pro Card",
   preview: true,
-  description: "可自定义各类HTML内容的模板超强卡片"
+  description: "Advanced HTML card with Jinja2 template support"
 });
