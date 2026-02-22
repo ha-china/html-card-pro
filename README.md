@@ -1,6 +1,10 @@
 <div align="center">
 
-<img src="https://raw.githubusercontent.com/knoop7/html-card-pro/main/dino.svg" width="80" height="80" alt="HTML Pro Card">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/knoop7/html-card-pro/main/dino.svg">
+  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/knoop7/html-card-pro/main/dino.svg">
+  <img src="./dino.svg" width="80" height="80" alt="HTML Pro Card">
+</picture>
 
 # HTML Pro Card
 
@@ -11,7 +15,6 @@
 
 </div>
 
----
 
 ##  安装
 
@@ -36,7 +39,7 @@ type: module
 
 ---
 
-## 🤖 AI 提示词工程
+##  AI 提示词工程
 
 > 复制以下提示词给 AI（ChatGPT / Claude / Gemini），让它帮你设计专业级 Home Assistant 卡片。
 
