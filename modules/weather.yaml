@@ -3,6 +3,8 @@ name: 天气卡片
 desc: 天气实体状态展示
 author: knoop7
 version: 1.0
+---
+type: custom:html-pro-card
 content: |
   <style>
     .weather-card {

@@ -3,6 +3,8 @@ name: 波浪背景
 desc: 动态波浪背景效果
 author: knoop7
 version: 1.0
+---
+type: custom:html-pro-card
 content: |
   <style>
     .wave-container {

@@ -3,6 +3,8 @@ name: 玻璃卡片
 desc: 毛玻璃效果卡片
 author: knoop7
 version: 1.0
+---
+type: custom:html-pro-card
 content: |
   <style>
     .glass-wrapper {

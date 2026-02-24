@@ -3,6 +3,8 @@ name: 进度条
 desc: 动态进度条展示
 author: knoop7
 version: 1.0
+---
+type: custom:html-pro-card
 content: |
   <style>
     .progress-container {

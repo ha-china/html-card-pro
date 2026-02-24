@@ -3,6 +3,8 @@ name: 头像卡片
 desc: 用户信息展示卡片
 author: knoop7
 version: 1.0
+---
+type: custom:html-pro-card
 content: |
   <style>
     .avatar-card {

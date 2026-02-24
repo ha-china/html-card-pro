@@ -3,6 +3,8 @@ name: 圆形进度
 desc: 圆环进度条展示
 author: knoop7
 version: 1.0
+---
+type: custom:html-pro-card
 content: |
   <style>
     .circular-container {

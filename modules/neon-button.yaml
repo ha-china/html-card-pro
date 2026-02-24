@@ -3,6 +3,8 @@ name: 霓虹按钮
 desc: 发光霓虹效果按钮
 author: knoop7
 version: 1.0
+---
+type: custom:html-pro-card
 content: |
   <style>
     .neon-container {

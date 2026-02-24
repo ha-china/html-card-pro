@@ -3,6 +3,8 @@ name: MDI图标测试
 desc: 测试调用HA内部MDI图标
 author: knoop7
 version: 1.0
+---
+type: custom:html-pro-card
 content: |
   <style>
     .mdi-test {

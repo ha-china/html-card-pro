@@ -3,6 +3,8 @@ name: 翻转卡片
 desc: 悬停翻转效果卡片
 author: knoop7
 version: 1.0
+---
+type: custom:html-pro-card
 content: |
   <style>
     .flip-container {

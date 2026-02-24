@@ -3,6 +3,8 @@ name: 数字时钟
 desc: 实时时间显示
 author: knoop7
 version: 1.0
+---
+type: custom:html-pro-card
 content: |
   <style>
     .clock {

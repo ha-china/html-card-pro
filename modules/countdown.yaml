@@ -3,6 +3,8 @@ name: 倒计时
 desc: 动态倒计时显示
 author: knoop7
 version: 1.0
+---
+type: custom:html-pro-card
 content: |
   <style>
     .countdown-container {

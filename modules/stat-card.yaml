@@ -3,6 +3,8 @@ name: 统计卡片
 desc: 数据统计展示卡片
 author: knoop7
 version: 1.0
+---
+type: custom:html-pro-card
 content: |
   <style>
     .stat-grid {

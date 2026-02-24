@@ -1,3 +1,9 @@
+id: satellite-map
+name: 卫星追踪地图
+desc: 赛博朋克风格人员定位追踪
+author: knoop7
+version: 1.0
+---
 type: custom:html-pro-card
 scripts:
   - https://unpkg.com/leaflet@1.9.4/dist/leaflet.js

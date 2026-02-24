@@ -3,6 +3,8 @@ name: 脉冲圆点
 desc: 呼吸脉冲动画效果
 author: knoop7
 version: 1.0
+---
+type: custom:html-pro-card
 content: |
   <style>
     .pulse-container {

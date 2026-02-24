@@ -117,5 +117,12 @@
     "desc": "赛博朋克风格人员定位追踪",
     "author": "knoop7",
     "file": "modules/satellite-map.yaml"
+  },
+  {
+    "id": "voice-pipeline",
+    "name": "语音管道",
+    "desc": "3D物理管道语音交互卡片",
+    "author": "knoop7",
+    "file": "modules/voice-pipeline.yaml"
   }
 ]

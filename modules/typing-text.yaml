@@ -3,6 +3,8 @@ name: 打字效果
 desc: 模拟打字机动画
 author: knoop7
 version: 1.0
+---
+type: custom:html-pro-card
 content: |
   <style>
     .typing-container {
