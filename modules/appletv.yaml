@@ -4,7 +4,6 @@ desc: 高仿appletv卡
 author: knoop7
 version: 1.0
 ---
-
 type: custom:html-pro-card
 do_not_parse: true
 update_interval: 0
