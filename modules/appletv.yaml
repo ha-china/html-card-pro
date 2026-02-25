@@ -1,0 +1,340 @@
+id: appletv
+name: 遥控器卡
+desc: 高仿appletv卡
+author: knoop7
+version: 1.0
+---
+
+type: custom:html-pro-card
+do_not_parse: true
+update_interval: 0
+scripts:
+  - https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js
+  - https://unpkg.com/lucide@latest
+content: |
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;500;600&family=Inter:wght@400;500;600&display=swap');
+
+    @layer base, components;
+
+    @layer base {
+      :host {
+        /* OKLCH 极致纯净白/灰色彩系统 */
+        --surface-base: oklch(99% 0 0);
+        --surface-raised: oklch(97% 0.005 250);
+        --surface-sunken: oklch(93% 0.01 250);
+        
+        --text-main: oklch(20% 0.01 250);
+        --text-muted: oklch(65% 0.02 250);
+        --accent-red: oklch(60% 0.18 20); /* 高级电源红 */
+        
+        --shadow-soft: 0 10px 40px -10px rgba(0,0,0,0.08);
+        --shadow-inner: inset 0 2px 4px rgba(0,0,0,0.02);
+        --border-subtle: rgba(0,0,0,0.04);
+      }
+
+      .remote-card {
+        background: var(--surface-base);
+        border-radius: 20px;
+        padding: 32px 24px;
+        font-family: 'SF Pro Display', 'Inter', sans-serif;
+        color: var(--text-main);
+        border: 1px solid var(--border-subtle);
+        box-shadow: var(--shadow-soft);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 32px;
+        /* 限制遥控器最大宽度，保持修长优雅的比例 */
+        margin: 0 auto;
+      }
+    }
+
+    @layer components {
+      /* 顶部信息与电源区 */
+      .header {
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        
+        & .device-info {
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+        }
+
+        & h2 { margin: 0; font-size: 18px; font-weight: 600; letter-spacing: -0.5px; }
+        & span { font-size: 12px; color: var(--text-muted); font-weight: 500; }
+      }
+
+      /* 统一按钮基础样式 */
+      .btn-tactile {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: var(--surface-raised);
+        border: 1px solid var(--surface-base);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.04), inset 0 2px 0 rgba(255,255,255,0.8);
+        cursor: pointer;
+        /* 移除原生 outline */
+        outline: none;
+        -webkit-tap-highlight-color: transparent;
+        color: var(--text-main);
+      }
+
+      /* 电源键特调 */
+      .btn-power {
+        width: 44px; height: 44px;
+        border-radius: 50%;
+        color: var(--accent-red);
+      }
+
+      /* --- 一体化方向键环 (Unibody D-Pad) --- */
+      .d-pad-container {
+        width: 200px;
+        height: 200px;
+        border-radius: 50%;
+        background: var(--surface-sunken);
+        box-shadow: var(--shadow-inner), 0 0 0 1px var(--border-subtle);
+        position: relative;
+        display: grid;
+        grid-template-areas:
+          ". up ."
+          "left center right"
+          ". down .";
+        grid-template-columns: 1fr 1fr 1fr;
+        grid-template-rows: 1fr 1fr 1fr;
+        padding: 8px;
+      }
+
+      .d-btn {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        color: var(--text-muted);
+        -webkit-tap-highlight-color: transparent;
+        & svg { width: 24px; height: 24px; }
+      }
+
+      .d-up { grid-area: up; align-items: flex-start; padding-top: 12px; }
+      .d-down { grid-area: down; align-items: flex-end; padding-bottom: 12px; }
+      .d-left { grid-area: left; justify-content: flex-start; padding-left: 12px; }
+      .d-right { grid-area: right; justify-content: flex-end; padding-right: 12px; }
+
+      /* 中心 OK 键 (玻璃拟态微凸起) */
+      .d-center {
+        grid-area: center;
+        background: var(--surface-base);
+        border-radius: 50%;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.06), inset 0 2px 0 rgba(255,255,255,0.8);
+        border: 1px solid var(--border-subtle);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-weight: 600;
+        font-size: 14px;
+        cursor: pointer;
+        color: var(--text-main);
+      }
+
+      /* --- 功能键排布 (Menu, Home, Back) --- */
+      .action-row {
+        display: flex;
+        gap: 20px;
+        width: 100%;
+        justify-content: center;
+      }
+
+      .btn-action {
+        width: 54px; height: 54px;
+        border-radius: 27px; /* 圆角矩形 */
+        & svg { width: 20px; height: 20px; }
+      }
+
+      /* --- 音量与频道摇杆 (Rockers) --- */
+      .rocker-group {
+        display: flex;
+        gap: 32px;
+        width: 100%;
+        justify-content: center;
+      }
+
+      .rocker-pill {
+        width: 56px;
+        height: 120px;
+        background: var(--surface-raised);
+        border-radius: 28px;
+        box-shadow: 0 6px 16px rgba(0,0,0,0.05), inset 0 2px 0 rgba(255,255,255,0.8);
+        border: 1px solid var(--surface-base);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        align-items: center;
+        padding: 6px 0;
+        position: relative;
+      }
+
+      /* 摇杆中间的微小分隔线 */
+      .rocker-pill::after {
+        content: '';
+        position: absolute;
+        top: 50%; left: 16px; right: 16px;
+        height: 1px;
+        background: var(--border-subtle);
+        transform: translateY(-50%);
+      }
+
+      .r-btn {
+        flex: 1;
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        color: var(--text-main);
+        -webkit-tap-highlight-color: transparent;
+        z-index: 2; /* 盖过分隔线 */
+        & svg { width: 18px; height: 18px; }
+      }
+      
+      .rocker-label {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 10px;
+        font-weight: 600;
+        color: var(--text-muted);
+        letter-spacing: 1px;
+        pointer-events: none;
+      }
+    }
+  </style>
+
+  <div class="remote-card">
+    
+    <div class="header">
+      <div class="device-info">
+        <h2>Apple TV 4K</h2>
+        <span>Living Room • Connected</span>
+      </div>
+      <button class="btn-tactile btn-power" id="btn-power" data-action="power">
+        <i data-lucide="power"></i>
+      </button>
+    </div>
+
+    <div class="d-pad-container">
+      <div class="d-btn d-up" data-action="up"><i data-lucide="chevron-up"></i></div>
+      <div class="d-btn d-down" data-action="down"><i data-lucide="chevron-down"></i></div>
+      <div class="d-btn d-left" data-action="left"><i data-lucide="chevron-left"></i></div>
+      <div class="d-btn d-right" data-action="right"><i data-lucide="chevron-right"></i></div>
+      <div class="d-center" data-action="ok">OK</div>
+    </div>
+
+    <div class="action-row">
+      <button class="btn-tactile btn-action" data-action="back"><i data-lucide="arrow-left"></i></button>
+      <button class="btn-tactile btn-action" data-action="home"><i data-lucide="tv"></i></button>
+      <button class="btn-tactile btn-action" data-action="menu"><i data-lucide="menu"></i></button>
+    </div>
+
+    <div class="rocker-group">
+      <div class="rocker-pill">
+        <div class="r-btn" data-action="channel_up"><i data-lucide="chevron-up"></i></div>
+        <div class="rocker-label">CH</div>
+        <div class="r-btn" data-action="channel_down"><i data-lucide="chevron-down"></i></div>
+      </div>
+      <div class="rocker-pill">
+        <div class="r-btn" data-action="volume_up"><i data-lucide="plus"></i></div>
+        <div class="rocker-label">VOL</div>
+        <div class="r-btn" data-action="volume_down"><i data-lucide="minus"></i></div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    function initRemote() {
+      // 等待核心库加载
+      if (!window.gsap || !window.lucide) {
+        setTimeout(initRemote, 50);
+        return;
+      }
+
+      // 渲染精致矢量图标
+      lucide.createIcons();
+
+      // --- 核心交互：GSAP 物理阻尼点击反馈 ---
+      // 我们为不同的按键应用不同的弹力物理反馈，模拟真实的按键手感
+      
+      const applyTactileFeedback = (element, scaleDown = 0.92) => {
+        // 触摸/按下：迅速下沉
+        const press = () => gsap.to(element, { scale: scaleDown, duration: 0.1, ease: "power2.out" });
+        // 释放/移出：弹性回弹
+        const release = () => gsap.to(element, { scale: 1, duration: 0.4, ease: "elastic.out(1, 0.5)" });
+
+        element.addEventListener('mousedown', press);
+        element.addEventListener('touchstart', press, { passive: true });
+        
+        element.addEventListener('mouseup', release);
+        element.addEventListener('mouseleave', release);
+        element.addEventListener('touchend', release, { passive: true });
+      };
+
+      // 绑定物理特效到各组按键
+      root.querySelectorAll('.btn-tactile').forEach(btn => applyTactileFeedback(btn, 0.9));
+      applyTactileFeedback(root.querySelector('.d-center'), 0.92);
+      
+      // 环形方向键与胶囊摇杆因为没有外边框，形变稍微小一点，显得更硬朗
+      root.querySelectorAll('.d-btn').forEach(btn => applyTactileFeedback(btn, 0.85));
+      root.querySelectorAll('.r-btn').forEach(btn => applyTactileFeedback(btn, 0.85));
+
+      // --- 智能家居 API 绑定区 ---
+      // 监听所有带 data-action 的元素
+      const allButtons = root.querySelectorAll('[data-action]');
+      allButtons.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          // 防止多重触发
+          e.preventDefault(); 
+          const action = btn.getAttribute('data-action');
+          console.log(`[CONTROL ONE] Action Triggered: ${action}`);
+
+          // ⚠️ 【在这里接入你的 Home Assistant 实体】
+          // 确保你在 html-pro-card 环境下有 hass 对象的访问权限
+          if (typeof hass !== 'undefined') {
+            const entityId = 'media_player.living_room_tv'; // 替换为你的电视实体ID
+
+            switch(action) {
+              case 'power':
+                hass.callService('media_player', 'toggle', { entity_id: entityId });
+                break;
+              case 'volume_up':
+                hass.callService('media_player', 'volume_up', { entity_id: entityId });
+                break;
+              case 'volume_down':
+                hass.callService('media_player', 'volume_down', { entity_id: entityId });
+                break;
+              case 'up':
+              case 'down':
+              case 'left':
+              case 'right':
+              case 'ok':
+              case 'back':
+              case 'home':
+              case 'menu':
+                // 对于智能电视（如 Apple TV / Android TV），通常使用 remote.send_command
+                hass.callService('remote', 'send_command', { 
+                  entity_id: 'remote.living_room_apple_tv', 
+                  command: action 
+                });
+                break;
+              default:
+                break;
+            }
+          }
+        });
+      });
+    }
+
+    initRemote();
+  </script>
