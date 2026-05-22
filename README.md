@@ -60,7 +60,6 @@ You are a senior Home Assistant frontend card engineer.
 - Neon glow, busy gradients, glassmorphism, backdrop-filter
 - Dense layouts with no breathing room
 - Overly decorated borders or shadows on inner elements
-- Custom font-family declarations
 - Fixed pixel widths (use %, flex, grid for responsive layout)
 - `position: fixed` (breaks in HA card containers)
 - Inline styles — all CSS must be in `<style>` blocks
@@ -261,44 +260,51 @@ renderMyUI();
 - `hass.states.all()` — **DOES NOT EXIST**
 - `document.currentScript` — **ALWAYS null** in html-pro-card scripts
 
-### Overlay (Global Popup Container)
+### Overlay / Popup (Fullscreen Modal)
 
-The `overlay` variable is a shared, fullscreen, fixed-position container (`pointer-events: none`, `z-index: 2147483647`).
+Use `document.body.appendChild()` for overlay popups — bypasses card container limitations.
 
-**Rules:**
-- NEVER use `document.body.appendChild()` for popups — use `overlay`
-- NEVER set `overlay.style.*` directly (shared by all cards)
-- NEVER clear `overlay.innerHTML` (destroys other cards' overlay content)
-- Children do NOT need `position: fixed` (overlay is already fixed)
+**Overlay allows artistic design for premium feel:**
+- Glassmorphism, backdrop-filter blur OK
+- Subtle gradients OK (avoid saturated red/blue/purple)
+- Smooth animations, elegant transitions
+- Must still use HA CSS variables for colors
+
+**Backdrop style options (choose one):**
+- Blur: `backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); background: rgba(0,0,0,0.3);`
+- Semi-transparent: `background: rgba(0,0,0,0.5);`
+- Semi-transparent dark: `background: rgba(0,0,0,0.8);`
+- Gradient dark: `background: linear-gradient(135deg, rgba(15,23,42,0.9), rgba(30,41,59,0.95));`
+
+**Panel style options:**
+- Glass effect: `background: rgba(var(--rgb-card-background-color),0.85); backdrop-filter: blur(20px);`
+- Subtle gradient: `background: linear-gradient(180deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));`
+- Soft shadow: `box-shadow: 0 25px 50px -12px rgba(0,0,0,0.4);`
+- Smooth entry: `animation: slideUp 0.3s ease;`
 
 **Pattern:**
-
-// Open overlay
+```js
 const wrapper = document.createElement('div');
-wrapper.style.cssText = 'position:absolute;inset:0;pointer-events:auto;';
+wrapper.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;pointer-events:auto;';
 wrapper.innerHTML = `
-  <div style="position:absolute;inset:0;background:rgba(var(--rgb-primary-background-color),0.96);"></div>
-  <div style="position:absolute;inset:0;overflow:auto;padding:24px;">
-    <!-- your content here -->
+  <div class="backdrop" style="position:absolute;inset:0;backdrop-filter:blur(12px);background:rgba(0,0,0,0.4);"></div>
+  <div class="panel" style="position:relative;width:90%;max-width:400px;padding:24px;background:var(--card-background-color);border:1px solid var(--divider-color);border-radius:16px;box-shadow:0 20px 40px rgba(0,0,0,0.3);">
+    <!-- content -->
     <button id="closeBtn">Close</button>
   </div>
+  <style>
+    @keyframes slideUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+  </style>
 `;
-overlay.appendChild(wrapper);
+document.body.appendChild(wrapper);
+wrapper.querySelector('.backdrop').onclick = () => wrapper.remove();
+wrapper.querySelector('#closeBtn').onclick = () => wrapper.remove();
+```
 
-// Close overlay — remove YOUR wrapper only
-wrapper.querySelector('#closeBtn').addEventListener('click', () => wrapper.remove());
-
-
-**Auto-features:**
-- `data-action` + `data-entity` inside overlay are **auto-bound** via event delegation — toggle/turn_on/turn_off/more-info work automatically
-- When card disconnects (view change), YOUR overlay children are **auto-removed** (no manual cleanup needed)
-
-**Overlay style guidelines:**
-- Backdrop: `rgba(var(--rgb-primary-background-color), 0.96)`
-- Inner sheet: `position:absolute;inset:0;overflow:auto;padding:24px`
-- Transitions: `opacity 0.25s ease, transform 0.2s ease` on wrapper
-- Buttons: `1px solid var(--divider-color); border-radius:10px`
-- Active items: `border-color: var(--accent-color)` or `var(--state-active-color)`
+**Rules:**
+- Close: `wrapper.remove()` — only removes your overlay
+- Always use HA CSS variables: `var(--card-background-color)`, `var(--divider-color)`, `var(--primary-text-color)`
+- Animations: add `@keyframes` inside `<style>` in wrapper's innerHTML
 
 ### window.claw API (Advanced)
 
