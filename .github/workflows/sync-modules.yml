@@ -56,14 +56,16 @@ jobs:
               const yamlContent = yamlMatch[1].trim();
               if (!yamlContent.includes('type: custom:html-pro-card')) continue;
               
-              // Extract description from first line (before **Author**)
-              const descMatch = disc.body.match(/^([^*\n]+)/);
+              // Extract first paragraph as description (before **Author** or ---)
+              const lines = disc.body.split('\n');
               let description = '';
-              if (descMatch) {
-                description = descMatch[1].replace(/^This module provides\s*(an?\s*)?/i, '').replace(/for HTML Pro Card\.?\s*/i, '').trim();
-                // Clean up markdown bold
-                description = description.replace(/\*\*([^*]+)\*\*/g, '$1');
+              for (const line of lines) {
+                const trimmed = line.trim();
+                if (!trimmed || trimmed.startsWith('**Author') || trimmed === '---') break;
+                description += (description ? ' ' : '') + trimmed;
               }
+              // Clean up markdown
+              description = description.replace(/\*\*([^*]+)\*\*/g, '$1').trim();
               
               // Extract author and version
               const authorMatch = disc.body.match(/\*\*Author\*\*:\s*(\S+)/i);
@@ -91,11 +93,12 @@ jobs:
                 yaml: yamlContent
               });
               
-              console.log(`✅ Added: ${name} - "${description.substring(0, 50)}..."`);
+              console.log(`Added: ${name}`);
+              console.log(`  Description: ${description.substring(0, 80)}...`);
             }
             
             fs.writeFileSync('store.json', JSON.stringify(modules, null, 2));
-            console.log(`\n📦 Generated store.json with ${modules.length} modules`);
+            console.log(`Generated store.json with ${modules.length} modules`);
       
       - name: Commit and Push
         run: |
