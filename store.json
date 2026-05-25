@@ -4,11 +4,11 @@
     "name": "Apple TV Remote",
     "version": "1.0",
     "creator": "knoop7",
-    "description": "This module provides an Apple TV Remote for HTML Pro Card. With exquisite UI design and GSAP physics animations, it delivers the ultimate remote control experience.",
+    "description": "This module provides an Apple TV Remote for HTML Pro Card. With exquisite UI design and GSAP physics animations, it delivers the ultimate remote control experience.\r",
     "tags": [
       "Appliance"
     ],
-    "image": "https://via.placeholder.com/300x500/667eea/fff?text=Apple+TV+Remote",
+    "image": "",
     "link": "https://github.com/ha-china/html-card-pro/discussions/7",
     "file": "mods/7-apple-tv-remote.yaml"
   }
