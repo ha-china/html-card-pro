@@ -538,7 +538,8 @@ const I18N = {
 
 const MODULE_STORE_CONFIG = {
   repo: 'ha-china/html-card-pro',
-  storeUrl: 'https://raw.githubusercontent.com/ha-china/html-card-pro/main/store.json',
+  indexUrl: 'https://api.github.com/repos/ha-china/html-card-pro/contents/mods',
+  rawBase: 'https://raw.githubusercontent.com/ha-china/html-card-pro/main/mods/',
   cacheKey: 'html-pro-card-modules-cache',
   cacheTTL: 5 * 60 * 1000
 };
@@ -1858,31 +1859,60 @@ class HtmlTemplateCardEditor extends LitElement {
 
   async _fetchModulesFromDiscussions() {
     const modules = [];
-    const storeUrl = MODULE_STORE_CONFIG.storeUrl;
 
     try {
-      const res = await fetch(storeUrl);
-      if (res.ok) {
-        const data = await res.json();
-        
-        for (const item of data) {
-          const module = {
-            id: item.id,
-            name: item.name || item.title?.replace(/^\[.*?\]\s*/, '') || 'Untitled',
-            version: item.version || '1.0',
-            creator: item.author || 'Community',
-            description: item.description || '',
-            link: item.link || `https://github.com/${MODULE_STORE_CONFIG.repo}/discussions/${item.id}`,
-            _tags: item.tags || []
-          };
+      // Fetch file list from mods folder
+      const indexRes = await fetch(MODULE_STORE_CONFIG.indexUrl);
+      if (!indexRes.ok) throw new Error('Failed to fetch index');
+      
+      const files = await indexRes.json();
+      const yamlFiles = files.filter(f => f.name.endsWith('.yaml') && f.name !== '.gitkeep');
+      
+      // Fetch each YAML file
+      for (const file of yamlFiles) {
+        try {
+          const yamlRes = await fetch(MODULE_STORE_CONFIG.rawBase + file.name);
+          if (!yamlRes.ok) continue;
           
-          if (item.yaml) {
-            module._yaml = item.yaml;
-            module._cardConfig = this._parseCardYaml(item.yaml);
-            module.code = module._cardConfig?.content || '';
+          const yamlText = await yamlRes.text();
+          
+          // Parse metadata from YAML comments
+          const meta = {};
+          const lines = yamlText.split('\n');
+          let contentStart = 0;
+          
+          for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
+            if (!line.startsWith('#')) {
+              contentStart = i;
+              break;
+            }
+            const match = line.match(/^#\s*(\w+):\s*(.+)/);
+            if (match) {
+              meta[match[1].toLowerCase()] = match[2].trim();
+            }
           }
           
+          // Extract card config (everything after metadata comments)
+          const cardYaml = lines.slice(contentStart).join('\n').trim();
+          
+          const module = {
+            id: meta.id || file.name.split('-')[0],
+            name: meta.name || lines[0]?.replace(/^#\s*/, '') || 'Untitled',
+            version: meta.version || '1.0',
+            creator: meta.author || 'Community',
+            description: meta.description || '',
+            image: meta.image || '',
+            link: meta.link || `https://github.com/${MODULE_STORE_CONFIG.repo}/discussions/${meta.id}`,
+            _tags: meta.tags ? meta.tags.split(',').map(t => t.trim()) : [],
+            _yaml: cardYaml,
+            _cardConfig: this._parseCardYaml(cardYaml)
+          };
+          
+          module.code = module._cardConfig?.content || '';
           modules.push(module);
+        } catch (e) {
+          console.warn(`[html-pro-card] Failed to load ${file.name}:`, e);
         }
       }
     } catch (e) {
@@ -1892,6 +1922,9 @@ class HtmlTemplateCardEditor extends LitElement {
     if (modules.length === 0) {
       return this._getBuiltinModules();
     }
+
+    // Sort by id descending (newest first)
+    modules.sort((a, b) => Number(b.id) - Number(a.id));
 
     const seen = new Set();
     return modules.filter(m => {
