@@ -1239,7 +1239,7 @@ class HtmlTemplateCardEditor extends LitElement {
           align-items: center;
           justify-content: center;
           position: relative;
-          cursor: zoom-in;
+          cursor: default;
         }
         .store-item-left img {
           width: 100%;
@@ -1824,6 +1824,10 @@ class HtmlTemplateCardEditor extends LitElement {
     return result;
   }
 
+  _loadStoreModules() {
+    return this._loadOnlineModules(true);
+  }
+
   async _loadOnlineModules(forceRefresh = false) {
     this._storeLoading = true;
     this._storeError = null;
@@ -2025,7 +2029,7 @@ class HtmlTemplateCardEditor extends LitElement {
 
     return html`
       <div class="store-item">
-        <div class="store-item-left" @click="${() => image && this._previewImage(image)}">
+        <div class="store-item-left">
           ${image ? html`
             <img src="${image}" alt="${m.name}" loading="lazy" />
           ` : html`
