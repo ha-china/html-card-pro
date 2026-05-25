@@ -1,0 +1,197 @@
+# Apple TV Remote
+# Author: knoop7
+# Version: 1.0
+# Description: This module provides an Apple TV Remote for HTML Pro Card. With exquisite UI design and GSAP physics animations, it delivers the ultimate remote control experience.
+# Tags: Appliance
+# Image: https://via.placeholder.com/300x500/667eea/fff?text=Apple+TV+Remote
+# Link: https://github.com/ha-china/html-card-pro/discussions/7
+# ID: 7
+
+type: custom:html-pro-card
+do_not_parse: true
+update_interval: 0
+ignore_line_breaks: true
+scripts:
+  - https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js
+  - https://unpkg.com/lucide@latest
+content: |-
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;500;600&family=Inter:wght@400;500;600&display=swap');
+    :host {
+      --surface-base: oklch(99% 0 0);
+      --surface-raised: oklch(97% 0.005 250);
+      --surface-sunken: oklch(93% 0.01 250);
+      --text-main: oklch(20% 0.01 250);
+      --text-muted: oklch(65% 0.02 250);
+      --accent-red: oklch(60% 0.18 20);
+      --shadow-soft: 0 10px 40px -10px rgba(0,0,0,0.08);
+      --shadow-inner: inset 0 2px 4px rgba(0,0,0,0.02);
+      --border-subtle: rgba(0,0,0,0.04);
+    }
+    .remote-card {
+      background: var(--surface-base);
+      border-radius: 10px;
+      padding: 32px 24px;
+      font-family: 'SF Pro Display', 'Inter', sans-serif;
+      color: var(--text-main);
+      border: 1px solid var(--border-subtle);
+      box-shadow: var(--shadow-soft);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 32px;
+      margin: 0 auto;
+    }
+    .header {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .header .device-info { display: flex; flex-direction: column; gap: 4px; }
+    .header h2 { margin: 0; font-size: 18px; font-weight: 600; letter-spacing: -0.5px; }
+    .header span { font-size: 12px; color: var(--text-muted); font-weight: 500; }
+    .btn-tactile {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: var(--surface-raised);
+      border: 1px solid var(--surface-base);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.04), inset 0 2px 0 rgba(255,255,255,0.8);
+      cursor: pointer;
+      outline: none;
+      -webkit-tap-highlight-color: transparent;
+      color: var(--text-main);
+    }
+    .btn-power { width: 44px; height: 44px; border-radius: 10px; color: var(--accent-red); }
+    .d-pad-container {
+      width: 200px; height: 200px;
+      border-radius: 10px;
+      background: var(--surface-sunken);
+      box-shadow: var(--shadow-inner), 0 0 0 1px var(--border-subtle);
+      position: relative;
+      display: grid;
+      grid-template-areas: ". up ." "left center right" ". down .";
+      grid-template-columns: 1fr 1fr 1fr;
+      grid-template-rows: 1fr 1fr 1fr;
+      padding: 8px;
+    }
+    .d-btn {
+      display: flex; justify-content: center; align-items: center;
+      cursor: pointer; color: var(--text-muted);
+      -webkit-tap-highlight-color: transparent;
+    }
+    .d-btn svg { width: 24px; height: 24px; }
+    .d-up { grid-area: up; align-items: flex-start; padding-top: 12px; }
+    .d-down { grid-area: down; align-items: flex-end; padding-bottom: 12px; }
+    .d-left { grid-area: left; justify-content: flex-start; padding-left: 12px; }
+    .d-right { grid-area: right; justify-content: flex-end; padding-right: 12px; }
+    .d-center {
+      grid-area: center;
+      background: var(--surface-base);
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.06), inset 0 2px 0 rgba(255,255,255,0.8);
+      border: 1px solid var(--border-subtle);
+      display: flex; justify-content: center; align-items: center;
+      font-weight: 600; font-size: 14px; cursor: pointer; color: var(--text-main);
+    }
+    .action-row { display: flex; gap: 20px; width: 100%; justify-content: center; }
+    .btn-action { width: 54px; height: 54px; border-radius: 10px; }
+    .btn-action svg { width: 20px; height: 20px; }
+    .rocker-group { display: flex; gap: 32px; width: 100%; justify-content: center; }
+    .rocker-pill {
+      width: 56px; height: 120px;
+      background: var(--surface-raised);
+      border-radius: 10px;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.05), inset 0 2px 0 rgba(255,255,255,0.8);
+      border: 1px solid var(--surface-base);
+      display: flex; flex-direction: column;
+      justify-content: space-between; align-items: center;
+      padding: 6px 0; position: relative;
+    }
+    .rocker-pill::after {
+      content: ''; position: absolute;
+      top: 50%; left: 16px; right: 16px; height: 1px;
+      background: var(--border-subtle); transform: translateY(-50%);
+    }
+    .r-btn {
+      flex: 1; width: 100%;
+      display: flex; justify-content: center; align-items: center;
+      cursor: pointer; color: var(--text-main);
+      -webkit-tap-highlight-color: transparent; z-index: 2;
+    }
+    .r-btn svg { width: 18px; height: 18px; }
+    .rocker-label {
+      position: absolute; top: 50%; transform: translateY(-50%);
+      font-size: 10px; font-weight: 600; color: var(--text-muted);
+      letter-spacing: 1px; pointer-events: none;
+    }
+  </style>
+  <div class="remote-card">
+    <div class="header">
+      <div class="device-info">
+        <h2>Apple TV 4K</h2>
+        <span>Living Room • Connected</span>
+      </div>
+      <button class="btn-tactile btn-power" data-action="power"><i data-lucide="power"></i></button>
+    </div>
+    <div class="d-pad-container">
+      <div class="d-btn d-up" data-action="up"><i data-lucide="chevron-up"></i></div>
+      <div class="d-btn d-down" data-action="down"><i data-lucide="chevron-down"></i></div>
+      <div class="d-btn d-left" data-action="left"><i data-lucide="chevron-left"></i></div>
+      <div class="d-btn d-right" data-action="right"><i data-lucide="chevron-right"></i></div>
+      <div class="d-center" data-action="ok">OK</div>
+    </div>
+    <div class="action-row">
+      <button class="btn-tactile btn-action" data-action="back"><i data-lucide="arrow-left"></i></button>
+      <button class="btn-tactile btn-action" data-action="home"><i data-lucide="tv"></i></button>
+      <button class="btn-tactile btn-action" data-action="menu"><i data-lucide="menu"></i></button>
+    </div>
+    <div class="rocker-group">
+      <div class="rocker-pill">
+        <div class="r-btn" data-action="channel_up"><i data-lucide="chevron-up"></i></div>
+        <div class="rocker-label">CH</div>
+        <div class="r-btn" data-action="channel_down"><i data-lucide="chevron-down"></i></div>
+      </div>
+      <div class="rocker-pill">
+        <div class="r-btn" data-action="volume_up"><i data-lucide="plus"></i></div>
+        <div class="rocker-label">VOL</div>
+        <div class="r-btn" data-action="volume_down"><i data-lucide="minus"></i></div>
+      </div>
+    </div>
+  </div>
+  <script>
+  function initRemote() {
+    if (!window.gsap || !window.lucide) { setTimeout(initRemote, 50); return; }
+    lucide.createIcons();
+    const applyTactileFeedback = (el, scale = 0.92) => {
+      const press = () => gsap.to(el, { scale, duration: 0.1, ease: "power2.out" });
+      const release = () => gsap.to(el, { scale: 1, duration: 0.4, ease: "elastic.out(1, 0.5)" });
+      el.addEventListener('mousedown', press);
+      el.addEventListener('touchstart', press, { passive: true });
+      el.addEventListener('mouseup', release);
+      el.addEventListener('mouseleave', release);
+      el.addEventListener('touchend', release, { passive: true });
+    };
+    root.querySelectorAll('.btn-tactile').forEach(btn => applyTactileFeedback(btn, 0.9));
+    applyTactileFeedback(root.querySelector('.d-center'), 0.92);
+    root.querySelectorAll('.d-btn').forEach(btn => applyTactileFeedback(btn, 0.85));
+    root.querySelectorAll('.r-btn').forEach(btn => applyTactileFeedback(btn, 0.85));
+    root.querySelectorAll('[data-action]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const action = btn.getAttribute('data-action');
+        if (typeof hass !== 'undefined') {
+          const entityId = 'media_player.living_room_tv';
+          switch(action) {
+            case 'power': hass.callService('media_player', 'toggle', { entity_id: entityId }); break;
+            case 'volume_up': hass.callService('media_player', 'volume_up', { entity_id: entityId }); break;
+            case 'volume_down': hass.callService('media_player', 'volume_down', { entity_id: entityId }); break;
+            default: hass.callService('remote', 'send_command', { entity_id: 'remote.living_room_apple_tv', command: action }); break;
+          }
+        }
+      });
+    });
+  }
+  initRemote();
+  </script>
