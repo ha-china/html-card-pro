@@ -153,18 +153,20 @@ jobs:
               const filename = `mods/${disc.number}-${safeName}.yaml`;
               
               // Write individual YAML file with metadata header
-              const yamlFile = `# ${name}
-# Author: ${creator}
-# Version: ${versionMatch ? versionMatch[1] : '1.0'}
-# Description: ${description}
-# Tags: ${tags.join(', ')}
-# Image: ${image}
-# Link: ${disc.url}
-# ID: ${disc.number}
-
-${yamlContent}
-`;
-              fs.writeFileSync(filename, yamlFile);
+              const header = [
+                '# ' + name,
+                '# Author: ' + creator,
+                '# Version: ' + (versionMatch ? versionMatch[1] : '1.0'),
+                '# Description: ' + description,
+                '# Tags: ' + tags.join(', '),
+                '# Image: ' + image,
+                '# Link: ' + disc.url,
+                '# ID: ' + disc.number,
+                '',
+                yamlContent,
+                ''
+              ].join('\n');
+              fs.writeFileSync(filename, header);
               
               // Add to store.json index
               modules.push({
