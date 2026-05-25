@@ -16,16 +16,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      - name: Fetch Discussions and Generate store.json
+      - name: Fetch Discussions and Generate Modules
         uses: actions/github-script@v7
         with:
           script: |
             const fs = require('fs');
+            const path = require('path');
+            
+            // Ensure mods directory exists
+            if (!fs.existsSync('mods')) fs.mkdirSync('mods');
             
             const query = `
               query($owner: String!, $name: String!) {
                 repository(owner: $owner, name: $name) {
-                  discussions(first: 100) {
+                  discussions(first: 100, categoryId: null) {
                     nodes {
                       number
                       title
@@ -47,63 +51,147 @@ jobs:
             const modules = [];
             const discussions = result.repository.discussions.nodes;
             
+            // Security: allowed external domains whitelist
+            const ALLOWED_DOMAINS = [
+              'cdn.jsdelivr.net',
+              'cdnjs.cloudflare.com',
+              'unpkg.com',
+              'fonts.googleapis.com',
+              'fonts.gstatic.com',
+              'raw.githubusercontent.com',
+              'github.com',
+              'via.placeholder.com'
+            ];
+            
+            const isUrlSafe = (url) => {
+              if (!url) return true;
+              try {
+                const hostname = new URL(url).hostname;
+                return ALLOWED_DOMAINS.some(d => hostname === d || hostname.endsWith('.' + d));
+              } catch { return false; }
+            };
+            
+            const hasUnsafeContent = (yaml) => {
+              // Block dangerous patterns
+              const dangerous = [
+                /eval\s*\(/i,
+                /Function\s*\(/i,
+                /document\.cookie/i,
+                /localStorage/i,
+                /sessionStorage/i,
+                /XMLHttpRequest/i,
+                /fetch\s*\([^)]*(?!hass)/i,
+                /<iframe/i,
+                /javascript:/i,
+                /data:text\/html/i,
+                /on\w+\s*=/i
+              ];
+              return dangerous.some(p => p.test(yaml));
+            };
+            
+            const extractUrls = (text) => {
+              const urls = [];
+              const patterns = [
+                /https?:\/\/[^\s"'<>]+/g,
+                /src=["']([^"']+)["']/gi,
+                /href=["']([^"']+)["']/gi,
+                /url\(["']?([^"')]+)["']?\)/gi
+              ];
+              for (const p of patterns) {
+                const matches = text.matchAll(p);
+                for (const m of matches) urls.push(m[1] || m[0]);
+              }
+              return urls.filter(u => u.startsWith('http'));
+            };
+            
             for (const disc of discussions) {
               if (!disc.body) continue;
               
+              // Match YAML in details block or direct code block
               const yamlMatch = disc.body.match(/```ya?ml\s*([\s\S]*?)```/i);
               if (!yamlMatch) continue;
               
               const yamlContent = yamlMatch[1].trim();
               if (!yamlContent.includes('type: custom:html-pro-card')) continue;
               
-              // Extract first paragraph as description (before **Author** or ---)
-              const lines = disc.body.split('\n');
-              let description = '';
-              for (const line of lines) {
-                const trimmed = line.trim();
-                if (!trimmed || trimmed.startsWith('**Author') || trimmed === '---') break;
-                description += (description ? ' ' : '') + trimmed;
+              // Security check: dangerous patterns
+              if (hasUnsafeContent(yamlContent)) {
+                console.log(`⚠️ BLOCKED: ${disc.title} - contains unsafe code`);
+                continue;
               }
-              // Clean up markdown
-              description = description.replace(/\*\*([^*]+)\*\*/g, '$1').trim();
+              
+              // Security check: external URLs
+              const urls = extractUrls(yamlContent);
+              const unsafeUrls = urls.filter(u => !isUrlSafe(u));
+              if (unsafeUrls.length > 0) {
+                console.log(`⚠️ BLOCKED: ${disc.title} - unsafe URLs: ${unsafeUrls.join(', ')}`);
+                continue;
+              }
+              
+              // Extract description
+              const descMatch = disc.body.match(/^This module provides[^\n]+/im);
+              let description = descMatch ? descMatch[0].replace(/\*\*/g, '') : '';
               
               // Extract author and version
               const authorMatch = disc.body.match(/\*\*Author\*\*:\s*(\S+)/i);
               const versionMatch = disc.body.match(/\*\*Version\*\*:\s*(\S+)/i);
               
-              // Extract tags from title [xxx]
+              // Extract tags and name from title
               const tagMatch = disc.title.match(/^\[([^\]]+)\]/);
               const tags = tagMatch ? tagMatch[1].split(/[,，]/).map(t => t.trim()) : [];
               const name = disc.title.replace(/^\[.*?\]\s*/, '').trim();
               
-              // Extract image URL if present
-              const imgMatch = disc.body.match(/!\[.*?\]\((https?:\/\/[^\s)]+)\)/);
+              // Extract image URL
+              const imgMatch = disc.body.match(/!\[[^\]]*\]\((https?:\/\/[^\s)]+)\)/);
               const image = imgMatch ? imgMatch[1] : '';
               
+              // Creator
+              const creator = authorMatch ? authorMatch[1] : disc.author.login;
+              
+              // Generate safe filename
+              const safeName = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+              const filename = `mods/${disc.number}-${safeName}.yaml`;
+              
+              // Write individual YAML file with metadata header
+              const yamlFile = `# ${name}
+# Author: ${creator}
+# Version: ${versionMatch ? versionMatch[1] : '1.0'}
+# Description: ${description}
+# Tags: ${tags.join(', ')}
+# Image: ${image}
+# Link: ${disc.url}
+# ID: ${disc.number}
+
+${yamlContent}
+`;
+              fs.writeFileSync(filename, yamlFile);
+              
+              // Add to store.json index
               modules.push({
                 id: disc.number,
                 name: name,
-                title: disc.title,
                 version: versionMatch ? versionMatch[1] : '1.0',
-                author: authorMatch ? authorMatch[1] : disc.author.login,
+                creator: creator,
                 description: description,
                 tags: tags,
                 image: image,
                 link: disc.url,
-                yaml: yamlContent
+                file: filename
               });
               
-              console.log(`Added: ${name}`);
-              console.log(`  Description: ${description.substring(0, 80)}...`);
+              console.log(`✓ ${name} -> ${filename}`);
             }
             
+            // Sort by id descending (newest first)
+            modules.sort((a, b) => b.id - a.id);
+            
             fs.writeFileSync('store.json', JSON.stringify(modules, null, 2));
-            console.log(`Generated store.json with ${modules.length} modules`);
+            console.log(`\n✅ Generated ${modules.length} modules`);
       
       - name: Commit and Push
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add store.json
-          git diff --staged --quiet || git commit -m "Sync modules from discussions"
+          git add mods/ store.json
+          git diff --staged --quiet || git commit -m "sync: update modules from discussions"
           git push
