@@ -1,0 +1,87 @@
+name: Sync Discussions to Store
+
+on:
+  discussion:
+    types: [created, edited, deleted]
+  workflow_dispatch:
+  schedule:
+    - cron: '0 */6 * * *'
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      discussions: read
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Fetch Discussions and Generate store.json
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            
+            const query = `
+              query($owner: String!, $name: String!) {
+                repository(owner: $owner, name: $name) {
+                  discussions(first: 100) {
+                    nodes {
+                      number
+                      title
+                      body
+                      author { login }
+                      createdAt
+                      url
+                    }
+                  }
+                }
+              }
+            `;
+            
+            const result = await github.graphql(query, {
+              owner: context.repo.owner,
+              name: context.repo.repo
+            });
+            
+            const modules = [];
+            const discussions = result.repository.discussions.nodes;
+            
+            for (const disc of discussions) {
+              if (!disc.body) continue;
+              
+              const yamlMatch = disc.body.match(/```ya?ml\s*([\s\S]*?)```/i);
+              if (!yamlMatch) continue;
+              
+              const yamlContent = yamlMatch[1].trim();
+              if (!yamlContent.includes('type: custom:html-pro-card')) continue;
+              
+              const authorMatch = disc.body.match(/\*\*Author\*\*:\s*(\S+)/i);
+              const versionMatch = disc.body.match(/\*\*Version\*\*:\s*(\S+)/i);
+              
+              const tagMatch = disc.title.match(/^\[([^\]]+)\]/);
+              const tags = tagMatch ? tagMatch[1].split(/[,，]/).map(t => t.trim()) : [];
+              const name = disc.title.replace(/^\[.*?\]\s*/, '').trim();
+              
+              modules.push({
+                id: disc.number,
+                name: name,
+                title: disc.title,
+                version: versionMatch ? versionMatch[1] : '1.0',
+                author: authorMatch ? authorMatch[1] : disc.author.login,
+                tags: tags,
+                link: disc.url,
+                yaml: yamlContent
+              });
+            }
+            
+            fs.writeFileSync('store.json', JSON.stringify(modules, null, 2));
+            console.log(`Generated store.json with ${modules.length} modules`);
+      
+      - name: Commit and Push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add store.json
+          git diff --staged --quiet || git commit -m "Sync modules from discussions"
+          git push
