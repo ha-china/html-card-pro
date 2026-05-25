@@ -5,7 +5,7 @@
     "title": "[Style] Digital Clock",
     "version": "1.0",
     "author": "knoop7",
-    "description": "",
+    "description": "This module provides a Digital Clock for HTML Pro Card. A beautiful gradient clock with monospace font that updates every second.",
     "tags": [
       "Style"
     ],
@@ -19,7 +19,7 @@
     "title": "[Appliance] Apple TV Remote",
     "version": "1.0",
     "author": "knoop7",
-    "description": "",
+    "description": "This module provides an Apple TV Remote for HTML Pro Card. With exquisite UI design and GSAP physics animations, it delivers the ultimate remote control experience.",
     "tags": [
       "Appliance"
     ],
