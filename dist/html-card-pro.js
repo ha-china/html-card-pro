@@ -1694,7 +1694,14 @@ class HtmlTemplateCardEditor extends LitElement {
   }
 
   _normalizeRadius(text) {
-    return text.replace(/border-radius\s*:\s*\d+(\.\d+)?(px|em|rem|%)?/gi, 'border-radius: 10px');
+    return text.replace(/border-radius\s*:\s*([^;}\n]+)/gi, (match, value) => {
+      const v = value.trim().toLowerCase();
+      if (v.includes('50%') || v.includes('100%') || v.includes('/')) return match;
+      if (v.split(/\s+/).length > 1) return match;
+      const num = parseFloat(v);
+      if (!isNaN(num) && num > 10 && v.includes('px')) return 'border-radius: 10px';
+      return match;
+    });
   }
 
   _handleParseChange(e) {
