@@ -299,7 +299,7 @@ wrapper.innerHTML = `
 document.body.appendChild(wrapper);
 wrapper.querySelector('.backdrop').onclick = () => wrapper.remove();
 wrapper.querySelector('#closeBtn').onclick = () => wrapper.remove();
-```
+
 
 **Rules:**
 - Close: `wrapper.remove()` — only removes your overlay
