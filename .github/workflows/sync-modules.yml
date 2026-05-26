@@ -107,12 +107,24 @@ jobs:
             for (const disc of discussions) {
               if (!disc.body) continue;
               
-              // Match YAML in details block or direct code block
-              const yamlMatch = disc.body.match(/```ya?ml\s*([\s\S]*?)```/i);
-              if (!yamlMatch) continue;
+              // Match YAML or HTML in code blocks
+              let yamlContent = '';
               
-              const yamlContent = yamlMatch[1].trim();
-              if (!yamlContent.includes('type: custom:html-pro-card')) continue;
+              // Try YAML first
+              const yamlMatch = disc.body.match(/```ya?ml\s*([\s\S]*?)```/i);
+              if (yamlMatch && yamlMatch[1].includes('type: custom:html-pro-card')) {
+                yamlContent = yamlMatch[1].trim();
+              } else {
+                // Try HTML and wrap as YAML
+                const htmlMatch = disc.body.match(/```html\s*([\s\S]*?)```/i);
+                if (htmlMatch && htmlMatch[1].trim()) {
+                  const htmlContent = htmlMatch[1].trim();
+                  // Wrap HTML in yaml config
+                  yamlContent = `type: custom:html-pro-card\ndo_not_parse: true\ncontent: |\n${htmlContent.split('\n').map(l => '  ' + l).join('\n')}`;
+                }
+              }
+              
+              if (!yamlContent) continue;
               
               // Security check: dangerous patterns
               if (hasUnsafeContent(yamlContent)) {
