@@ -1,0 +1,127 @@
+title: "[Category] Module Name"
+labels: ["module"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 📦 Submit a New Module
+        
+        Thanks for sharing your module! Please fill in the template below.
+        
+        ---
+
+  - type: input
+    id: module-name
+    attributes:
+      label: Module Name
+      description: A short, descriptive name for your module
+      placeholder: "e.g. Synology NAS Panel"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Category
+      description: Select the category that best fits your module
+      options:
+        - Style
+        - Appliance
+        - Widget
+        - Animation
+        - Dashboard
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: author
+    attributes:
+      label: Author
+      description: Your GitHub username
+      placeholder: "@username"
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Module version number
+      placeholder: "1.0"
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Briefly describe what your module does (1-2 sentences)
+      placeholder: "This module provides a beautiful dark-style NAS monitoring panel..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: screenshot
+    attributes:
+      label: Screenshot
+      description: Drag and drop your screenshot here. At least one image is required.
+      placeholder: "Drag image here..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: features
+    attributes:
+      label: Features
+      description: List the main features (optional)
+      placeholder: |
+        - Feature 1
+        - Feature 2
+        - Feature 3
+
+  - type: textarea
+    id: entities
+    attributes:
+      label: Required Entities
+      description: List the Home Assistant entities this module uses (optional)
+      placeholder: |
+        - sensor.xxx_temperature
+        - climate.xxx
+
+  - type: textarea
+    id: yaml-code
+    attributes:
+      label: YAML Code
+      description: "Paste your complete YAML config here. Must start with type: custom:html-pro-card"
+      placeholder: |
+        type: custom:html-pro-card
+        do_not_parse: true
+        content: |
+          <style>
+            ...
+          </style>
+          <div>
+            ...
+          </div>
+          <script>
+            ...
+          </script>
+      render: yaml
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      description: Please confirm the following
+      options:
+        - label: My YAML starts with `type: custom:html-pro-card`
+          required: true
+        - label: I have included at least one screenshot
+          required: true
+        - label: My code does not contain external URLs (except CDN libraries)
+          required: true
+        - label: My code does not contain dangerous patterns (eval, localStorage, etc.)
+          required: true
