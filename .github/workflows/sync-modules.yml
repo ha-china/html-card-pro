@@ -228,6 +228,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git pull --rebase origin main || true
-          git add mods/ store.json images/
+          git add mods/ store.json
+          [ -d images ] && git add images/
           git diff --staged --quiet || git commit -m "sync: update modules from discussions"
           git push
