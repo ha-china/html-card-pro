@@ -141,9 +141,42 @@ jobs:
               const tags = tagMatch ? tagMatch[1].split(/[,，]/).map(t => t.trim()) : [];
               const name = disc.title.replace(/^\[.*?\]\s*/, '').trim();
               
-              // Extract image URL
+              // Extract image URL and download to repo
               const imgMatch = disc.body.match(/!\[[^\]]*\]\((https?:\/\/[^\s)]+)\)/);
-              const image = imgMatch ? imgMatch[1] : '';
+              let image = '';
+              if (imgMatch && imgMatch[1]) {
+                const imgUrl = imgMatch[1];
+                const imgExt = imgUrl.match(/\.(png|jpg|jpeg|gif|webp)/i)?.[1] || 'png';
+                const imgFilename = `images/${disc.number}.${imgExt}`;
+                
+                try {
+                  const https = require('https');
+                  const http = require('http');
+                  const imgFs = require('fs');
+                  
+                  if (!imgFs.existsSync('images')) imgFs.mkdirSync('images');
+                  
+                  const downloadImage = (url, dest) => new Promise((resolve, reject) => {
+                    const protocol = url.startsWith('https') ? https : http;
+                    const file = imgFs.createWriteStream(dest);
+                    protocol.get(url, { headers: { 'User-Agent': 'Mozilla/5.0' } }, (response) => {
+                      if (response.statusCode === 301 || response.statusCode === 302) {
+                        downloadImage(response.headers.location, dest).then(resolve).catch(reject);
+                        return;
+                      }
+                      response.pipe(file);
+                      file.on('finish', () => { file.close(); resolve(); });
+                    }).on('error', reject);
+                  });
+                  
+                  await downloadImage(imgUrl, imgFilename);
+                  image = 'https://cdn.jsdelivr.net/gh/ha-china/html-card-pro@main/' + imgFilename;
+                  console.log(`  📷 Downloaded: ${imgFilename}`);
+                } catch (e) {
+                  console.log(`  ⚠️ Failed to download image: ${e.message}`);
+                  image = imgUrl;
+                }
+              }
               
               // Creator
               const creator = authorMatch ? authorMatch[1] : disc.author.login;
@@ -195,6 +228,6 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git pull --rebase origin main || true
-          git add mods/ store.json
+          git add mods/ store.json images/
           git diff --staged --quiet || git commit -m "sync: update modules from discussions"
           git push
