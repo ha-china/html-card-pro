@@ -1,3 +1,5 @@
+name: Module Submission
+description: Submit a new module to the store
 title: "[Category] Module Name"
 labels: ["module"]
 body:
