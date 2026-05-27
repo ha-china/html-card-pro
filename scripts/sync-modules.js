@@ -180,6 +180,13 @@ const wrapHtmlAsYaml = (html) =>
     ...html.split("\n").map((line) => `  ${line}`),
   ].join("\n");
 
+const combineBlocks = (blocks) =>
+  blocks
+    .map((block) => block.content.trim())
+    .filter(Boolean)
+    .filter((content, index, all) => all.indexOf(content) === index)
+    .join("\n\n");
+
 const extractYamlContent = (body) => {
   const normalizedBody = body || "";
   const blocks = [
@@ -207,19 +214,18 @@ const extractYamlContent = (body) => {
         ["html", "htm", "xml", "markup", ""].includes(language) &&
         looksLikeHtml(block.content)
       );
-    })
-    .sort((a, b) => b.content.length - a.content.length);
+    });
 
   if (htmlCandidates.length > 0) {
-    return wrapHtmlAsYaml(htmlCandidates[0].content.trim());
+    return wrapHtmlAsYaml(combineBlocks(htmlCandidates));
   }
 
   const structuralCandidates = blocks
     .filter((block) => looksLikeHtml(block.content) || /(^|\n)\s*content\s*:\s*[>|-]/i.test(block.content))
-    .sort((a, b) => b.content.length - a.content.length);
+    .sort((a, b) => blocks.indexOf(a) - blocks.indexOf(b));
 
   if (structuralCandidates.length > 0) {
-    const content = structuralCandidates[0].content.trim();
+    const content = combineBlocks(structuralCandidates);
     return looksLikeYamlCard(content) ? content : wrapHtmlAsYaml(content);
   }
 

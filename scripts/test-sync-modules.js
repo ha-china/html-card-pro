@@ -75,6 +75,12 @@ ${yaml}
     extractYamlContent(
       "```\n<div>short</div>\n```\n\n```\n<style>.x{}</style>\n<div>long</div>\n<script>root.x = true;</script>\n```",
     ),
+    /<div>short<\/div>[\s\S]*<script>root\.x = true;<\/script>/,
+  );
+  assert.match(
+    extractYamlContent(
+      "```html\n<style>.x{}</style>\n```\n\n```html\n<div>body</div>\n```\n\n```html\n<script>root.x = true;</script>\n```",
+    ),
     /<script>root\.x = true;<\/script>/,
   );
   assert.match(
