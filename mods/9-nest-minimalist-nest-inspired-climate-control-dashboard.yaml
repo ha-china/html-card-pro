@@ -1,0 +1,15 @@
+# Generated from GitHub Discussions by sync-modules.
+# 极简 Nest 风格的空调控制面板/minimalist Nest-inspired climate control dashboard
+# Author: fenglibo51
+# Version: 1.0
+# Description: 
+# Tags: Style
+# Image: https://cdn.jsdelivr.net/gh/ha-china/html-card-pro@main/images/9.png
+# Link: https://github.com/ha-china/html-card-pro/discussions/9
+# ID: 9
+
+type: custom:html-pro-card
+do_not_parse: true
+content: |
+  </h2>
+  <div class="ava-status-badge" id="txtStatusBadge">OFF</div>

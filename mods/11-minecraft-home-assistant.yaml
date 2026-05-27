@@ -1,0 +1,15 @@
+# Generated from GitHub Discussions by sync-modules.
+# Minecraft 风格的 Home Assistant 平板中控仪表盘
+# Author: JochenZhou
+# Version: 1.0
+# Description: 
+# Tags: 
+# Image: https://cdn.jsdelivr.net/gh/ha-china/html-card-pro@main/images/11.png
+# Link: https://github.com/ha-china/html-card-pro/discussions/11
+# ID: 11
+
+type: custom:html-pro-card
+do_not_parse: true
+content: |
+  </aside>
+  <main class="stage"><div class="stage-grid">

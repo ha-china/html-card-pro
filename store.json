@@ -1,5 +1,42 @@
 [
   {
+    "id": 11,
+    "name": "Minecraft 风格的 Home Assistant 平板中控仪表盘",
+    "version": "1.0",
+    "creator": "JochenZhou",
+    "description": "",
+    "tags": [],
+    "image": "https://cdn.jsdelivr.net/gh/ha-china/html-card-pro@main/images/11.png",
+    "link": "https://github.com/ha-china/html-card-pro/discussions/11",
+    "file": "mods/11-minecraft-home-assistant.yaml"
+  },
+  {
+    "id": 10,
+    "name": "群晖 NAS 状态监控面板 / Synology NAS Status Panel",
+    "version": "1.0",
+    "creator": "fenglibo51",
+    "description": "",
+    "tags": [
+      "Style"
+    ],
+    "image": "https://cdn.jsdelivr.net/gh/ha-china/html-card-pro@main/images/10.png",
+    "link": "https://github.com/ha-china/html-card-pro/discussions/10",
+    "file": "mods/10-nas-synology-nas-status-panel.yaml"
+  },
+  {
+    "id": 9,
+    "name": "极简 Nest 风格的空调控制面板/minimalist Nest-inspired climate control dashboard",
+    "version": "1.0",
+    "creator": "fenglibo51",
+    "description": "",
+    "tags": [
+      "Style"
+    ],
+    "image": "https://cdn.jsdelivr.net/gh/ha-china/html-card-pro@main/images/9.png",
+    "link": "https://github.com/ha-china/html-card-pro/discussions/9",
+    "file": "mods/9-nest-minimalist-nest-inspired-climate-control-dashboard.yaml"
+  },
+  {
     "id": 8,
     "name": "Digital Clock",
     "version": "1.0",
