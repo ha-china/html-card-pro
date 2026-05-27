@@ -1,5 +1,6 @@
+# Generated from GitHub Discussions by sync-modules.
 # Apple TV Remote
-# Author: knoop7
+# Author: knoop7 | Version: 1.0
 # Version: 1.0
 # Description: This module provides an Apple TV Remote for HTML Pro Card. With exquisite UI design and GSAP physics animations, it delivers the ultimate remote control experience.
 # Tags: Appliance
@@ -195,3 +196,12 @@ content: |-
   }
   initRemote();
   </script>
+```
+
+</details>
+
+---
+
+### Screenshot
+
+<img width="970" height="1266" alt="Mac_2026-05-26 01 14 01" src="https://github.com/user-attachments/assets/a442e9ee-0076-48bc-8a15-1a9c86c54900" />

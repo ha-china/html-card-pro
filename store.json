@@ -1,23 +1,10 @@
 [
   {
-    "id": 10,
-    "name": "群晖 NAS 状态监控面板 / Synology NAS Status Panel",
-    "version": "1.0",
-    "creator": "fenglibo51",
-    "description": "",
-    "tags": [
-      "Style"
-    ],
-    "image": "https://cdn.jsdelivr.net/gh/ha-china/html-card-pro@main/images/10.png",
-    "link": "https://github.com/ha-china/html-card-pro/discussions/10",
-    "file": "mods/10-nas-synology-nas-status-panel.yaml"
-  },
-  {
     "id": 7,
     "name": "Apple TV Remote",
     "version": "1.0",
-    "creator": "knoop7",
-    "description": "This module provides an Apple TV Remote for HTML Pro Card. With exquisite UI design and GSAP physics animations, it delivers the ultimate remote control experience.\r",
+    "creator": "knoop7 | Version: 1.0",
+    "description": "This module provides an Apple TV Remote for HTML Pro Card. With exquisite UI design and GSAP physics animations, it delivers the ultimate remote control experience.",
     "tags": [
       "Appliance"
     ],
