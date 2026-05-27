@@ -87,6 +87,23 @@ ${yaml}
     extractYamlContent("    <style>.x{}</style>\n    <div>OK</div>"),
     /^type: custom:html-pro-card\n/,
   );
+  assert.match(
+    extractYamlContent(`## YAML Code
+
+<style>
+.outer { color: red; }
+</style>
+<div class="outer">
+  <div class="inner">value</div>
+</div>
+<script>
+root.x = true;
+</script>
+
+## Checklist
+- [ ] done`),
+    /<style>[\s\S]*<div class="outer">[\s\S]*<script>[\s\S]*root\.x = true;/,
+  );
 
   const minecraft = await discussionToModule(
     discussion({

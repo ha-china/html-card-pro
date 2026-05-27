@@ -187,14 +187,35 @@ const combineBlocks = (blocks) =>
     .filter((content, index, all) => all.indexOf(content) === index)
     .join("\n\n");
 
+const extractRawHtmlRegion = (body) => {
+  const normalized = (body || "").replace(/\r\n/g, "\n");
+  const starts = [
+    normalized.search(/<style\b/i),
+    normalized.search(/<ha-card\b/i),
+    normalized.search(/<section\b/i),
+    normalized.search(/<article\b/i),
+    normalized.search(/<main\b/i),
+    normalized.search(/<div\b/i),
+  ].filter((index) => index !== -1);
+
+  if (starts.length === 0) return "";
+
+  const start = Math.min(...starts);
+  const afterStart = normalized.slice(start);
+  const endMatch = afterStart.match(
+    /\n\s*(?:#{1,6}\s+(?:Checklist|Screenshot|截图|YAML|代码)|<!--\s*(?:Drag and drop|截图|screenshot)|-\s*\[[ xX]\])/i,
+  );
+  const region = (endMatch ? afterStart.slice(0, endMatch.index) : afterStart).trim();
+
+  return looksLikeHtml(region) ? region : "";
+};
+
 const extractYamlContent = (body) => {
   const normalizedBody = body || "";
-  const blocks = [
-    ...extractCodeBlocks(normalizedBody),
-    ...extractIndentedCodeBlocks(normalizedBody),
-  ];
+  const fencedBlocks = extractCodeBlocks(normalizedBody);
+  const blocks = [...fencedBlocks, ...extractIndentedCodeBlocks(normalizedBody)];
 
-  const yamlCandidates = blocks.filter((block) => {
+  const yamlCandidates = fencedBlocks.filter((block) => {
     const language = block.language.split(/\s+/)[0];
     return (
       ["yaml", "yml", "lovelace", "home-assistant", "ha", ""].includes(
@@ -207,7 +228,7 @@ const extractYamlContent = (body) => {
     return yamlCandidates[0].content.trim();
   }
 
-  const htmlCandidates = blocks
+  const fencedHtmlCandidates = fencedBlocks
     .filter((block) => {
       const language = block.language.split(/\s+/)[0];
       return (
@@ -216,8 +237,13 @@ const extractYamlContent = (body) => {
       );
     });
 
-  if (htmlCandidates.length > 0) {
-    return wrapHtmlAsYaml(combineBlocks(htmlCandidates));
+  if (fencedHtmlCandidates.length > 0) {
+    return wrapHtmlAsYaml(combineBlocks(fencedHtmlCandidates));
+  }
+
+  const rawHtmlRegion = extractRawHtmlRegion(normalizedBody);
+  if (rawHtmlRegion) {
+    return wrapHtmlAsYaml(rawHtmlRegion);
   }
 
   const structuralCandidates = blocks
