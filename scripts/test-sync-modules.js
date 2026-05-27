@@ -6,6 +6,7 @@ const path = require("path");
 const {
   extractYamlContent,
   discussionToModule,
+  discussionSources,
   writeModules,
 } = require("./sync-modules");
 
@@ -29,6 +30,22 @@ content: |
   <div class="card">OK</div>`;
 
 const run = async () => {
+  assert.strictEqual(
+    (
+      await discussionToModule(
+        discussion({
+          body: `**Author**: knoop7 | **Version**: 1.0
+
+\`\`\`yaml
+${yaml}
+\`\`\``,
+        }),
+        { downloadImages: false },
+      )
+    ).module.creator,
+    "knoop7",
+  );
+
   assert.strictEqual(
     extractYamlContent(`## YAML\n\`\`\`yml\n${yaml}\n\`\`\``),
     yaml,
@@ -134,6 +151,46 @@ ${yaml}
     "10-nas-synology-nas-status-panel.yaml",
   ]);
 
+  const sourceDiscussion = discussion({
+    number: 13,
+    title: "[Style] Main discussion",
+    body: `\`\`\`yaml\n${yaml}\n\`\`\``,
+    comments: {
+      nodes: [
+        {
+          body: `# [Style] Comment Minecraft
+
+\`\`\`
+${yaml}
+\`\`\``,
+          author: { login: "JochenZhou" },
+          url: "https://github.com/ha-china/html-card-pro/discussions/13#discussioncomment-1",
+        },
+        {
+          body: `# [Style] Comment Nest
+
+\`\`\`lovelace
+${yaml}
+\`\`\``,
+          author: { login: "fenglibo51" },
+          url: "https://github.com/ha-china/html-card-pro/discussions/13#discussioncomment-2",
+        },
+      ],
+    },
+  });
+  assert.deepStrictEqual(
+    discussionSources(sourceDiscussion).map((source) => source.id),
+    [13, "13-comment-1", "13-comment-2"],
+  );
+
+  await writeModules([sourceDiscussion], { downloadImages: false });
+  assert.deepStrictEqual(fs.readdirSync("mods").sort(), [
+    "10-nas-synology-nas-status-panel.yaml",
+    "13-comment-1-comment-minecraft.yaml",
+    "13-comment-2-comment-nest.yaml",
+    "13-main-discussion.yaml",
+  ]);
+
   await writeModules(
     [
       discussion({
@@ -144,8 +201,11 @@ ${yaml}
     ],
     { downloadImages: false },
   );
-  assert.deepStrictEqual(fs.readdirSync("mods"), [
+  assert.deepStrictEqual(fs.readdirSync("mods").sort(), [
     "10-nas-synology-nas-status-panel.yaml",
+    "13-comment-1-comment-minecraft.yaml",
+    "13-comment-2-comment-nest.yaml",
+    "13-main-discussion.yaml",
   ]);
 };
 

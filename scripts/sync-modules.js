@@ -40,6 +40,15 @@ const GRAPHQL_QUERY = `
           createdAt
           updatedAt
           url
+          comments(first: 100) {
+            nodes {
+              body
+              author { login }
+              createdAt
+              updatedAt
+              url
+            }
+          }
         }
       }
     }
@@ -211,7 +220,7 @@ const extractDescription = (body) => {
 const extractField = (body, names) => {
   const escaped = names.map((name) => name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
   const pattern = new RegExp(
-    `(?:^|\\n)\\s*(?:\\*\\*)?(?:${escaped.join("|")})(?:\\*\\*)?\\s*[:：]\\s*([^\\n]+)`,
+    `(?:^|\\n|\\|)\\s*(?:\\*\\*)?(?:${escaped.join("|")})(?:\\*\\*)?\\s*[:：]\\s*([^\\n|]+)`,
     "i",
   );
   const match = (body || "").match(pattern);
@@ -228,6 +237,22 @@ const parseTitle = (title) => {
     : [];
   const name = title.replace(/^\[[^\]]+\]\s*/, "").trim();
   return { name, tags };
+};
+
+const titleFromBody = (body) => {
+  const lines = (body || "")
+    .replace(/\r\n/g, "\n")
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  const taggedLine = lines.find((line) => /^\[[^\]]+\]\s*\S/.test(line));
+  if (taggedLine) return taggedLine.replace(/^#+\s*/, "");
+
+  const heading = lines.find((line) => /^#{1,3}\s+\S/.test(line));
+  if (heading) return heading.replace(/^#{1,3}\s+/, "");
+
+  return "";
 };
 
 const slugify = (value, fallback) => {
@@ -305,13 +330,15 @@ const downloadImage = (url, dest, redirectCount = 0) =>
     request.on("error", reject);
   });
 
-const cleanupModuleFiles = (discussionNumber, keepFile) => {
+const cleanupModuleFiles = (discussionNumber, keepFiles) => {
   ensureDir("mods");
   const prefix = `${discussionNumber}-`;
+  const keep = new Set(keepFiles);
   for (const entry of fs.readdirSync("mods")) {
     if (!entry.startsWith(prefix) || !entry.endsWith(".yaml")) continue;
     const file = path.join("mods", entry);
-    if (file !== keepFile) {
+    const content = fs.readFileSync(file, "utf8");
+    if (!keep.has(file) && content.startsWith(GENERATED_HEADER)) {
       fs.unlinkSync(file);
     }
   }
@@ -332,18 +359,22 @@ const cleanupDeletedDiscussionFiles = (discussionNumbers) => {
   }
 };
 
-const discussionToModule = async (disc, options = {}) => {
-  if (!disc.body) {
-    return { skipped: true, reason: "empty body", discussion: disc };
+const discussionToModule = async (source, options = {}) => {
+  if (!source.body) {
+    return { skipped: true, reason: "empty body", discussion: source };
   }
 
-  const yamlContent = extractYamlContent(disc.body);
+  const yamlContent = extractYamlContent(source.body);
   if (!yamlContent) {
-    return { skipped: true, reason: "no html-pro-card code block", discussion: disc };
+    return {
+      skipped: true,
+      reason: "no html-pro-card code block",
+      discussion: source,
+    };
   }
 
   if (hasUnsafeContent(yamlContent)) {
-    return { skipped: true, reason: "contains unsafe code", discussion: disc };
+    return { skipped: true, reason: "contains unsafe code", discussion: source };
   }
 
   const urls = extractUrls(yamlContent);
@@ -352,25 +383,33 @@ const discussionToModule = async (disc, options = {}) => {
     return {
       skipped: true,
       reason: `unsafe URLs: ${unsafeUrls.join(", ")}`,
-      discussion: disc,
+      discussion: source,
     };
   }
 
-  const { name, tags } = parseTitle(disc.title);
-  const author = extractField(disc.body, ["Author", "作者"]) || disc.author?.login || "";
-  const version = extractField(disc.body, ["Version", "版本"]) || "1.0";
-  const description = extractDescription(disc.body);
-  const safeName = slugify(name, `module-${disc.number}`);
-  const filename = `mods/${disc.number}-${safeName}.yaml`;
+  const { name, tags } = parseTitle(source.title);
+  const author =
+    extractField(source.body, ["Author", "作者"]) || source.author?.login || "";
+  const version = extractField(source.body, ["Version", "版本"]) || "1.0";
+  const description = extractDescription(source.body);
+  const safeName = slugify(name, `module-${source.number}`);
+  const filenamePrefix =
+    source.kind === "comment"
+      ? `${source.number}-comment-${source.commentIndex}`
+      : `${source.number}`;
+  const filename = `mods/${filenamePrefix}-${safeName}.yaml`;
 
-  const imgUrl = extractImageUrl(disc.body);
+  const imgUrl = extractImageUrl(source.body);
   let image = "";
   if (imgUrl) {
     if (!isUrlSafe(imgUrl)) {
-      options.log?.(`  Ignored unsafe image URL for #${disc.number}: ${imgUrl}`);
+      options.log?.(`  Ignored unsafe image URL for #${source.number}: ${imgUrl}`);
     } else {
       const ext = extensionFromUrl(imgUrl);
-      const imgFilename = `images/${disc.number}.${ext}`;
+      const imgFilename =
+        source.kind === "comment"
+          ? `images/${source.number}-comment-${source.commentIndex}.${ext}`
+          : `images/${source.number}.${ext}`;
       if (options.downloadImages !== false) {
         ensureDir("images");
         try {
@@ -380,7 +419,7 @@ const discussionToModule = async (disc, options = {}) => {
         } catch (error) {
           image = imgUrl;
           options.log?.(
-            `  Failed to download image for #${disc.number}: ${error.message}`,
+            `  Failed to download image for #${source.number}: ${error.message}`,
           );
         }
       } else {
@@ -397,8 +436,8 @@ const discussionToModule = async (disc, options = {}) => {
     `# Description: ${description}`,
     `# Tags: ${tags.join(", ")}`,
     `# Image: ${image}`,
-    `# Link: ${disc.url}`,
-    `# ID: ${disc.number}`,
+    `# Link: ${source.url}`,
+    `# ID: ${source.id}`,
     "",
     yamlContent.trim(),
     "",
@@ -409,17 +448,44 @@ const discussionToModule = async (disc, options = {}) => {
     filename,
     content: header,
     module: {
-      id: disc.number,
+      id: source.id,
       name,
       version,
       creator: author,
       description,
       tags,
       image,
-      link: disc.url,
+      link: source.url,
       file: filename,
     },
   };
+};
+
+const discussionSources = (disc) => {
+  const fallbackTitle = titleFromBody(disc.body) || disc.title;
+  const sources = [
+    {
+      ...disc,
+      id: disc.number,
+      kind: "discussion",
+      title: fallbackTitle,
+      number: disc.number,
+    },
+  ];
+
+  for (const [index, comment] of (disc.comments?.nodes || []).entries()) {
+    const commentIndex = index + 1;
+    sources.push({
+      ...comment,
+      id: `${disc.number}-comment-${commentIndex}`,
+      kind: "comment",
+      commentIndex,
+      title: titleFromBody(comment.body) || disc.title,
+      number: disc.number,
+    });
+  }
+
+  return sources;
 };
 
 const fetchDiscussions = async ({ github, context }) => {
@@ -443,27 +509,46 @@ const fetchDiscussions = async ({ github, context }) => {
 const writeModules = async (discussions, options = {}) => {
   ensureDir("mods");
   ensureDir("images");
-  cleanupDeletedDiscussionFiles(
-    new Set(discussions.map((discussion) => discussion.number)),
-  );
+  if (options.fullSync) {
+    cleanupDeletedDiscussionFiles(
+      new Set(discussions.map((discussion) => discussion.number)),
+    );
+  }
 
   const modules = [];
   const skipped = [];
   for (const disc of discussions) {
-    const result = await discussionToModule(disc, options);
-    if (result.skipped) {
-      skipped.push(result);
-      options.log?.(`Skipped #${disc.number} ${disc.title}: ${result.reason}`);
-      continue;
+    const results = [];
+    for (const source of discussionSources(disc)) {
+      const result = await discussionToModule(source, options);
+      if (result.skipped) {
+        skipped.push(result);
+        options.log?.(`Skipped ${source.id} ${source.title}: ${result.reason}`);
+        continue;
+      }
+
+      results.push(result);
     }
 
-    cleanupModuleFiles(disc.number, result.filename);
-    fs.writeFileSync(result.filename, result.content);
-    modules.push(result.module);
-    options.log?.(`Synced #${disc.number} ${result.module.name} -> ${result.filename}`);
+    if (results.length > 0) {
+      cleanupModuleFiles(
+        disc.number,
+        results.map((result) => result.filename),
+      );
+    }
+
+    for (const result of results) {
+      fs.writeFileSync(result.filename, result.content);
+      modules.push(result.module);
+      options.log?.(
+        `Synced ${result.module.id} ${result.module.name} -> ${result.filename}`,
+      );
+    }
   }
 
-  modules.sort((a, b) => b.id - a.id);
+  modules.sort((a, b) => String(b.id).localeCompare(String(a.id), undefined, {
+    numeric: true,
+  }));
   fs.writeFileSync("store.json", `${JSON.stringify(modules, null, 2)}\n`);
   options.log?.(`Generated ${modules.length} modules (${skipped.length} skipped)`);
 
@@ -472,13 +557,14 @@ const writeModules = async (discussions, options = {}) => {
 
 const syncDiscussions = async ({ github, context, log = console.log }) => {
   const discussions = await fetchDiscussions({ github, context });
-  return writeModules(discussions, { log });
+  return writeModules(discussions, { fullSync: true, log });
 };
 
 module.exports = {
   ALLOWED_DOMAINS,
   extractCodeBlocks,
   extractYamlContent,
+  discussionSources,
   discussionToModule,
   fetchDiscussions,
   hasUnsafeContent,
