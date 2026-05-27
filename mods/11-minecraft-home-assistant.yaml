@@ -11,5 +11,549 @@
 type: custom:html-pro-card
 do_not_parse: true
 content: |
-  </aside>
-  <main class="stage"><div class="stage-grid">
+  <style>
+      :host { display:block; }
+      ha-card { overflow:hidden; border:0; background:transparent; box-shadow:none; }
+      .mc-app { min-height:calc(100vh - 16px); padding:18px; box-sizing:border-box; font:inherit; color:#ffffff; display:grid; grid-template-columns:190px minmax(0,1fr); gap:18px; background:linear-gradient(rgba(20,14,10,.42),rgba(20,14,10,.42)),url("/local/minecraft-dashboard/base-texture.jpg"); background-size:cover; background-position:center; background-repeat:no-repeat; }
+      h1,h2,h3,p { margin:0; font:inherit; }
+      h1 { font-size:24px; line-height:1.12; font-weight:900; color:#ffffff; text-shadow:0 2px 16px rgba(0,0,0,.42); }
+      h2 { font-size:16px; font-weight:900; color:#ffffff; }
+      h3 { font-size:13px; font-weight:850; }
+      .muted { color:rgba(255,255,255,.68); font-size:12px; }
+      .sidebar { padding:12px 6px; display:flex; flex-direction:column; min-height:calc(100vh - 52px); background:transparent; border:0; box-shadow:none; border-radius:0; }
+      .profile { display:flex; align-items:center; gap:12px; margin:2px 0 24px 0; padding:0 8px; }
+      .profile-img,.member-img { border-radius:16px; object-fit:cover; display:block; border:1px solid rgba(255,255,255,.16); }
+      .profile-img { width:54px; height:54px; box-shadow:0 14px 34px rgba(0,0,0,.24); }
+      .member-img { width:40px; height:40px; }
+      .menu { display:grid; gap:6px; }
+      .menu button { min-height:46px; border:0; border-radius:16px; padding:0 12px; display:flex; align-items:center; gap:10px; color:rgba(255,255,255,.62); background:transparent; font:inherit; cursor:pointer; transition:all .2s ease; text-align:left; text-shadow:0 2px 14px rgba(0,0,0,.5); }
+      .menu button:hover { transform:translateY(-2px); background:rgba(255,255,255,.06); color:#ffffff; }
+      .menu button.active { color:#ffffff; background:rgba(112,154,82,.20); border:1px solid rgba(167,215,107,.22); }
+      .menu ha-icon { width:22px; color:inherit; }
+      .sidebar-art { margin-top:auto; min-height:146px; border-radius:24px; overflow:hidden; border:0; box-shadow:0 18px 50px rgba(0,0,0,.28); }
+      .sidebar-art img { width:100%; height:100%; object-fit:cover; display:block; opacity:.94; }
+      .stage { min-height:calc(100vh - 52px); border-radius:32px; overflow:hidden; position:relative; background-image:linear-gradient(90deg,rgba(17,12,9,.28),rgba(17,12,9,.03) 45%,rgba(17,12,9,.36)),url("/local/minecraft-dashboard/stage-background.jpg"); background-size:cover; background-position:center; border:0; box-shadow:0 30px 96px rgba(0,0,0,.34); }
+      .stage:before { content:""; position:absolute; inset:0; pointer-events:none; border-radius:32px; box-shadow:inset 0 0 0 1px rgba(255,255,255,.10), inset 0 -80px 160px rgba(0,0,0,.22); z-index:0; }
+      .stage-grid { position:absolute; inset:0; z-index:1; padding:24px; box-sizing:border-box; display:grid; grid-template-columns:minmax(0,3fr) minmax(292px,1fr); grid-template-rows:auto 1fr auto; grid-template-areas:"welcome side" "spacer side" "bottom side"; gap:16px; }
+      .welcome { grid-area:welcome; align-self:start; max-width:520px; color:#ffffff; text-shadow:0 3px 18px rgba(0,0,0,.48); }
+      .subtitle { margin-top:6px; font-size:14px; color:rgba(255,255,255,.82); text-shadow:0 2px 14px rgba(0,0,0,.45); }
+      .weather-row { display:flex; align-items:center; gap:10px; margin-top:14px; }
+      .sun-icon { width:36px; height:36px; border-radius:12px; background:linear-gradient(135deg,#ffd45d,#e7a939); position:relative; box-shadow:0 0 22px rgba(247,190,72,.38); border:1px solid rgba(255,255,255,.22); }
+      .sun-icon:before { content:""; position:absolute; inset:9px; border-radius:8px; background:rgba(255,255,255,.28); box-shadow:8px 8px 0 rgba(0,0,0,.10); }
+      .weather-text { min-height:36px; display:flex; align-items:center; font-size:14px; font-weight:800; color:#ffffff; }
+      .bottom-stack { grid-area:bottom; align-self:end; display:grid; gap:16px; }
+      .section-title { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; color:#ffffff; text-shadow:0 3px 18px rgba(0,0,0,.65); }
+      .devices { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:12px; }
+      .device { min-height:152px; border-radius:18px; padding:16px; box-sizing:border-box; background:rgba(245,240,230,.95); color:#2a221e; border:1px solid rgba(255,255,255,.55); box-shadow:0 18px 48px rgba(0,0,0,.25); display:grid; grid-template-rows:auto 1fr auto; cursor:pointer; transition:all .2s ease; }
+      .device .muted { color:rgba(42,34,30,.58); }
+      .device:hover,.room:hover,.scene:hover,.add-btn:hover { transform:translateY(-2px); }
+      .device:active,.scene:active,.add-btn:active { transform:scale(.98); }
+      .device-top { display:flex; justify-content:space-between; align-items:flex-start; gap:8px; }
+      .item-img { width:56px; height:56px; border-radius:16px; object-fit:cover; display:block; border:1px solid rgba(42,34,30,.10); box-shadow:0 10px 24px rgba(42,34,30,.14); }
+      .tag-stack { display:grid; justify-items:end; gap:6px; }
+      .status { min-width:34px; min-height:24px; border-radius:999px; display:grid; place-items:center; font-size:11px; font-weight:900; background:rgba(42,34,30,.10); color:rgba(42,34,30,.62); padding:0 8px; }
+      .count-tag { min-width:24px; height:24px; border-radius:999px; display:grid; place-items:center; font-size:11px; font-weight:900; background:rgba(42,34,30,.08); color:rgba(42,34,30,.58); }
+      .device-copy { align-self:end; }
+      .device-name { font-size:15px; font-weight:950; margin-bottom:3px; color:#2a221e; }
+      .control-row { display:flex; justify-content:space-between; align-items:center; gap:8px; margin-top:10px; }
+      .state-word { font-size:14px; font-weight:950; }
+      .green { color:#3f8a31; } .blue { color:#398bd7; } .purple { color:#7a4fc2; } .red { color:#c24a43; } .grey { color:#7d7771; }
+      .switch { width:44px; height:24px; border-radius:999px; background:rgba(42,34,30,.16); position:relative; }
+      .switch:after { content:""; position:absolute; top:4px; left:4px; width:16px; height:16px; border-radius:999px; background:#f3eee5; box-shadow:0 2px 8px rgba(0,0,0,.18); }
+      .switch.on.green-bg { background:#5ca147; } .switch.on.blue-bg { background:#4d9de6; } .switch.on.purple-bg { background:#7c59c8; } .switch.on:after { left:24px; }
+      .rooms { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; }
+      .room { aspect-ratio:4/3; min-height:150px; border-radius:20px; overflow:hidden; position:relative; border:1px solid rgba(255,255,255,.12); box-shadow:0 18px 52px rgba(0,0,0,.28); transition:all .2s ease; }
+      .room img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:block; }
+      .room:after { content:""; position:absolute; inset:0; background:linear-gradient(180deg,transparent 42%,rgba(14,10,8,.50)); }
+      .room-label { position:absolute; z-index:1; left:14px; bottom:14px; border-radius:0; padding:0; min-width:0; background:transparent; border:0; text-shadow:0 3px 16px rgba(0,0,0,.85); }
+      .room-label h3 { color:#ffffff; font-size:14px; font-weight:950; }
+      .room-label .muted { color:rgba(255,255,255,.72); font-size:11px; margin-top:2px; }
+      .side { grid-area:side; display:grid; gap:16px; align-content:start; }
+      .glass-card { border-radius:20px; padding:16px; background:rgb(32,14,3); border:1px solid rgba(255,255,255,.10); box-shadow:0 20px 58px rgba(0,0,0,.24); color:#ffffff; }
+      .family-row { display:grid; grid-template-columns:minmax(0,1fr) 48px; gap:10px; }
+      .family-pill { min-height:58px; border-radius:999px; padding:8px 12px; display:flex; align-items:center; gap:10px; background:rgb(32,14,3); border:1px solid rgba(255,255,255,.10); box-shadow:0 18px 48px rgba(0,0,0,.20); }
+      .online { color:#7bd85f; font-weight:950; }
+      .arrow { margin-left:auto; color:rgba(255,255,255,.52); font-weight:900; }
+      .add-btn { min-width:48px; min-height:58px; border:1px solid rgba(255,255,255,.10); border-radius:18px; background:rgb(32,14,3); color:#ffffff; font-size:28px; font-weight:300; cursor:pointer; transition:all .2s ease; }
+      .env-list { display:grid; gap:12px; margin-top:12px; position:relative; }
+      .env-list:after { display:none; box-shadow:none; filter:none; }
+      .env-row { display:grid; grid-template-columns:30px 1fr auto; align-items:center; gap:10px; min-height:34px; }
+      .dot { width:28px; height:28px; border-radius:10px; display:grid; place-items:center; font-size:13px; font-weight:950; }
+      .dot.red-dot { background:rgba(216,82,72,.22); color:#ff8d84; } .dot.blue-dot { background:rgba(74,151,226,.22); color:#8ac7ff; } .dot.green-dot { background:rgba(112,185,86,.22); color:#93e374; }
+      .env-value { font-weight:950; color:#ffffff; }
+      .good { color:#8be36d; font-weight:950; }
+      .energy-value { font-size:34px; line-height:1; font-weight:950; margin-top:4px; }
+      .energy-value small { font-size:13px; color:rgba(255,255,255,.62); font-weight:700; }
+      .bars { height:82px; display:flex; align-items:end; gap:6px; margin-top:14px; padding:0 4px; }
+      .bars span { flex:1; border-radius:6px 6px 2px 2px; background:linear-gradient(180deg,#8fe36f,#477b35); min-height:12px; opacity:.92; }
+      .energy-footer { display:flex; justify-content:space-between; align-items:center; margin-top:10px; }
+      .down { color:#7bd85f; font-weight:950; }
+      .scene-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px; }
+      .scene { min-height:84px; border:1px solid rgba(255,255,255,.14); border-radius:16px; color:#ffffff; padding:12px; text-align:center; font:inherit; cursor:pointer; box-shadow:0 12px 30px rgba(0,0,0,.16); display:flex; flex-direction:column; align-items:center; justify-content:center; }
+      .scene.morning { background:rgba(142,176,74,.52); } .scene.night { background:rgba(38,62,103,.55); } .scene.movie { background:rgba(175,91,52,.52); } .scene.game { background:rgba(84,58,130,.55); }
+      .scene ha-icon { color:#ffffff; margin-bottom:6px; }
+      .scene strong { font-weight:950; }
+      .scene span { font-size:12px; color:rgba(255,255,255,.74); }
+      @media(max-width:1180px) { .mc-app { grid-template-columns:84px minmax(0,1fr); } .sidebar { padding:10px 4px; } .profile .meta,.menu span,.sidebar-art { display:none; } .stage-grid { grid-template-columns:1fr; grid-template-areas:"welcome" "bottom" "side"; overflow:auto; position:relative; min-height:calc(100vh - 52px); } .side { grid-template-columns:repeat(2,1fr); } .devices { grid-template-columns:repeat(3,1fr); } }
+      @media(max-width:760px) { .mc-app { grid-template-columns:1fr; padding:10px; } .sidebar { display:none; } .stage-grid { padding:14px; } .devices { grid-template-columns:repeat(2,1fr); } .rooms,.side { grid-template-columns:1fr 1fr; } }
+      @media(max-width:520px) { .rooms,.side { grid-template-columns:1fr; } }
+    
+    
+    
+      /* fluid-tablet-layout-no-max-size */
+      @media (min-width: 900px) {
+        .mc-app {
+          width: 100%;
+          height: calc(100vh - 16px);
+          min-height: 0;
+          max-width: none;
+          max-height: none;
+          margin: 0;
+          padding: clamp(10px, 1.4vw, 18px);
+          grid-template-columns: clamp(82px, 15vw, 190px) minmax(0, 1fr);
+          gap: clamp(10px, 1.4vw, 18px);
+          overflow: hidden;
+        }
+        .sidebar {
+          height: 100%;
+          min-height: 0;
+          box-sizing: border-box;
+          overflow: hidden;
+        }
+        .stage {
+          height: 100%;
+          min-height: 0;
+        }
+        .stage-grid {
+          padding: clamp(14px, 1.9vw, 24px);
+          grid-template-columns: minmax(0, 3fr) minmax(260px, 25%);
+          grid-template-rows: auto minmax(0, 1fr) auto;
+          gap: clamp(10px, 1.25vw, 16px);
+          overflow: hidden;
+        }
+        .bottom-stack {
+          gap: clamp(10px, 1.25vw, 16px);
+          min-width: 0;
+        }
+        .devices {
+          gap: clamp(8px, 1vw, 12px);
+        }
+        .device {
+          min-height: clamp(116px, 17vh, 152px);
+          padding: clamp(10px, 1.2vw, 16px);
+        }
+        .item-img {
+          width: clamp(42px, 4.4vw, 56px);
+          height: clamp(42px, 4.4vw, 56px);
+        }
+        .rooms {
+          gap: clamp(8px, 1vw, 12px);
+        }
+        .room {
+          min-height: clamp(110px, 18vh, 170px);
+          max-height: none;
+        }
+        .side {
+          gap: clamp(10px, 1.25vw, 16px);
+          overflow: hidden;
+        }
+        .glass-card {
+          padding: clamp(10px, 1.2vw, 16px);
+        }
+        .bars {
+          height: clamp(48px, 8vh, 82px);
+        }
+        .scene {
+          min-height: clamp(60px, 9vh, 84px);
+        }
+      }
+    
+      @media (min-width: 900px) and (max-width: 1120px) {
+        .mc-app {
+          grid-template-columns: 78px minmax(0, 1fr);
+        }
+        .profile .meta,
+        .menu span,
+        .sidebar-art {
+          display: none;
+        }
+        .stage-grid {
+          grid-template-columns: minmax(0, 1fr) minmax(240px, 28%);
+        }
+      }
+      /* fluid-tablet-layout-no-max-size-end */
+    
+    
+    
+      /* time-hitokoto-ha-bindings */
+      .time-card { min-height:58px; border-radius:20px; padding:10px 14px; background:rgb(32,14,3); border:1px solid rgba(255,255,255,.10); box-shadow:0 18px 48px rgba(0,0,0,.20); display:flex; align-items:center; justify-content:space-between; gap:12px; color:#ffffff; }
+      .time-main { font-size:30px; line-height:1; font-weight:950; letter-spacing:.5px; }
+      .time-sub { margin-top:4px; color:rgba(255,255,255,.68); font-size:12px; }
+      .time-icon { width:42px; height:42px; border-radius:14px; display:grid; place-items:center; background:rgba(255,255,255,.08); color:#ffffff; }
+      .hitokoto-text { margin-top:6px; font-size:14px; color:rgba(255,255,255,.84); text-shadow:0 2px 14px rgba(0,0,0,.45); max-width:560px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+      .hitokoto-from { margin-top:4px; font-size:12px; color:rgba(255,255,255,.62); text-shadow:0 2px 14px rgba(0,0,0,.45); }
+      .env-title-icon { color:rgba(255,255,255,.72); filter:none; box-shadow:none; text-shadow:none; }
+      .env-list:after { display:none; box-shadow:none; filter:none; }
+      .ha-dyn { font-weight:950; }
+      .status-off { color:#7d7771; }
+      .status-on { color:#3f8a31; }
+      .status-blue { color:#398bd7; }
+      .status-purple { color:#7a4fc2; }
+      .status-red { color:#c24a43; }
+      /* time-hitokoto-ha-bindings-end */
+    
+    
+    
+      /* env-weather-nav-scenes-fixes */
+      .weather-row { cursor:pointer; transition:all .2s ease; }
+      .weather-row:hover { transform:translateY(-2px); }
+      .weather-row:active { transform:scale(.98); }
+      .env-title-icon { display:none; }
+      .env-row .dot ha-icon { --mdc-icon-size:16px; color:currentColor; }
+      .dot.temp-dot { background:rgba(216,82,72,.22); color:#ff8d84; }
+      .dot.hum-dot { background:rgba(74,151,226,.22); color:#8ac7ff; }
+      .dot.pm-dot { background:rgba(112,185,86,.22); color:#93e374; }
+      .room-label h3 { font-size:17px; line-height:1.05; }
+      .room-label .muted { font-size:13px; font-weight:800; }
+      .nav-target { cursor:pointer; }
+      /* env-weather-nav-scenes-fixes-end */
+    
+    
+    
+      /* weather-icon-and-scene-confirm */
+      .weather-state-icon { width:32px; height:32px; border-radius:10px; display:grid; place-items:center; background:rgba(255,255,255,.12); color:#ffd45d; border:1px solid rgba(255,255,255,.18); box-shadow:0 0 18px rgba(247,190,72,.22); }
+      .weather-state-icon ha-icon { --mdc-icon-size:22px; color:currentColor; }
+      .scene[data-scene-entity] { cursor:pointer; }
+      /* weather-icon-and-scene-confirm-end */
+    
+      /* device-state-background-colors */
+      .device {
+        transition: background .22s ease, color .22s ease, transform .2s ease, box-shadow .22s ease;
+      }
+      .device.device-off,
+      .device.device-idle,
+      .device.device-unavailable {
+        background:rgba(245,240,230,.95);
+        color:#2a221e;
+      }
+      .device.device-on-yellow {
+        background:rgb(232,196,112);
+        color:#352712;
+        box-shadow:0 18px 48px rgba(110,78,22,.24);
+      }
+      .device.device-on-green {
+        background:rgb(142,190,112);
+        color:#203118;
+        box-shadow:0 18px 48px rgba(55,105,39,.24);
+      }
+      .device.device-on-blue {
+        background:rgb(138,190,231);
+        color:#172b3d;
+        box-shadow:0 18px 48px rgba(54,112,164,.24);
+      }
+      .device.device-on-purple {
+        background:rgb(176,145,225);
+        color:#281c3d;
+        box-shadow:0 18px 48px rgba(94,62,145,.24);
+      }
+      .device.device-on-red {
+        background:rgb(218,139,116);
+        color:#3d1d16;
+        box-shadow:0 18px 48px rgba(145,62,42,.24);
+      }
+      .device.device-on-brown {
+        background:rgb(177,139,96);
+        color:#352416;
+        box-shadow:0 18px 48px rgba(96,62,30,.22);
+      }
+      .device.device-on-yellow .muted,
+      .device.device-on-green .muted,
+      .device.device-on-blue .muted,
+      .device.device-on-purple .muted,
+      .device.device-on-red .muted,
+      .device.device-on-brown .muted {
+        color:rgba(32,26,20,.62);
+      }
+      .device.device-on-yellow .device-name,
+      .device.device-on-green .device-name,
+      .device.device-on-blue .device-name,
+      .device.device-on-purple .device-name,
+      .device.device-on-red .device-name,
+      .device.device-on-brown .device-name {
+        color:inherit;
+      }
+      /* device-state-background-colors-end */
+    
+    
+    
+    
+      /* hitokoto-inline-and-room-presence */
+      .hitokoto-text { white-space:normal; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
+      .hitokoto-from-inline { color:rgba(255,255,255,.62); font-size:12px; margin-left:6px; }
+      /* hitokoto-inline-and-room-presence-end */
+    
+    
+    /* hitokoto-inline-source */
+    .hitokoto-line,
+    .hitokoto-text,
+    .hitokoto-wrap,
+    .quote-line {
+      display: inline-flex !important;
+      align-items: baseline !important;
+      flex-wrap: wrap !important;
+      gap: 0 !important;
+    }
+    .hitokoto-from,
+    .hitokoto-source,
+    #hitokoto-from,
+    [data-hitokoto-from] {
+      display: inline !important;
+      margin-left: .35em !important;
+      white-space: nowrap !important;
+    }
+    /* hitokoto-inline-source-end */
+    
+    </style>
+    <div class="mc-app">
+      <aside class="sidebar">
+        <div class="profile"><img class="profile-img" alt="Steve avatar" src="/local/minecraft-dashboard/avatar-steve.jpg"><div class="meta"><h2>冒险家</h2><p class="muted">Minecraft Home</p></div></div>
+        <nav class="menu"><button class="active nav-target" data-nav="home"><ha-icon icon="mdi:home"></ha-icon><span>首页</span></button><button class="nav-target" data-nav="devices"><ha-icon icon="mdi:devices"></ha-icon><span>设备</span></button><button class="nav-target" data-nav="scenes"><ha-icon icon="mdi:palette-swatch"></ha-icon><span>场景</span></button><button class="nav-target" data-nav="automations"><ha-icon icon="mdi:robot"></ha-icon><span>自动化</span></button><button class="nav-target" data-nav="rooms"><ha-icon icon="mdi:door"></ha-icon><span>房间</span></button><button class="nav-target" data-nav="energy"><ha-icon icon="mdi:lightning-bolt"></ha-icon><span>能源</span></button><button class="nav-target" data-nav="logs"><ha-icon icon="mdi:clipboard-text-clock"></ha-icon><span>日志</span></button><button class="nav-target" data-nav="settings"><ha-icon icon="mdi:cog"></ha-icon><span>设置</span></button></nav>
+        <div class="sidebar-art"><img alt="Minecraft wolf and soul lantern" src="/local/minecraft-dashboard/decor-wolf-lantern.jpg"></div>
+      </aside>
+      <main class="stage"><div class="stage-grid">
+        <section class="welcome"><h1>欢迎回家，冒险家！</h1><p id="hitokoto" class="hitokoto-text">加载一言中<span id="hitokoto-from" class="hitokoto-from-inline"></span></p><div class="weather-row" id="weather-action" data-weather="weather.home"><div class="weather-state-icon"><ha-icon id="weather-icon" icon="mdi:weather-partly-cloudy"></ha-icon></div><div class="weather-text"><span id="weather-summary">--</span>&nbsp;<span id="out-temp">--</span>°C</div></div></section>
+        <section class="bottom-stack">
+          <div><div class="section-title"><h2>常用设备</h2><p class="muted">快捷控制</p></div><div class="devices">
+            <div id="device-living-light" class="device" data-entity="light.living_room_lights" data-action="toggle"><div class="device-top"><img class="item-img" alt="glowstone lamp icon" src="/local/minecraft-dashboard/icon-light.jpg"><div class="tag-stack"><div id="lamp-status" class="status green">--</div><div id="lamp-count" class="count-tag">--</div></div></div><div class="device-copy"><p class="device-name">客厅灯光</p><p class="muted">客厅</p></div><div class="control-row"><span id="lamp-control-text" class="state-word green">--</span><span id="lamp-switch" class="switch"></span></div></div>
+            <div id="device-climate" class="device" data-entity="climate.living_room_ac" data-action="more-info"><div class="device-top"><img class="item-img" alt="furnace air conditioner icon" src="/local/minecraft-dashboard/icon-ac.jpg"><div class="tag-stack"><div id="climate-status" class="status blue">--</div></div></div><div class="device-copy"><p class="device-name">空调</p><p class="muted">客厅</p></div><div class="control-row"><span id="climate-temp" class="state-word blue">--°C</span><span id="climate-switch" class="switch"></span></div></div>
+            <div id="device-media" class="device" data-entity="media_player.living_room_speaker" data-action="more-info"><div class="device-top"><img class="item-img" alt="jukebox speaker icon" src="/local/minecraft-dashboard/icon-speaker.jpg"><div class="tag-stack"><div class="status">客厅</div></div></div><div class="device-copy"><p class="device-name">智能音箱</p><p class="muted">客厅</p></div><div class="control-row"><span id="media-state" class="state-word purple">--</span><ha-icon id="media-icon" icon="mdi:music-note" class="purple"></ha-icon></div></div>
+            <div id="device-lock" class="device"><div class="device-top"><img class="item-img" alt="smart door lock icon" src="/local/minecraft-dashboard/icon-lock.jpg"><div class="tag-stack"><div class="status">安全</div></div></div><div class="device-copy"><p class="device-name">大门锁</p><p class="muted">门厅</p></div><div class="control-row"><span class="state-word red" id="lock-status">已上锁</span><ha-icon id="lock-icon" icon="mdi:lock" class="green"></ha-icon></div></div>
+            <div id="device-garden-light" class="device" data-entity="light.garden_light_strip" data-action="toggle"><div class="device-top"><img class="item-img" alt="garden sprinkler icon" src="/local/minecraft-dashboard/icon-garden-light.jpg"><div class="tag-stack"><div class="status">花园</div></div></div><div class="device-copy"><p class="device-name">花园灯带</p><p class="muted">花园</p></div><div class="control-row"><span id="garden-state-text" class="state-word grey">--</span><span id="garden-switch" class="switch"></span></div></div>
+          </div></div>
+          <div><div class="section-title"><h2>房间导航</h2><p class="muted">视窗快照</p></div><div class="rooms">
+            <div class="room"><img alt="living room" src="/local/minecraft-dashboard/room-living.jpg"><div class="room-label"><h3>客厅</h3><p class="muted"><span id="living-room-info">--</span></p></div></div>
+            <div class="room"><img alt="bedroom" src="/local/minecraft-dashboard/room-bedroom.jpg"><div class="room-label"><h3>卧室</h3><p class="muted"><span id="bedroom-room-info">--</span></p></div></div>
+            <div class="room"><img alt="kitchen" src="/local/minecraft-dashboard/room-kitchen.jpg"><div class="room-label"><h3>厨房</h3><p class="muted"><span id="kitchen-room-info">--</span></p></div></div>
+            <div class="room"><img alt="garden" src="/local/minecraft-dashboard/room-garden.jpg"><div class="room-label"><h3>花园</h3><p class="muted"><span id="garden-room-info">--</span></p></div></div>
+          </div></div>
+        </section>
+        <aside class="side">
+          <section class="time-card"><div><div id="clock-time" class="time-main">--:--</div><div id="clock-date" class="time-sub">----/--/--</div></div><div class="time-icon"><ha-icon icon="mdi:clock-outline"></ha-icon></div></section>
+          <section class="glass-card"><div class="section-title"><h2>环境信息</h2></div><div class="env-list"><div class="env-row"><div class="dot temp-dot"><ha-icon icon="mdi:thermometer"></ha-icon></div><div class="muted">客厅温度</div><div class="env-value"><span id="env-temp">--</span>°C</div></div><div class="env-row"><div class="dot hum-dot"><ha-icon icon="mdi:water-percent"></ha-icon></div><div class="muted">客厅湿度</div><div class="env-value"><span id="env-hum">--</span>%</div></div><div class="env-row"><div class="dot pm-dot"><ha-icon icon="mdi:leaf"></ha-icon></div><div class="muted">PM2.5</div><div class="good"><span id="pm25-value">--</span></div></div></div></section>
+          <section class="glass-card"><p class="muted">今日用电</p><div class="energy-value"><span id="energy-today-big">12.4</span><small> 度</small></div><div class="bars"><span style="height:30%"></span><span style="height:46%"></span><span style="height:38%"></span><span style="height:65%"></span><span style="height:52%"></span><span style="height:78%"></span><span style="height:60%"></span><span style="height:86%"></span><span style="height:68%"></span><span style="height:42%"></span></div><div class="energy-footer"><span class="muted">较昨日</span><span class="down">▼ 8.2%</span></div></section>
+          <section class="glass-card"><div class="section-title"><h2>快捷场景</h2><p class="muted">模式</p></div><div class="scene-grid"><button class="scene morning" data-scene-entity="scene.home_mode" data-scene-name="回家模式"><ha-icon icon="mdi:home-import-outline"></ha-icon><strong>回家</strong><span>回家模式</span></button><button class="scene night" data-scene-entity="scene.good_night" data-scene-name="晚安"><ha-icon icon="mdi:weather-night"></ha-icon><strong>晚安</strong><span>晚安场景</span></button><button class="scene movie" data-scene-entity="scene.welcome_home" data-scene-name="欢迎回家"><ha-icon icon="mdi:home-heart"></ha-icon><strong>欢迎</strong><span>欢迎回家</span></button><button class="scene game" data-scene-entity="scene.away_mode" data-scene-name="离家模式"><ha-icon icon="mdi:exit-run"></ha-icon><strong>离家</strong><span>离家模式</span></button></div></section>
+        </aside>
+      </div></main>
+    </div><script>
+    if(!root.__mcDashboardInitV2){
+      root.__mcDashboardInitV2=true;
+      const navTo = (path) => {
+        if(window.claw && claw.navigate) claw.navigate(path);
+        else window.history.pushState(null,'',path);
+      };
+      $$('.nav-target').forEach(btn=>btn.addEventListener('click',()=>{
+        $$('.nav-target').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+        const key=btn.dataset.nav;
+        if(key==='home') $('.welcome')?.scrollIntoView({behavior:'smooth',block:'nearest'});
+        if(key==='devices') $('.devices')?.scrollIntoView({behavior:'smooth',block:'nearest'});
+        if(key==='rooms') $('.rooms')?.scrollIntoView({behavior:'smooth',block:'nearest'});
+        if(key==='energy') $('.bars')?.scrollIntoView({behavior:'smooth',block:'nearest'});
+        if(key==='scenes') $('.scene-grid')?.scrollIntoView({behavior:'smooth',block:'nearest'});
+        if(key==='automations') navTo('/config/automation/dashboard');
+        if(key==='logs') navTo('/config/logs');
+        if(key==='settings') navTo('/config/dashboard');
+      }));
+      $('#weather-action')?.addEventListener('click',()=>{
+        if(window.claw && claw.moreInfo) claw.moreInfo('weather.home');
+        else if(window.claw && claw.fire) claw.fire('hass-more-info',{entityId:'weather.home'});
+      });
+      $$('.scene').forEach(btn=>btn.addEventListener('click',()=>{
+        const entity=btn.dataset.sceneEntity;
+        const name=btn.dataset.sceneName || btn.textContent.trim() || entity;
+        if(!entity) return;
+        if(window.confirm && !window.confirm('确认执行场景：' + name + '？')) return;
+        hass.callService('scene','turn_on',{entity_id:entity});
+      }));
+    }
+    const val=(id,f='--')=>hass.states[id]?.state??f;
+    const attr=(id,k,f='')=>hass.states[id]?.attributes?.[k]??f;
+    const num=id=>parseFloat(val(id,'0'))||0;
+    const txt=(sel,v)=>{const e=$(sel); if(e)e.textContent=v;};
+    const cls=(sel,classes)=>{const e=$(sel); if(e)e.className=classes;};
+    const addOn=(sel,on,color)=>{const e=$(sel); if(!e)return; e.className='switch'+(on?' on '+color:'');};
+    
+    const setDeviceClass=(sel,stateClass)=>{
+      const e=$(sel); if(!e)return;
+      e.classList.remove('device-off','device-idle','device-unavailable','device-on-yellow','device-on-green','device-on-blue','device-on-purple','device-on-red','device-on-brown');
+      e.classList.add(stateClass);
+    };
+    
+    const fmt=(v,d=1)=>{const n=parseFloat(v); return Number.isFinite(n)?n.toFixed(d):'--';};
+    function weatherCN(s){
+      const map={sunny:'晴朗',clear:'晴朗',cloudy:'多云',partlycloudy:'局部多云',rainy:'下雨',pouring:'大雨',snowy:'下雪',fog:'有雾',windy:'有风',hail:'冰雹',lightning:'雷电'};
+      return map[s]||s||'--';
+    }
+    function weatherIcon(s){
+      const map={sunny:'mdi:weather-sunny',clear:'mdi:weather-sunny',cloudy:'mdi:weather-cloudy',partlycloudy:'mdi:weather-partly-cloudy',rainy:'mdi:weather-rainy',pouring:'mdi:weather-pouring',snowy:'mdi:weather-snowy',fog:'mdi:weather-fog',windy:'mdi:weather-windy',hail:'mdi:weather-hail',lightning:'mdi:weather-lightning'};
+      return map[s]||'mdi:weather-partly-cloudy';
+    }
+    function stateCN(s){
+      if(['on','playing','cool','heat','auto'].includes(s)) return '开';
+      if(['off','idle','standby'].includes(s)) return '关';
+      if(['unavailable','unknown'].includes(s)) return '离线';
+      return s || '--';
+    }
+    function doorCN(s){
+      if(['close','closed','off'].includes(s)) return '已关闭';
+      if(['open','on'].includes(s)) return '已打开';
+      if(s==='inside_unlock') return '室内解锁';
+      if(s==='lock') return '已上锁';
+      return s || '--';
+    }
+    function renderAllHA(){
+      const now=new Date();
+      txt('#clock-time', val('sensor.time', now.toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'})));
+      txt('#clock-date', val('sensor.date', now.toLocaleDateString('zh-CN')));
+      const h=val('input_text.daily_quote', val('sensor.openclaw_hitokoto',''));
+      const hf=val('input_text.daily_quote_source','');
+      txt('#hitokoto', h || '');
+      txt('#hitokoto-from', hf ? ' —— ' + hf : '');
+    
+      const weatherState=val('weather.home', val('weather.home_backup','--'));
+      txt('#weather-summary', weatherCN(weatherState));
+      const wi=$('#weather-icon'); if(wi) wi.setAttribute('icon', weatherIcon(weatherState));
+      txt('#out-temp', fmt(val('sensor.outdoor_temperature'),1));
+      txt('#env-temp', fmt(val('sensor.living_room_temperature'),1));
+      txt('#env-hum', fmt(val('sensor.living_room_humidity'),0));
+      txt('#pm25-value', fmt(val('sensor.pm25'),0));
+    
+      const lamp=val('light.living_room_lights');
+      const lampOn=lamp==='on';
+      txt('#lamp-status', lampOn?'开':'关');
+      txt('#lamp-count', lampOn?'3':'0');
+      txt('#lamp-control-text', lampOn?'开启':'关闭');
+      cls('#lamp-control-text','state-word '+(lampOn?'green':'grey'));
+      addOn('#lamp-switch',lampOn,'green-bg');
+      setDeviceClass('#device-living-light', lamp==='unavailable'?'device-unavailable':(lampOn?'device-on-yellow':'device-off'));
+    
+      const climate=val('climate.living_room_ac');
+      const currentTemp=attr('climate.living_room_ac','current_temperature',val('sensor.living_room_temperature'));
+      txt('#climate-status', climate==='off'?'关闭':stateCN(climate));
+      txt('#climate-temp', fmt(currentTemp,1)+'°C');
+      addOn('#climate-switch', climate!=='off' && climate!=='unavailable','blue-bg');
+      setDeviceClass('#device-climate', climate==='unavailable'?'device-unavailable':((climate!=='off')?'device-on-blue':'device-off'));
+    
+      const media=val('media_player.living_room_speaker');
+      txt('#media-state', media==='playing'?'播放中':stateCN(media));
+      cls('#media-state','state-word '+(media==='playing'?'purple':'grey'));
+      setDeviceClass('#device-media', media==='unavailable'?'device-unavailable':(media==='playing'?'device-on-purple':(media==='off'?'device-off':'device-idle')));
+    
+      const door=val('binary_sensor.front_door_contact');
+      const lockAction=val('lock.front_door');
+      const doorText=doorCN(door==='close'?lockAction||door:door);
+      txt('#lock-status', doorText);
+      {
+        const lockColor = (door==='open'||door==='on') ? 'red' : ((door==='unavailable'||door==='unknown') ? 'grey' : 'green');
+        cls('#lock-status','state-word '+lockColor);
+        cls('#lock-icon', lockColor);
+      }
+      txt('#door-state', doorCN(door));
+      setDeviceClass('#device-lock', (door==='open'||door==='on')?'device-on-red':((door==='unavailable'||door==='unknown')?'device-unavailable':'device-on-green'));
+    
+      const garden=val('light.garden_light_strip');
+      const gardenOn=garden==='on';
+      txt('#garden-state-text', gardenOn?'开启':'关闭');
+      cls('#garden-state-text','state-word '+(gardenOn?'green':'grey'));
+      addOn('#garden-switch',gardenOn,'green-bg');
+      setDeviceClass('#device-garden-light', garden==='unavailable'?'device-unavailable':(gardenOn?'device-on-yellow':'device-off'));
+    
+      const livingPresence = val('binary_sensor.living_room_presence')==='on'?'有人':'无人';
+      txt('#living-room-info', livingPresence+' · '+fmt(val('sensor.living_room_temperature'),1)+'°C · '+fmt(val('sensor.living_room_humidity'),0)+'%');
+      const bedroomPresence = val('binary_sensor.bedroom_presence')==='有人'?'有人':'无人';
+      txt('#bedroom-room-info', bedroomPresence+' · '+fmt(val('sensor.bedroom_temperature'),1)+'°C · '+fmt(val('sensor.bedroom_humidity'),0)+'%');
+      txt('#kitchen-room-info', (val('binary_sensor.kitchen_presence')==='on'?'有人':'无人')+' · '+fmt(val('sensor.kitchen_illuminance'),0)+'lx');
+      txt('#garden-room-info', (gardenOn?'灯带开':'灯带关')+' · '+fmt(val('sensor.outdoor_humidity'),0)+'%');
+    
+      const kit=val('binary_sensor.kitchen_presence')==='on'?'有人':'无人';
+      txt('#kitchen-env',kit);
+    
+      const p=num('sensor.current_power');
+      const e=num('sensor.energy_cost_today');
+      txt('#power-now',p.toFixed(0));
+      txt('#energy-today',e.toFixed(2));
+      txt('#energy-today-big',e.toFixed(1));
+      const bars=$$('.bars span');
+      const month=num('sensor.energy_cost_month');
+      bars.forEach((b,i)=>{ const v=Math.max(12, Math.min(92, (p*2 + e*80 + i*9 + month%30))); b.style.height=v+'%'; });
+    }
+    root._watchedEntities=['input_text.','sensor.','binary_sensor.','light.','climate.','media_player.','switch.','weather.','scene.'];
+    root._onHassUpdate=renderAllHA;
+    renderAllHA();
+    
+          // hitokoto-inline-render-patch
+          try {
+            const qState = hass.states['input_text.daily_quote'];
+            const fState = hass.states['input_text.daily_quote_source'];
+            const q = qState && qState.state && !['unknown','unavailable'].includes(qState.state) ? qState.state : '';
+            const f = fState && fState.state && !['unknown','unavailable'].includes(fState.state) ? fState.state : '';
+            const line = q + (f ? ' —— ' + f : '');
+            const qEl = root.querySelector('#hitokoto') || root.querySelector('[data-entity="input_text.daily_quote"]') || root.querySelector('.hitokoto-text');
+            const fEl = root.querySelector('#hitokoto-from') || root.querySelector('#hitokoto_from') || root.querySelector('[data-entity="input_text.daily_quote_source"]') || root.querySelector('.hitokoto-from') || root.querySelector('.hitokoto-source');
+            if (qEl) qEl.textContent = line;
+            if (fEl) fEl.textContent = '';
+          } catch(e) {}
+    
+    </script>
+  entities:
+    - "light.living_room_lights"
+    - "light.garden_light_strip"
+    - "switch.6cd3eec9a69c_switch"
+    - "climate.living_room_ac"
+    - "media_player.ap81494f3d706e"
+    - "sensor.wo_de_jia_wen_du"
+    - "sensor.wo_de_jia_shi_du"
+    - "sensor.outdoor_temperature"
+    - "sensor.outdoor_humidity"
+    - "sensor.living_room_temperature"
+    - "sensor.living_room_humidity"
+    - "sensor.bedroom_temperature"
+    - "sensor.bedroom_humidity"
+    - "binary_sensor.living_room_presence"
+    - "binary_sensor.kitchen_presence"
+    - "binary_sensor.hallway_presence"
+    - "binary_sensor.front_door_contact"
+    - "sensor.current_power"
+    - "sensor.energy_cost_today"
+    - "sensor.acb722f6b13a_purifiedtds"
+    - "sensor.acb722f6b13a_rofilterremained"
+    - "input_text.daily_quote"
+    - "input_text.daily_quote_source"
+    - "sensor.time"
+    - "sensor.date"
+    - "sensor.date_time"
+    - "lock.front_door"
+    - "sensor.front_door_battery"
+    - "sensor.wo_de_jia_kong_qi_zhi_liang_miao_shu"
+    - "sensor.wo_de_jia_kong_qi_zhi_liang_zhi_shu"
+    - "switch.0x54ef4410004f7b60_switch"
+    - "sensor.energy_cost_month"
+    - "weather.home"
+    - "weather.home_backup"
+    - "sensor.pm25"
+    - "sensor.weather_minutely_forecast"
+    - "scene.good_night"
+    - "scene.home_mode"
+    - "scene.welcome_home"
+    - "scene.away_mode"
+    - "media_player.living_room_speaker"
+    - "binary_sensor.bedroom_presence"
+  do_not_parse: true
+  update_interval: 10000
+  ignore_line_breaks: true
+  
+  ```
+  
+  </details>
+  
+  [minecraft-dashboard.zip](https://github.com/user-attachments/files/28302157/minecraft-dashboard.zip)

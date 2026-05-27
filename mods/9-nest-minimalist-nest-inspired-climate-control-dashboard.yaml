@@ -11,22 +11,738 @@
 type: custom:html-pro-card
 do_not_parse: true
 content: |
-  </h2>
-  <div class="ava-status-badge" id="txtStatusBadge">OFF</div>
+  <style>
+  .ava-climate{padding:24px;display:flex;flex-direction:column;align-items:center;justify-content:space-between;min-height:500px;box-sizing:border-box;user-select:none;-webkit-tap-highlight-color:transparent;position:relative;overflow:visible}
+  .ava-header{width:100%;display:flex;justify-content:space-between;align-items:center}
+  .ava-title{display:flex;align-items:center;gap:6px;font-size:14px;font-weight:600;color:var(--primary-text-color);margin:0}
+  .ava-title ha-icon{--mdc-icon-size:18px;color:var(--secondary-text-color)}
+  .ava-status-badge{font-size:11px;font-weight:700;padding:3px 10px;border-radius: 10px;border:1px solid var(--divider-color);text-transform:uppercase;transition:all .3s ease}
+  .status-off{color:var(--disabled-text-color);border-color:var(--divider-color);background:rgba(100,100,100,.05)}
+  .status-cool{color:var(--info-color,#03a9f4);border-color:var(--info-color,#03a9f4);background:rgba(3,169,244,.1)}
+  .status-heat{color:var(--orange-color,#ff9800);border-color:var(--orange-color,#ff9800);background:rgba(255,152,0,.1)}
+  .status-dry{color:#00bcd4;border-color:#00bcd4;background:rgba(0,188,212,.1)}
+  .status-fan{color:var(--success-color,#4caf50);border-color:var(--success-color,#4caf50);background:rgba(76,175,80,.1)}
+  .ava-ambient{display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;margin-top:10px;margin-bottom:5px}
+  .ava-ambient-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--secondary-text-color);margin-bottom:4px;opacity:.6;display:block;text-align:center}
+  .ava-ambient-box{position:relative;display:inline-block;text-align:center}
+  .ava-ambient-value{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display",sans-serif;font-size:48px;font-weight:300;color:var(--primary-text-color);line-height:.9;display:inline-block}
+  .ava-ambient-unit{position:absolute;left:100%;top:2px;margin-left:2px;font-size:16px;font-weight:400;color:var(--primary-text-color)}
+  .ava-knob-zone{width:100%;display:flex;justify-content:center;align-items:center;margin:10px 0;position:relative}
+  .ava-knob-container{position:relative;width:270px;height:270px;display:block}
+  .ava-svg-dial{width:100%;height:100%;overflow:visible}
+  .tick-line{stroke:var(--primary-text-color);stroke-width:1.5px;stroke-linecap:round;opacity:.08;transition:all .25s ease}
+  .tick-line.active{stroke:var(--primary-text-color);stroke-width:2.2px;opacity:.75}
+  .knob-interactive{cursor:grab}.knob-interactive:active{cursor:grabbing}
+  .knob-label{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",sans-serif;font-size:10px;font-weight:600;letter-spacing:1.5px;fill:var(--secondary-text-color);text-anchor:middle;opacity:.5}
+  .knob-value{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Oswald",sans-serif;font-size:44px;font-weight:300;letter-spacing:.5px;fill:var(--primary-text-color)}
+  .knob-value.is-off{font-weight:200;letter-spacing:1px;fill:var(--disabled-text-color,#a2a2a2)}
+  .knob-unit{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display",sans-serif;font-size:15px;font-weight:400;fill:var(--primary-text-color)}
+  .ava-buttons-track{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;width:100%;margin:0 auto;box-sizing:border-box}
+  .ava-action-btn{height:44px;border-radius: 10px;border:1px solid var(--divider-color);background:rgba(150,150,150,.08);display:flex;justify-content:center;align-items:center;color:var(--primary-text-color);cursor:pointer;transition:all .2s ease}
+  .ava-action-btn:hover{transform:translateY(-1px)}
+  .ava-action-btn:active{transform:scale(.96)}
+  .ava-action-btn.active-cool{color:var(--info-color,#03a9f4);border-color:var(--info-color,#03a9f4);background:rgba(3,169,244,.1)}
+  .ava-action-btn.active-heat{color:var(--orange-color,#ff9800);border-color:var(--orange-color,#ff9800);background:rgba(255,152,0,.1)}
+  .ava-action-btn.active-dry{color:#00bcd4;border-color:#00bcd4;background:rgba(0,188,212,.1)}
+  .ava-action-btn.active-fan{color:var(--success-color,#4caf50);border-color:var(--success-color,#4caf50);background:rgba(76,175,80,.1)}
+  .ava-action-btn.active-power{color:var(--warning-color,#ffc107);border-color:var(--warning-color,#ffc107);background:rgba(255,193,7,.1)}
+  #btnFanSpeed{position:relative;z-index:10}
+  .fan-popup{position:absolute;bottom:72px;right:24px;display:flex;flex-direction:column;gap:6px;padding:10px;border-radius: 10px;background:rgba(255,255,255,.78);border:1px solid rgba(255,255,255,.45);box-shadow:0 10px 30px rgba(0,0,0,.12),0 2px 8px rgba(0,0,0,.08);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);z-index:999999;opacity:0;transform:translateY(10px) scale(.96);pointer-events:none;transition:opacity .22s ease,transform .22s ease;min-width:110px}
+  .fan-popup.show{opacity:1;transform:translateY(0) scale(1);pointer-events:auto}
+  .fan-popup-item{padding:11px 14px;border-radius: 10px;font-size:14px;font-weight:520;color:var(--primary-text-color);cursor:pointer;transition:background .18s ease,color .18s ease,transform .15s ease;display:flex;align-items:center}
+  .fan-popup-item:hover{background:rgba(0,0,0,.05)}
+  .fan-popup-item:active{transform:scale(.97)}
+  .fan-popup-item.active{background:rgba(255,193,7,.16);color:var(--warning-color,#ffc107);font-weight:600}
+  @media (prefers-color-scheme:dark){
+    .fan-popup{background:rgba(28,28,30,.82);border:1px solid rgba(255,255,255,.06);box-shadow:0 8px 24px rgba(0,0,0,.32),0 2px 8px rgba(0,0,0,.18);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+    .fan-popup-item{color:rgba(255,255,255,.92)}
+    .fan-popup-item:hover{background:rgba(255,255,255,.08)}
+  }
+  </style>
   
-  <span class="ava-ambient-label">Ambient Sensor</span>
-  <div class="ava-ambient-box">
+  <div class="ava-climate">
+    <div class="ava-header">
+      <h2 class="ava-title">
+        <ha-icon icon="mdi:air-conditioner"></ha-icon>
+        <span id="txtFriendlyName">书房空调</span>
+      </h2>
+      <div class="ava-status-badge" id="txtStatusBadge">OFF</div>
+    </div>
   
-  <div class="ava-knob-container">
+    <div class="ava-ambient">
+      <span class="ava-ambient-label">Ambient Sensor</span>
+      <div class="ava-ambient-box">
+        <span id="txtAmbientValue" class="ava-ambient-value">--</span>
+        <span class="ava-ambient-unit">°C</span>
+      </div>
+    </div>
   
-  <div class="ava-action-btn" id="btnCool"><ha-icon icon="mdi:snowflake"></ha-icon></div>
-  <div class="ava-action-btn" id="btnHeat"><ha-icon icon="mdi:fire"></ha-icon></div>
-  <div class="ava-action-btn" id="btnDry"><ha-icon icon="mdi:water-percent"></ha-icon></div>
-  <div class="ava-action-btn" id="btnFan"><ha-icon icon="mdi:fan"></ha-icon></div>
-  <div class="ava-action-btn" id="btnPower"><ha-icon icon="mdi:power"></ha-icon></div>
-  <div class="ava-action-btn" id="btnFanSpeed"><ha-icon id="fanSpeedIcon" icon="mdi:fan-auto"></ha-icon></div>
+    <div class="ava-knob-zone">
+      <div class="ava-knob-container">
+        <svg class="ava-svg-dial" viewBox="0 0 270 270" id="dialSvg">
+          <defs>
+            <filter id="groove-inset">
+              <feOffset dx="0" dy="1"/>
+              <feGaussianBlur stdDeviation="1.5" result="blur"/>
+              <feComposite operator="out" in="SourceGraphic" in2="blur" result="invert"/>
+              <feFlood flood-color="black" flood-opacity="0.15" result="color"/>
+              <feComposite operator="in" in="color" in2="invert" result="shadow"/>
+              <feComposite operator="over" in="shadow" in2="SourceGraphic"/>
+            </filter>
+          </defs>
   
-  <div class="fan-popup-item" data-mode="低风">低风</div>
-  <div class="fan-popup-item" data-mode="中风">中风</div>
-  <div class="fan-popup-item" data-mode="高风">高风</div>
-  <div class="fan-popup-item" data-mode="自动">自动</div>
+          <g id="svgTicksGroup"></g>
+  
+          <g class="knob-interactive" id="svgKnobMesh">
+            <circle cx="135" cy="135" r="92" fill="none" stroke="rgba(150,150,150,0.1)" stroke-width="2.5" filter="url(#groove-inset)"/>
+            <circle cx="135" cy="135" r="85" fill="var(--card-background-color)" stroke="rgba(150,150,150,0.12)" stroke-width="0.8"/>
+            <circle cx="135" cy="135" r="73" fill="none" stroke="rgba(150,150,150,0.1)" stroke-width="1"/>
+            <circle id="svgPointer" cx="135" cy="66" r="4" fill="var(--disabled-text-color,#9e9e9e)"/>
+            <text x="135" y="115" class="knob-label">SET TARGET</text>
+            <g transform="translate(135,148)">
+              <text x="0" y="0" class="knob-value" id="svgTargetText" text-anchor="middle" dominant-baseline="middle">--</text>
+              <text x="0" y="0" class="knob-unit" id="svgUnitText" dominant-baseline="middle" dy="-15" dx="32">°C</text>
+            </g>
+          </g>
+        </svg>
+      </div>
+    </div>
+  
+    <div class="ava-buttons-track">
+      <div class="ava-action-btn" id="btnCool"><ha-icon icon="mdi:snowflake"></ha-icon></div>
+      <div class="ava-action-btn" id="btnHeat"><ha-icon icon="mdi:fire"></ha-icon></div>
+      <div class="ava-action-btn" id="btnDry"><ha-icon icon="mdi:water-percent"></ha-icon></div>
+      <div class="ava-action-btn" id="btnFan"><ha-icon icon="mdi:fan"></ha-icon></div>
+      <div class="ava-action-btn" id="btnPower"><ha-icon icon="mdi:power"></ha-icon></div>
+      <div class="ava-action-btn" id="btnFanSpeed"><ha-icon id="fanSpeedIcon" icon="mdi:fan-auto"></ha-icon></div>
+    </div>
+  
+    <div class="fan-popup" id="fanPopup">
+      <div class="fan-popup-item" data-mode="低风">低风</div>
+      <div class="fan-popup-item" data-mode="中风">中风</div>
+      <div class="fan-popup-item" data-mode="高风">高风</div>
+      <div class="fan-popup-item" data-mode="自动">自动</div>
+    </div>
+  </div>
+  
+  <script>
+  const ENTITY_ID='climate.qdhkl_cn_proxy_582227860_0101_ac';
+  
+  const els={
+    name:$('#txtFriendlyName'),
+    badge:$('#txtStatusBadge'),
+    ambient:$('#txtAmbientValue'),
+    target:$('#svgTargetText'),
+    unit:$('#svgUnitText'),
+    pointer:$('#svgPointer'),
+    ticks:$('#svgTicksGroup'),
+    knob:$('#svgKnobMesh'),
+    svg:$('#dialSvg'),
+    btnCool:$('#btnCool'),
+    btnHeat:$('#btnHeat'),
+    btnDry:$('#btnDry'),
+    btnFan:$('#btnFan'),
+    btnPower:$('#btnPower'),
+    btnFanSpeed:$('#btnFanSpeed'),
+    fanSpeedIcon:$('#fanSpeedIcon')
+  };
+  
+  const fanPopup=$('#fanPopup');
+  
+  const startAngle=-125;
+  const endAngle=125;
+  const totalTicks=26;
+  
+  let isDragging=false;
+  let lastSetTemp=null;
+  let lastHvacMode='cool';
+  let currentDragVal=null;
+  let tickLines=[];
+  
+  function setFanIcon(mode){
+    els.fanSpeedIcon.setAttribute(
+      'icon',
+      mode==='低风'
+        ?'mdi:fan-speed-1'
+        :mode==='中风'
+        ?'mdi:fan-speed-2'
+        :mode==='高风'
+        ?'mdi:fan-speed-3'
+        :'mdi:fan-auto'
+    );
+  }
+  
+  function renderTicks(){
+    els.ticks.innerHTML='';
+  
+    for(let i=0;i<=totalTicks;i++){
+  
+      const a=
+        ((startAngle+
+        (i/totalTicks)*
+        (endAngle-startAngle))-90)
+        *(Math.PI/180);
+  
+      const line=document.createElementNS(
+        'http://www.w3.org/2000/svg',
+        'line'
+      );
+  
+      line.setAttribute('x1',135+101*Math.cos(a));
+      line.setAttribute('y1',135+101*Math.sin(a));
+      line.setAttribute('x2',135+109*Math.cos(a));
+      line.setAttribute('y2',135+109*Math.sin(a));
+  
+      line.classList.add('tick-line');
+  
+      els.ticks.appendChild(line);
+    }
+  
+    tickLines=root.querySelectorAll('.tick-line');
+  }
+  
+  function setBadge(mode){
+  
+    els.badge.textContent=
+      mode.toUpperCase();
+  
+    els.badge.className=
+      'ava-status-badge';
+  
+    const cls={
+      cool:'status-cool',
+      heat:'status-heat',
+      dry:'status-dry',
+      fan_only:'status-fan'
+    }[mode]||'status-off';
+  
+    els.badge.classList.add(cls);
+  }
+  
+  function resetButtons(){
+  
+    [
+      els.btnCool,
+      els.btnHeat,
+      els.btnDry,
+      els.btnFan,
+      els.btnPower
+    ].forEach(
+      b=>b.className='ava-action-btn'
+    );
+  
+  }
+  
+  function updatePointerByTemp(
+    temp,
+    minTemp,
+    maxTemp
+  ){
+  
+    const pct=
+      (temp-minTemp)/
+      (maxTemp-minTemp);
+  
+    els.pointer.setAttribute(
+      'transform',
+      `rotate(${
+        startAngle+
+        pct*(endAngle-startAngle)
+      },135,135)`
+    );
+  
+    const activeIndex=
+      Math.round(pct*totalTicks);
+  
+    tickLines.forEach((line,idx)=>{
+  
+      line.classList.toggle(
+        'active',
+        idx<=activeIndex
+      );
+  
+    });
+  
+  }
+  
+  function updateUI(){
+  
+    const st=
+      hass.states[ENTITY_ID];
+  
+    if(!st) return;
+  
+    const attr=
+      st.attributes||{};
+  
+    const hvac=
+      st.state||'off';
+  
+    const fan=
+      attr.fan_mode||'自动';
+  
+    /* 修复：清理 friendly_name */
+  
+    const cleanName=
+      (attr.friendly_name||'空调')
+        .replace(/\s+/g,' ')
+        .replace(/ 空调$/,'')
+        .trim();
+  
+    els.name.textContent=
+      cleanName;
+  
+    if(attr.current_temperature!=null){
+  
+      els.ambient.textContent=
+        Math.round(
+          attr.current_temperature
+        );
+  
+    }
+  
+    /* 修复：动态读取实体温度范围 */
+  
+    const entityMinTemp=
+      attr.min_temp ?? 16;
+  
+    const entityMaxTemp=
+      attr.max_temp ?? 30;
+  
+    if([
+      'cool',
+      'heat',
+      'dry',
+      'fan_only'
+    ].includes(hvac)){
+  
+      lastHvacMode=hvac;
+  
+    }
+  
+    setFanIcon(fan);
+  
+    setBadge(hvac);
+  
+    resetButtons();
+  
+    const target=
+      attr.temperature;
+  
+    const fallback=
+      attr.current_temperature!=null
+        ?Math.round(attr.current_temperature)
+        :24;
+  
+    const currentTemp=
+  
+      (
+        target!=null &&
+        !isNaN(target)
+      )
+  
+      ?Math.round(target)
+  
+      :(
+        lastSetTemp!=null
+        ?lastSetTemp
+        :fallback
+      );
+  
+    lastSetTemp=currentTemp;
+  
+    if(hvac==='off'){
+  
+      els.target.textContent='OFF';
+  
+      els.target.classList.add(
+        'is-off'
+      );
+  
+      els.unit.style.display='none';
+  
+      els.pointer.setAttribute(
+        'fill',
+        'var(--disabled-text-color,#9e9e9e)'
+      );
+  
+      els.pointer.setAttribute(
+        'transform',
+        `rotate(${startAngle},135,135)`
+      );
+  
+      tickLines.forEach(line=>{
+  
+        line.classList.remove(
+          'active'
+        );
+  
+      });
+  
+      return;
+    }
+  
+    els.target.classList.remove(
+      'is-off'
+    );
+  
+    els.unit.style.display='block';
+  
+    els.unit.setAttribute(
+      'dx',
+      '28'
+    );
+  
+    els.btnPower.classList.add(
+      'active-power'
+    );
+  
+    els.pointer.setAttribute(
+      'fill',
+      'var(--warning-color,#ffc107)'
+    );
+  
+    if(hvac==='cool')
+      els.btnCool.classList.add('active-cool');
+  
+    if(hvac==='heat')
+      els.btnHeat.classList.add('active-heat');
+  
+    if(hvac==='dry')
+      els.btnDry.classList.add('active-dry');
+  
+    if(hvac==='fan_only')
+      els.btnFan.classList.add('active-fan');
+  
+    if(!isDragging){
+  
+      els.target.textContent=
+        currentTemp;
+  
+      updatePointerByTemp(
+        currentTemp,
+        entityMinTemp,
+        entityMaxTemp
+      );
+  
+    }
+  
+  }
+  
+  function setHvac(mode){
+  
+    hass.callService(
+      'climate',
+      'set_hvac_mode',
+      {
+        entity_id:ENTITY_ID,
+        hvac_mode:mode
+      }
+    );
+  
+    setTimeout(updateUI,300);
+  
+  }
+  
+  function handleMove(e){
+  
+    if(!isDragging) return;
+  
+    const st=
+      hass.states[ENTITY_ID];
+  
+    if(!st||st.state==='off')
+      return;
+  
+    const attr=
+      st.attributes||{};
+  
+    const entityMinTemp=
+      attr.min_temp ?? 16;
+  
+    const entityMaxTemp=
+      attr.max_temp ?? 30;
+  
+    const rect=
+      els.svg.getBoundingClientRect();
+  
+    const cx=
+      rect.left+rect.width/2;
+  
+    const cy=
+      rect.top+rect.height/2;
+  
+    const x=
+      e.touches
+        ?e.touches[0].clientX
+        :e.clientX;
+  
+    const y=
+      e.touches
+        ?e.touches[0].clientY
+        :e.clientY;
+  
+    let angle=
+      Math.atan2(
+        y-cy,
+        x-cx
+      )*(180/Math.PI)+90;
+  
+    if(angle>180)
+      angle-=360;
+  
+    else if(angle<-180)
+      angle+=360;
+  
+    angle=Math.max(
+      startAngle,
+      Math.min(endAngle,angle)
+    );
+  
+    const pct=
+      (angle-startAngle)/
+      (endAngle-startAngle);
+  
+    const temp=
+      Math.round(
+        entityMinTemp+
+        pct*(
+          entityMaxTemp-
+          entityMinTemp
+        )
+      );
+  
+    els.target.textContent=temp;
+  
+    els.pointer.setAttribute(
+      'transform',
+      `rotate(${angle},135,135)`
+    );
+  
+    tickLines.forEach((line,idx)=>{
+  
+      line.classList.toggle(
+        'active',
+        idx<=Math.round(pct*totalTicks)
+      );
+  
+    });
+  
+    currentDragVal=temp;
+  
+  }
+  
+  function handleStart(e){
+  
+    const st=
+      hass.states[ENTITY_ID];
+  
+    if(!st||st.state==='off')
+      return;
+  
+    isDragging=true;
+  
+    currentDragVal=
+      lastSetTemp;
+  
+    if(e.cancelable)
+      e.preventDefault();
+  
+  }
+  
+  function handleEnd(){
+  
+    if(!isDragging) return;
+  
+    isDragging=false;
+  
+    if(currentDragVal!==null){
+  
+      lastSetTemp=
+        currentDragVal;
+  
+      hass.callService(
+        'climate',
+        'set_temperature',
+        {
+          entity_id:ENTITY_ID,
+          temperature:currentDragVal
+        }
+      );
+  
+      setTimeout(updateUI,500);
+  
+    }
+  
+  }
+  
+  function closeFanPopup(){
+    fanPopup.classList.remove('show');
+  }
+  
+  function openFanPopup(){
+  
+    const st=
+      hass.states[ENTITY_ID];
+  
+    if(!st) return;
+  
+    const current=
+      st.attributes.fan_mode||'自动';
+  
+    fanPopup
+      .querySelectorAll('.fan-popup-item')
+      .forEach(item=>{
+  
+        item.classList.toggle(
+          'active',
+          item.dataset.mode===current
+        );
+  
+      });
+  
+    fanPopup.classList.add('show');
+  
+  }
+  
+  function toggleFanPopup(){
+  
+    fanPopup.classList.contains('show')
+      ?closeFanPopup()
+      :openFanPopup();
+  
+  }
+  
+  /* init */
+  
+  renderTicks();
+  
+  updateUI();
+  
+  setInterval(updateUI,1500);
+  
+  /* hvac */
+  
+  els.btnCool.onclick=
+    ()=>setHvac('cool');
+  
+  els.btnHeat.onclick=
+    ()=>setHvac('heat');
+  
+  els.btnDry.onclick=
+    ()=>setHvac('dry');
+  
+  els.btnFan.onclick=
+    ()=>setHvac('fan_only');
+  
+  els.btnPower.onclick=()=>{
+  
+    const st=
+      hass.states[ENTITY_ID];
+  
+    setHvac(
+      st&&st.state==='off'
+        ?(lastHvacMode||'cool')
+        :'off'
+    );
+  
+  };
+  
+  /* knob */
+  
+  els.knob.addEventListener(
+    'mousedown',
+    handleStart
+  );
+  
+  els.knob.addEventListener(
+    'touchstart',
+    handleStart,
+    {passive:false}
+  );
+  
+  window.addEventListener(
+    'mousemove',
+    handleMove
+  );
+  
+  window.addEventListener(
+    'touchmove',
+    handleMove,
+    {passive:false}
+  );
+  
+  window.addEventListener(
+    'mouseup',
+    handleEnd
+  );
+  
+  window.addEventListener(
+    'touchend',
+    handleEnd
+  );
+  
+  /* fan popup */
+  
+  els.btnFanSpeed.addEventListener(
+    'click',
+    e=>{
+      e.preventDefault();
+      e.stopPropagation();
+      toggleFanPopup();
+    }
+  );
+  
+  fanPopup
+    .querySelectorAll('.fan-popup-item')
+    .forEach(item=>{
+  
+      item.addEventListener(
+        'click',
+        e=>{
+  
+          e.stopPropagation();
+  
+          const mode=
+            item.dataset.mode;
+  
+          hass.callService(
+            'climate',
+            'set_fan_mode',
+            {
+              entity_id:ENTITY_ID,
+              fan_mode:mode
+            }
+          );
+  
+          setFanIcon(mode);
+  
+          closeFanPopup();
+  
+          setTimeout(updateUI,300);
+  
+        }
+      );
+  
+    });
+  
+  document.addEventListener(
+    'click',
+    e=>{
+  
+      if(
+        !fanPopup.contains(e.target)
+        &&
+        !els.btnFanSpeed.contains(e.target)
+      ){
+  
+        closeFanPopup();
+  
+      }
+  
+    }
+  );
+  </script>
+  ```
+  
+  </details>

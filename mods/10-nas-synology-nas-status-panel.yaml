@@ -11,39 +11,704 @@
 type: custom:html-pro-card
 do_not_parse: true
 content: |
-  <div class="model-tag">DS920+</div>
-  <div class="led-group">
+  <div class="syno-nas-card">
+    <div class="panel-header">
+      <div class="model-tag">DS920+</div>
+      <div class="led-group">
+        <div class="led-item">
+          <div class="led-light green blinking"></div>
+          <span class="led-label">STATUS</span>
+        </div>
+        <div class="led-item">
+          <div class="led-light off"></div>
+          <span class="led-label">ALERT</span>
+        </div>
+        <div class="led-item">
+          <div class="led-light green"></div>
+          <span class="led-label">LAN1</span>
+        </div>
+      </div>
+    </div>
   
-  {% for i in [1, 2, 3, 4] %}
-  {% set drive_temp = states('sensor.bobonas920_drive_' ~ i ~ '_temperature') | float(0) %}
-  {% if drive_temp > 60 %}{% set t_cls = 'color-red' %}
-  {% elif drive_temp > 45 %}{% set t_cls = 'color-cyan' %}
-  {% else %}{% set t_cls = 'color-green' %}{% endif %}
-  <div class="drive-slot">
+    <div class="drive-bay-container">
+      {% for i in [1, 2, 3, 4] %}
+      {% set drive_temp = states('sensor.bobonas920_drive_' ~ i ~ '_temperature') | float(0) %}
+      {% if drive_temp > 60 %}{% set t_cls = 'color-red' %}
+      {% elif drive_temp > 45 %}{% set t_cls = 'color-cyan' %}
+      {% else %}{% set t_cls = 'color-green' %}{% endif %}
+      <div class="drive-slot">
+        <div class="drive-arrow active">▲</div>
+        <div class="drive-info">
+          <div class="drive-index">{{ i }}</div>
+          <div class="drive-model">DISK {{ i }}</div>
+          <div class="drive-temp-box">
+            <span class="real-data {{ t_cls }}">{{ drive_temp | round(0) }}</span><span class="unit-deg {{ t_cls }}">°</span>
+          </div>
+        </div>
+        <div class="drive-lock-line"></div>
+      </div>
+      {% endfor %}
+    </div>
   
-  <div class="metric-box box-left">
+    <div class="bottom-metrics">
+      <div class="metric-box box-left">
+        <div class="metric-title">SYSTEM COMPUTE</div>
+        
+        <div class="ram-section">
+          <div class="ram-meta">
+            {% set ram_pct = states('sensor.bobonas920_memory_usage_real') | float(0) %}
+            {% set ram_total_mb = states('sensor.bobonas920_memory_total_size_real') | float(20816.5) %}
+            {% set ram_used_gb = ((ram_total_mb * (ram_pct / 100)) / 1024) | round(1) %}
+            {% set ram_total_gb = (ram_total_mb / 1024) | round(0) %}
+            
+            {% if ram_pct > 80 %}{% set ram_cls = 'color-red' %}
+            {% elif ram_pct > 50 %}{% set ram_cls = 'color-orange' %}
+            {% else %}{% set ram_cls = 'color-blue' %}{% endif %}
+            
+            <span class="ram-num {{ ram_cls }}">{{ ram_pct | round(0) }}%</span>
+            <span class="ram-detail">RAM USED ({{ ram_used_gb }}G / {{ ram_total_gb }}G)</span>
+          </div>
+          <div class="progress-bar-bg">
+            <div class="progress-bar-fill" style="width: {{ ram_pct }}%; background: {% if ram_pct > 80 %}#ff453a{% elif ram_pct > 50 %}#ff9f0a{% else %}#007aff{% endif %}; box-shadow: 0 0 6px {% if ram_pct > 80 %}#ff453a{% elif ram_pct > 50 %}#ff9f0a{% else %}#007aff{% endif %};"></div>
+          </div>
+        </div>
   
+        <div class="cpu-temp-grid">
+          {% set cpu_load = states('sensor.bobonas920_cpu_utilization_total') | float(0) %}
+          {% if cpu_load > 80 %}{% set cpu_cls = 'color-red' %}
+          {% elif cpu_load > 50 %}{% set cpu_cls = 'color-orange' %}
+          {% else %}{% set cpu_cls = 'color-blue' %}{% endif %}
+          <div class="stat-mini-card">
+            <span class="card-label">CPU LOAD</span>
+            <span class="card-val {{ cpu_cls }}">{{ cpu_load | round(0) }}<span class="card-unit">%</span></span>
+          </div>
+          
+          {% set sys_temp = states('sensor.bobonas920_temperature') | float(0) %}
+          {% if sys_temp > 60 %}{% set sys_cls = 'color-red' %}
+          {% elif sys_temp > 45 %}{% set sys_cls = 'color-cyan' %}
+          {% else %}{% set sys_cls = 'color-green' %}{% endif %}
+          <div class="stat-mini-card">
+            <span class="card-label">SYS TEMP</span>
+            <span class="card-val {{ sys_cls }}">{{ sys_temp | round(0) }}<span class="card-unit">°C</span></span>
+          </div>
+        </div>
+      </div>
+  
+      <div class="metric-box box-right">
+        <div class="metric-title">STORAGE & UPS</div>
+        
+        <div class="storage-section">
+          {% set raw_used = states('sensor.bobonas920_volume_1_used_space') | float(0) %}
+          {% set raw_total = states('sensor.bobonas920_volume_1_total_size') | float(0) %}
+          
+          {% if raw_total > 1000000000 %}
+            {% set used_tb = (raw_used / 1099511627776) | round(1) %}
+            {% set total_tb = (raw_total / 1099511627776) | round(1) %}
+          {% else %}
+            {% set used_tb = (raw_used / 1024) | round(1) %}
+            {% set total_tb = (raw_total / 1024) | round(1) %}
+          {% endif %}
+          
+          {% if used_tb == 0 %}{% set used_tb = 25.8 %}{% endif %}
+          {% if total_tb == 0 %}{% set total_tb = 43.5 %}{% endif %}
+          {% set storage_pct = ((used_tb / total_tb) * 100) | round(0) %}
+          
+          <div class="storage-row">
+            <span class="env-label">Vol1 Used:</span>
+            <span class="storage-val text-white">{{ used_tb }} TB</span>
+          </div>
+          <div class="storage-row">
+            <span class="env-label">Vol1 Total:</span>
+            <span class="storage-val text-muted">{{ total_tb }} TB</span>
+          </div>
+          
+          <div class="progress-bar-bg storage-bar">
+            <div class="progress-bar-fill storage-fill" style="width: {{ storage_pct }}%"></div>
+          </div>
+        </div>
+  
+        <div class="ups-section green-text">
+          <div class="ups-row">
+            <span class="env-label">UPS BATT:</span>
+            <span class="env-value font-bold">{{ states('sensor.apc_bk650m2_ch_battery_charge') }} %</span>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
   
-  <div class="metric-box box-right">
+  <style>
+  /* 全局样式隔离基础重置 */
+  .syno-nas-card, .syno-nas-card * {
+    box-sizing: border-box !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: 1.4 !important;
+  }
   
-  <div class="model-tag">DS220+</div>
-  <div class="led-group">
+  .syno-nas-card {
+    background: #161618;
+    border-radius: 10px;
+    padding: 22px !important;
+    width: 100%;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.03), 0 16px 40px rgba(0,0,0,0.6);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
   
-  {% set drive_1_temp = states('sensor.bobonas220_drive_1_temperature') | float(0) %}
-  {% if drive_1_temp > 60 %}{% set t1_cls = 'color-red' %}
-  {% elif drive_1_temp > 45 %}{% set t1_cls = 'color-cyan' %}
-  {% else %}{% set t1_cls = 'color-green' %}{% endif %}
-  <div class="drive-slot">
+  /* 顶部状态栏面板 */
+  .panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 22px !important;
+    background: rgba(255,255,255,0.02);
+    padding: 10px 14px !important;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.03);
+  }
+  .model-tag {
+    font-size: 13px;
+    font-weight: 900;
+    color: #55555a;
+    letter-spacing: 1px;
+  }
+  .led-group {
+    display: flex;
+    gap: 14px;
+  }
+  .led-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+  }
+  .led-light {
+    width: 5px;
+    height: 5px;
+    border-radius: 10px;
+    background: #2c2c2e;
+  }
+  .led-light.green {
+    background: #30d158;
+    box-shadow: 0 0 8px #30d158, 0 0 2px #30d158;
+  }
+  .led-light.off {
+    background: #2c2c2e;
+  }
+  .led-light.blinking {
+    animation: blink 1.5s infinite;
+  }
+  @keyframes blink {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 1; }
+  }
+  .led-label {
+    font-size: 8px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    color: #48484a;
+  }
   
+  /* 中间4盘位插槽区布局 */
+  .drive-bay-container {
+    background: #09090a;
+    border-radius: 10px;
+    padding: 14px !important;
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    box-shadow: inset 0 4px 12px rgba(0,0,0,0.85);
+    margin-bottom: 22px !important;
+  }
+  .drive-slot {
+    flex: 1;
+    min-width: 0;
+    height: 145px;
+    background: linear-gradient(180deg, #242426 0%, #1a1a1c 100%);
+    border: 1px solid #141416;
+    border-radius: 10px;
+    padding: 12px 2px !important;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+  }
+  .drive-arrow {
+    font-size: 8px;
+    color: #2c2c2e;
+  }
+  .drive-arrow.active {
+    color: #30d158;
+    text-shadow: 0 0 6px rgba(48,209,88,0.6);
+  }
+  .drive-info {
+    text-align: center;
+    width: 100%;
+  }
+  .drive-index {
+    font-size: 12px;
+    font-weight: bold;
+    color: #636366;
+    margin-bottom: 3px !important;
+  }
+  .drive-model {
+    font-size: 8px;
+    font-weight: 600;
+    color: #48484a;
+  }
+  .drive-temp-box {
+    margin-top: 6px !important;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .real-data {
+    font-size: 15px;
+    font-family: "SF Mono", Monaco, monospace;
+    font-weight: 700;
+  }
+  .unit-deg {
+    font-size: 10px;
+    font-weight: bold;
+  }
+  .drive-lock-line {
+    width: 3px;
+    height: 8px;
+    background: #09090a;
+    border-radius: 10px;
+  }
+  
+  /* 底部核心参数控制面板 */
+  .bottom-metrics {
+    display: flex;
+    gap: 14px;
+    width: 100%;
+  }
+  .metric-box {
+    flex: 1;
+    min-width: 0;
+    background: #1c1c1e;
+    border: 1px solid #2c2c2e;
+    border-radius: 10px;
+    padding: 14px !important;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  }
+  .metric-title {
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.8px;
+    color: #636366;
+    margin-bottom: 12px !important;
+    text-transform: uppercase;
+  }
+  
+  /* 内存监控条排版 */
+  .ram-section {
+    margin-bottom: 14px !important;
+  }
+  .ram-meta {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 6px !important;
+  }
+  .ram-num {
+    font-size: 24px;
+    font-family: "SF Mono", monospace;
+    font-weight: 700;
+  }
+  .ram-detail {
+    font-size: 9px;
+    color: #8e8e93;
+    font-weight: bold;
+  }
+  
+  /* 能量胶囊进度条通用 */
+  .progress-bar-bg {
+    width: 100%;
+    height: 6px;
+    background: #2c2c2e;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    border-radius: 10px;
+    transition: width 0.5s ease-in-out, background 0.3s ease;
+  }
+  
+  /* 水平与垂直绝对居中排版 */
+  .cpu-temp-grid {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+  }
+  .stat-mini-card {
+    flex: 1;
+    background: #2c2c2e;
+    border-radius: 10px;
+    padding: 10px 6px !important;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+  }
+  .card-label {
+    font-size: 8px;
+    color: #aeaeb2;
+    font-weight: bold;
+    margin-bottom: 4px !important;
+  }
+  .card-val {
+    font-size: 16px;
+    font-family: "SF Mono", monospace;
+    font-weight: 700;
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+  }
+  .card-unit {
+    font-size: 10px;
+    margin-left: 1px !important;
+    font-weight: normal;
+  }
+  
+  /* 赛博高亮环境阶梯调色类 */
+  .color-green { color: #30d158 !important; text-shadow: 0 0 10px rgba(48,209,88,0.4); }
+  .color-cyan { color: #64d2ff !important; text-shadow: 0 0 10px rgba(100,210,255,0.4); }
+  .color-blue { color: #00bfff !important; text-shadow: 0 0 10px rgba(0,191,255,0.4); }
+  .color-orange { color: #ff9f0a !important; text-shadow: 0 0 10px rgba(255,159,10,0.4); }
+  .color-red { color: #ff453a !important; text-shadow: 0 0 10px rgba(255,69,58,0.5); }
+  
+  /* 右侧存储池参数 */
+  .storage-section {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 12px !important;
+  }
+  .storage-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    height: 16px;
+  }
+  .env-label { color: #8e8e93; }
+  .storage-val { font-family: "SF Mono", monospace; font-weight: bold; }
+  .text-white { color: #ffffff; }
+  .text-muted { color: #8e8e93; }
+  
+  .storage-bar { height: 5px; margin-top: 6px !important;}
+  .storage-fill { background: linear-gradient(90deg, #bf5af2, #af52de); box-shadow: 0 0 6px rgba(191,90,242,0.4); }
+  
+  /* UPS 参数 */
+  .ups-section {
+    border-top: 1px solid #2c2c2e;
+    padding-top: 10px !important;
+    margin-top: auto !important;
+  }
+  .ups-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+  }
+  .green-text { color: #30d158 !important; text-shadow: 0 0 8px rgba(48,209,88,0.2); }
+  .font-bold { font-family: "SF Mono", monospace; font-weight: bold; }
+  </style>
+  ```
+  
+  </details>
+  
+  ---
+  
+  # DS220+ 双盘位版本代码 / DS220+ 2-Bay Version Code
+  
+  <details>
+  <summary>点击展开 / Click to expand</summary>
+  
+  ```html
+  <div class="syno-nas-card ds220-theme">
+    <div class="panel-header">
+      <div class="model-tag">DS220+</div>
+      <div class="led-group">
+        <div class="led-item">
+          <div class="led-light green blinking"></div>
+          <span class="led-label">STATUS</span>
+        </div>
+        <div class="led-item">
+          {% set sys_status = states('sensor.bobonas220_status') %}
+          {% if sys_status in ['attention', 'danger'] %}
+            <div class="led-light orange blinking"></div>
+          {% else %}
+            <div class="led-light off"></div>
+          {% endif %}
+          <span class="led-label">ALERT</span>
+        </div>
+        <div class="led-item">
+          <div class="led-light green"></div>
+          <span class="led-label">LAN</span>
+        </div>
+      </div>
+    </div>
+  
+    <div class="drive-bay-container">
+      
+      {% set drive_1_temp = states('sensor.bobonas220_drive_1_temperature') | float(0) %}
+      {% if drive_1_temp > 60 %}{% set t1_cls = 'color-red' %}
+      {% elif drive_1_temp > 45 %}{% set t1_cls = 'color-cyan' %}
+      {% else %}{% set t1_cls = 'color-green' %}{% endif %}
+      <div class="drive-slot">
+        <div class="drive-arrow active">▲</div>
+        <div class="drive-info">
+          <div class="drive-index">1</div>
+          <div class="drive-model">DISK 1</div>
+          <div class="drive-temp-box">
+            <span class="real-data {{ t1_cls }}">{{ drive_1_temp | round(0) }}</span><span class="unit-deg {{ t1_cls }}">°</span>
+          </div>
+        </div>
+        <div class="drive-lock-line"></div>
+      </div>
+  
+      {% set drive_2_temp = states('sensor.bobonas220_drive_2_temperature') | float(0) %}
+      {% if drive_2_temp > 60 %}{% set t2_cls = 'color-red' %}
+      {% elif drive_2_temp > 45 %}{% set t2_cls = 'color-cyan' %}
+      {% else %}{% set t2_cls = 'color-green' %}{% endif %}
+      <div class="drive-slot">
+        <div class="drive-arrow active">▲</div>
+        <div class="drive-info">
+          <div class="drive-index">2</div>
+          <div class="drive-model">DISK 2</div>
+          <div class="drive-temp-box">
+            <span class="real-data {{ t2_cls }}">{{ drive_2_temp | round(0) }}</span><span class="unit-deg {{ t2_cls }}">°</span>
+          </div>
+        </div>
+        <div class="drive-lock-line"></div>
+      </div>
+  
+      <div class="drive-slot empty-slot">
+        <div class="drive-arrow">▲</div>
+        <div class="drive-info">
+          <div class="drive-index">3</div>
+          <div class="drive-model">EMPTY</div>
+          <div class="drive-temp-box">
+            <span class="real-data text-muted">--</span>
+          </div>
+        </div>
+        <div class="drive-lock-line"></div>
+      </div>
+  
+      <div class="drive-slot empty-slot">
+        <div class="drive-arrow">▲</div>
+        <div class="drive-info">
+          <div class="drive-index">4</div>
+          <div class="drive-model">EMPTY</div>
+          <div class="drive-temp-box">
+            <span class="real-data text-muted">--</span>
+          </div>
+        </div>
+        <div class="drive-lock-line"></div>
+      </div>
+  
+    </div>
+  
+    <div class="bottom-metrics">
+      <div class="metric-box box-left">
+        <div class="metric-title">SYSTEM COMPUTE</div>
+        <div class="ram-section">
+          <div class="ram-meta">
+            {% set ram_pct = states('sensor.bobonas220_memory_usage_real') | float(0) %}
+            {% set ram_total_mb = states('sensor.bobonas220_memory_total_real') | float(6056) %}
+            {% set ram_used_gb = (ram_total_mb * (ram_pct / 100) / 1024) | round(1) %}
+            {% set ram_total_gb = (ram_total_mb / 1024) | round(0) %}
+            {% if ram_pct > 80 %}{% set ram_cls = 'color-red' %}
+            {% elif ram_pct > 50 %}{% set ram_cls = 'color-orange' %}
+            {% else %}{% set ram_cls = 'color-blue' %}{% endif %}
+            <span class="ram-num {{ ram_cls }}">{{ ram_pct | round(0) }}%</span>
+            <span class="ram-detail">RAM USED ({{ ram_used_gb }}G / {{ ram_total_gb }}G)</span>
+          </div>
+          <div class="progress-bar-bg">
+            <div class="progress-bar-fill" style="width: {{ ram_pct }}%; background: {% if ram_pct > 80 %}#ff453a{% elif ram_pct > 50 %}#ff9f0a{% else %}#007aff{% endif %}; box-shadow: 0 0 6px {% if ram_pct > 80 %}#ff453a{% elif ram_pct > 50 %}#ff9f0a{% else %}#007aff{% endif %};"></div>
+          </div>
+        </div>
+  
+        <div class="cpu-temp-grid">
+          {% set cpu_load = states('sensor.bobonas220_cpu_utilization_total') | float(0) %}
+          {% if cpu_load > 80 %}{% set cpu_cls = 'color-red' %}
+          {% elif cpu_load > 50 %}{% set cpu_cls = 'color-orange' %}
+          {% else %}{% set cpu_cls = 'color-blue' %}{% endif %}
+          <div class="stat-mini-card">
+            <span class="card-label">CPU LOAD</span>
+            <span class="card-val {{ cpu_cls }}">{{ cpu_load | round(0) }}<span class="card-unit">%</span></span>
+          </div>
+          
+          {% set sys_temp = states('sensor.bobonas220_temperature') | float(0) %}
+          {% if sys_temp > 60 %}{% set sys_cls = 'color-red' %}
+          {% elif sys_temp > 45 %}{% set sys_cls = 'color-cyan' %}
+          {% else %}{% set sys_cls = 'color-green' %}{% endif %}
+          <div class="stat-mini-card">
+            <span class="card-label">SYS TEMP</span>
+            <span class="card-val {{ sys_cls }}">{{ sys_temp | round(0) }}<span class="card-unit">°C</span></span>
+          </div>
+        </div>
+      </div>
+  
+      <div class="metric-box box-right">
+        <div class="metric-title">STORAGE & UPS</div>
+        <div class="storage-section">
+          {% set used_tb = states('sensor.bobonas220_volume_1_used_space') | float(0) %}
+          {% set usage_pct = states('sensor.bobonas220_volume_1_volume_used') | float(0) %}
+          {% if usage_pct > 0 and used_tb > 0 %}
+            {% set total_tb = (used_tb / (usage_pct / 100)) | round(1) %}
+          {% else %}
+            {% set total_tb = 0.0 %}
+          {% endif %}
+          <div class="storage-row">
+            <span class="env-label">Vol1 Used:</span>
+            <span class="storage-val text-white">{{ used_tb | round(1) }} TB</span>
+          </div>
+          <div class="storage-row">
+            <span class="env-label">Vol1 Total:</span>
+            <span class="storage-val text-muted">{{ total_tb }} TB</span>
+          </div>
+          <div class="progress-bar-bg storage-bar">
+            <div class="progress-bar-fill storage-fill" style="width: {{ usage_pct }}%"></div>
+          </div>
+        </div>
+  
+        <div class="ups-section">
+          <div class="ups-row green-text">
+            <span class="env-label">UPS BATT:</span>
+            <span class="env-value font-bold">{{ states('sensor.apc_bk650m2_ch_battery_charge') | float(0) | round(0) }} %</span>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
   
-  {% set drive_2_temp = states('sensor.bobonas220_drive_2_temperature') | float(0) %}
-  {% if drive_2_temp > 60 %}{% set t2_cls = 'color-red' %}
-  {% elif drive_2_temp > 45 %}{% set t2_cls = 'color-cyan' %}
-  {% else %}{% set t2_cls = 'color-green' %}{% endif %}
-  <div class="drive-slot">
+  <style>
+  /* 全局基础隔离重置 */
+  .syno-nas-card, .syno-nas-card * {
+    box-sizing: border-box !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: 1.4 !important;
+  }
+  .syno-nas-card {
+    background: #161618;
+    border-radius: 10px;
+    padding: 22px !important;
+    width: 100%;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.03), 0 16px 40px rgba(0,0,0,0.6);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
   
-  </div>
+  /* 顶部状态栏 */
+  .panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 22px !important;
+    background: rgba(255,255,255,0.02);
+    padding: 10px 14px !important;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.03);
+  }
+  .model-tag { font-size: 13px; font-weight: 900; color: #55555a; letter-spacing: 1px; }
+  .led-group { display: flex; gap: 14px; }
+  .led-item { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+  .led-light { width: 5px; height: 5px; border-radius: 10px; background: #2c2c2e; }
+  .led-light.green { background: #30d158; box-shadow: 0 0 8px #30d158, 0 0 2px #30d158; }
+  .led-light.orange { background: #ff9f0a; box-shadow: 0 0 8px #ff9f0a, 0 0 2px #ff9f0a; }
+  .led-light.off { background: #2c2c2e; }
+  .led-light.blinking { animation: blink 1.5s infinite; }
+  @keyframes blink { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
+  .led-label { font-size: 8px; font-weight: 800; letter-spacing: 0.5px; color: #48484a; }
   
-  <div class="drive-slot empty-slot">
+  /* 核心整体底盒：完美融合所有槽位，消除穿帮感 */
+  .drive-bay-container {
+    background: #09090a;
+    border-radius: 10px;
+    padding: 14px !important;
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    box-shadow: inset 0 4px 12px rgba(0,0,0,0.85);
+    margin-bottom: 22px !important;
+  }
+  .drive-slot {
+    flex: 1;
+    min-width: 0;
+    height: 145px;
+    background: linear-gradient(180deg, #242426 0%, #1a1a1c 100%);
+    border: 1px solid #141416;
+    border-radius: 10px;
+    padding: 12px 2px !important;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+  }
+  /* 空置插槽样式：调暗亮度，呈现不喧宾夺主的极客深邃感 */
+  .drive-slot.empty-slot {
+    background: linear-gradient(180deg, #161617 0%, #101011 100%);
+    border: 1px solid rgba(255,255,255,0.01);
+    opacity: 0.4;
+    box-shadow: none;
+  }
+  .drive-arrow { font-size: 8px; color: #2c2c2e; }
+  .drive-arrow.active { color: #30d158; text-shadow: 0 0 6px rgba(48,209,88,0.6); }
+  .drive-info { text-align: center; width: 100%; }
+  .drive-index { font-size: 12px; font-weight: bold; color: #636366; margin-bottom: 3px !important; }
+  .drive-model { font-size: 8px; font-weight: 600; color: #48484a; }
+  .drive-temp-box { margin-top: 6px !important; display: flex; justify-content: center; align-items: center; }
+  .real-data { font-size: 15px; font-family: "SF Mono", Monaco, monospace; font-weight: 700; }
+  .unit-deg { font-size: 10px; font-weight: bold; }
+  .drive-lock-line { width: 3px; height: 8px; background: #09090a; border-radius: 10px; }
+  
+  /* 底部面板 */
+  .bottom-metrics { display: flex; gap: 14px; width: 100%; }
+  .metric-box {
+    flex: 1; min-width: 0; background: #1c1c1e; border: 1px solid #2c2c2e; border-radius: 10px;
+    padding: 14px !important; display: flex; flex-direction: column; box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  }
+  .metric-title { font-size: 9px; font-weight: 800; letter-spacing: 0.8px; color: #636366; margin-bottom: 12px !important; text-transform: uppercase; }
+  .ram-section { margin-bottom: 14px !important; }
+  .ram-meta { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 6px !important; }
+  .ram-num { font-size: 24px; font-family: "SF Mono", monospace; font-weight: 700; }
+  .ram-detail { font-size: 9px; color: #8e8e93; font-weight: bold; }
+  .progress-bar-bg { width: 100%; height: 6px; background: #2c2c2e; border-radius: 10px; overflow: hidden; }
+  .progress-bar-fill { height: 100%; border-radius: 10px; transition: width 0.5s ease-in-out, background 0.3s ease; }
+  .cpu-temp-grid { display: flex; gap: 8px; width: 100%; }
+  .stat-mini-card { flex: 1; background: #2c2c2e; border-radius: 10px; padding: 10px 6px !important; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+  .card-label { font-size: 8px; color: #aeaeb2; font-weight: bold; margin-bottom: 4px !important; }
+  .card-val { font-size: 16px; font-family: "SF Mono", monospace; font-weight: 700; display: flex; align-items: baseline; justify-content: center; }
+  .card-unit { font-size: 10px; margin-left: 1px !important; font-weight: normal; }
+  
+  /* 颜色类 */
+  .color-green { color: #30d158 !important; text-shadow: 0 0 10px rgba(48,209,88,0.4); }
+  .color-cyan { color: #64d2ff !important; text-shadow: 0 0 10px rgba(100,210,255,0.4); }
+  .color-blue { color: #00bfff !important; text-shadow: 0 0 10px rgba(0,191,255,0.4); }
+  .color-orange { color: #ff9f0a !important; text-shadow: 0 0 10px rgba(255,159,10,0.4); }
+  .color-red { color: #ff453a !important; text-shadow: 0 0 10px rgba(255,69,58,0.5); }
+  .storage-section { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px !important; }
+  .storage-row { display: flex; justify-content: space-between; align-items: center; font-size: 11px; height: 16px; }
+  .env-label { color: #8e8e93; }
+  .storage-val { font-family: "SF Mono", monospace; font-weight: bold; }
+  .text-white { color: #ffffff; }
+  .text-muted { color: #55555a !important; }
+  .storage-bar { height: 5px; margin-top: 6px !important;}
+  .storage-fill { background: linear-gradient(90deg, #bf5af2, #af52de); box-shadow: 0 0 6px rgba(191,90,242,0.4); }
+  .ups-section { border-top: 1px solid #2c2c2e; padding-top: 10px !important; margin-top: auto !important; }
+  .ups-row { display: flex; justify-content: space-between; font-size: 11px; }
+  .green-text { color: #30d158 !important; text-shadow: 0 0 8px rgba(48,209,88,0.2); }
+  .font-bold { font-family: "SF Mono", monospace; font-weight: bold; }
+  </style>
+  ```
+  
+  </details>
