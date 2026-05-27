@@ -200,13 +200,15 @@ const extractYamlContent = (body) => {
     return yamlCandidates[0].content.trim();
   }
 
-  const htmlCandidates = blocks.filter((block) => {
-    const language = block.language.split(/\s+/)[0];
-    return (
-      ["html", "htm", "xml", "markup", ""].includes(language) &&
-      looksLikeHtml(block.content)
-    );
-  });
+  const htmlCandidates = blocks
+    .filter((block) => {
+      const language = block.language.split(/\s+/)[0];
+      return (
+        ["html", "htm", "xml", "markup", ""].includes(language) &&
+        looksLikeHtml(block.content)
+      );
+    })
+    .sort((a, b) => b.content.length - a.content.length);
 
   if (htmlCandidates.length > 0) {
     return wrapHtmlAsYaml(htmlCandidates[0].content.trim());

@@ -72,6 +72,12 @@ ${yaml}
     /^type: custom:html-pro-card\n/,
   );
   assert.match(
+    extractYamlContent(
+      "```\n<div>short</div>\n```\n\n```\n<style>.x{}</style>\n<div>long</div>\n<script>root.x = true;</script>\n```",
+    ),
+    /<script>root\.x = true;<\/script>/,
+  );
+  assert.match(
     extractYamlContent("    <style>.x{}</style>\n    <div>OK</div>"),
     /^type: custom:html-pro-card\n/,
   );
