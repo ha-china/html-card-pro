@@ -11,9 +11,22 @@
 type: custom:html-pro-card
 do_not_parse: true
 content: |
+  </h2>
+  <div class="ava-status-badge" id="txtStatusBadge">OFF</div>
+  
+  <span class="ava-ambient-label">Ambient Sensor</span>
+  <div class="ava-ambient-box">
+  
+  <div class="ava-knob-container">
+  
   <div class="ava-action-btn" id="btnCool"><ha-icon icon="mdi:snowflake"></ha-icon></div>
   <div class="ava-action-btn" id="btnHeat"><ha-icon icon="mdi:fire"></ha-icon></div>
   <div class="ava-action-btn" id="btnDry"><ha-icon icon="mdi:water-percent"></ha-icon></div>
   <div class="ava-action-btn" id="btnFan"><ha-icon icon="mdi:fan"></ha-icon></div>
   <div class="ava-action-btn" id="btnPower"><ha-icon icon="mdi:power"></ha-icon></div>
   <div class="ava-action-btn" id="btnFanSpeed"><ha-icon id="fanSpeedIcon" icon="mdi:fan-auto"></ha-icon></div>
+  
+  <div class="fan-popup-item" data-mode="低风">低风</div>
+  <div class="fan-popup-item" data-mode="中风">中风</div>
+  <div class="fan-popup-item" data-mode="高风">高风</div>
+  <div class="fan-popup-item" data-mode="自动">自动</div>

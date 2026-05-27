@@ -11,9 +11,39 @@
 type: custom:html-pro-card
 do_not_parse: true
 content: |
+  <div class="model-tag">DS920+</div>
+  <div class="led-group">
+  
   {% for i in [1, 2, 3, 4] %}
   {% set drive_temp = states('sensor.bobonas920_drive_' ~ i ~ '_temperature') | float(0) %}
   {% if drive_temp > 60 %}{% set t_cls = 'color-red' %}
   {% elif drive_temp > 45 %}{% set t_cls = 'color-cyan' %}
   {% else %}{% set t_cls = 'color-green' %}{% endif %}
   <div class="drive-slot">
+  
+  <div class="metric-box box-left">
+  
+  </div>
+  
+  <div class="metric-box box-right">
+  
+  <div class="model-tag">DS220+</div>
+  <div class="led-group">
+  
+  {% set drive_1_temp = states('sensor.bobonas220_drive_1_temperature') | float(0) %}
+  {% if drive_1_temp > 60 %}{% set t1_cls = 'color-red' %}
+  {% elif drive_1_temp > 45 %}{% set t1_cls = 'color-cyan' %}
+  {% else %}{% set t1_cls = 'color-green' %}{% endif %}
+  <div class="drive-slot">
+  
+  </div>
+  
+  {% set drive_2_temp = states('sensor.bobonas220_drive_2_temperature') | float(0) %}
+  {% if drive_2_temp > 60 %}{% set t2_cls = 'color-red' %}
+  {% elif drive_2_temp > 45 %}{% set t2_cls = 'color-cyan' %}
+  {% else %}{% set t2_cls = 'color-green' %}{% endif %}
+  <div class="drive-slot">
+  
+  </div>
+  
+  <div class="drive-slot empty-slot">
