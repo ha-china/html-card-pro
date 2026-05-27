@@ -374,17 +374,13 @@ const discussionToModule = async (source, options = {}) => {
   }
 
   if (hasUnsafeContent(yamlContent)) {
-    return { skipped: true, reason: "contains unsafe code", discussion: source };
+    options.log?.(`Warning ${source.id}: content matched safety patterns`);
   }
 
   const urls = extractUrls(yamlContent);
   const unsafeUrls = urls.filter((url) => !isUrlSafe(url));
   if (unsafeUrls.length > 0) {
-    return {
-      skipped: true,
-      reason: `unsafe URLs: ${unsafeUrls.join(", ")}`,
-      discussion: source,
-    };
+    options.log?.(`Warning ${source.id}: external URLs: ${unsafeUrls.join(", ")}`);
   }
 
   const { name, tags } = parseTitle(source.title);

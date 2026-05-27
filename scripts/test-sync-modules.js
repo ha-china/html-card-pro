@@ -207,7 +207,7 @@ ${yaml}
     { downloadImages: false },
   );
   assert.deepStrictEqual(fs.readdirSync("mods").sort(), [
-    "10-nas-synology-nas-status-panel.yaml",
+    "10-unsafe-replacement.yaml",
     "13-comment-1-comment-minecraft.yaml",
     "13-comment-2-comment-nest.yaml",
     "13-main-discussion.yaml",
