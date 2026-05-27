@@ -1,5 +1,18 @@
 [
   {
+    "id": 8,
+    "name": "Digital Clock",
+    "version": "1.0",
+    "creator": "knoop7",
+    "description": "This module provides a Digital Clock for HTML Pro Card. A beautiful gradient clock with monospace font that updates every second.",
+    "tags": [
+      "Style"
+    ],
+    "image": "https://via.placeholder.com/400x200/667eea/fff?text=12:34:56",
+    "link": "https://github.com/ha-china/html-card-pro/discussions/8",
+    "file": "mods/8-digital-clock.yaml"
+  },
+  {
     "id": 7,
     "name": "Apple TV Remote",
     "version": "1.0",

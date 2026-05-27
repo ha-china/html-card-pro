@@ -1,0 +1,33 @@
+# Generated from GitHub Discussions by sync-modules.
+# Digital Clock
+# Author: knoop7
+# Version: 1.0
+# Description: This module provides a Digital Clock for HTML Pro Card. A beautiful gradient clock with monospace font that updates every second.
+# Tags: Style
+# Image: https://via.placeholder.com/400x200/667eea/fff?text=12:34:56
+# Link: https://github.com/ha-china/html-card-pro/discussions/8
+# ID: 8
+
+type: custom:html-pro-card
+do_not_parse: true
+update_interval: 1000
+ignore_line_breaks: true
+content: |-
+  <style>
+  .clock {
+    font-size: 48px;
+    font-family: 'SF Mono', 'Consolas', monospace;
+    text-align: center;
+    padding: 40px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: #fff;
+    border-radius: 16px;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  }
+  </style>
+  <div class="clock" id="clock">00:00:00</div>
+  <script>
+  setInterval(function() {
+    $("#clock").textContent = new Date().toLocaleTimeString();
+  }, 1000);
+  </script>
