@@ -11,5 +11,9 @@
 type: custom:html-pro-card
 do_not_parse: true
 content: |
-  </h2>
-  <div class="ava-status-badge" id="txtStatusBadge">OFF</div>
+  <div class="ava-action-btn" id="btnCool"><ha-icon icon="mdi:snowflake"></ha-icon></div>
+  <div class="ava-action-btn" id="btnHeat"><ha-icon icon="mdi:fire"></ha-icon></div>
+  <div class="ava-action-btn" id="btnDry"><ha-icon icon="mdi:water-percent"></ha-icon></div>
+  <div class="ava-action-btn" id="btnFan"><ha-icon icon="mdi:fan"></ha-icon></div>
+  <div class="ava-action-btn" id="btnPower"><ha-icon icon="mdi:power"></ha-icon></div>
+  <div class="ava-action-btn" id="btnFanSpeed"><ha-icon id="fanSpeedIcon" icon="mdi:fan-auto"></ha-icon></div>

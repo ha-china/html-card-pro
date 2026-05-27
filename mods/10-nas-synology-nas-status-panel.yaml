@@ -11,5 +11,9 @@
 type: custom:html-pro-card
 do_not_parse: true
 content: |
-  <div class="model-tag">DS920+</div>
-  <div class="led-group">
+  {% for i in [1, 2, 3, 4] %}
+  {% set drive_temp = states('sensor.bobonas920_drive_' ~ i ~ '_temperature') | float(0) %}
+  {% if drive_temp > 60 %}{% set t_cls = 'color-red' %}
+  {% elif drive_temp > 45 %}{% set t_cls = 'color-cyan' %}
+  {% else %}{% set t_cls = 'color-green' %}{% endif %}
+  <div class="drive-slot">
