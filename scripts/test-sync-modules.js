@@ -67,6 +67,14 @@ ${yaml}
     ),
     /^type: custom:html-pro-card\n[\s\S]*<!-- keep -->/,
   );
+  assert.match(
+    extractYamlContent("```\n<style>.x{}</style>\n<div>OK</div>\n```"),
+    /^type: custom:html-pro-card\n/,
+  );
+  assert.match(
+    extractYamlContent("    <style>.x{}</style>\n    <div>OK</div>"),
+    /^type: custom:html-pro-card\n/,
+  );
 
   const minecraft = await discussionToModule(
     discussion({

@@ -136,6 +136,33 @@ const extractCodeBlocks = (body) => {
   return blocks;
 };
 
+const extractIndentedCodeBlocks = (body) => {
+  const blocks = [];
+  let current = [];
+
+  const flush = () => {
+    if (current.length === 0) return;
+    const content = unquoteCodeFence(
+      current.map((line) => line.replace(/^(?: {4}|\t)/, "")).join("\n"),
+    );
+    if (content) {
+      blocks.push({ language: "", content });
+    }
+    current = [];
+  };
+
+  for (const line of (body || "").replace(/\r\n/g, "\n").split("\n")) {
+    if (/^(?: {4}|\t)\S/.test(line) || (current.length > 0 && /^\s*$/.test(line))) {
+      current.push(line);
+      continue;
+    }
+    flush();
+  }
+  flush();
+
+  return blocks;
+};
+
 const looksLikeHtml = (content) =>
   /<(?:style|script|div|section|article|ha-card|ha-icon|template|canvas|svg)\b/i.test(
     content,
@@ -155,7 +182,10 @@ const wrapHtmlAsYaml = (html) =>
 
 const extractYamlContent = (body) => {
   const normalizedBody = body || "";
-  const blocks = extractCodeBlocks(normalizedBody);
+  const blocks = [
+    ...extractCodeBlocks(normalizedBody),
+    ...extractIndentedCodeBlocks(normalizedBody),
+  ];
 
   const yamlCandidates = blocks.filter((block) => {
     const language = block.language.split(/\s+/)[0];
@@ -182,6 +212,15 @@ const extractYamlContent = (body) => {
     return wrapHtmlAsYaml(htmlCandidates[0].content.trim());
   }
 
+  const structuralCandidates = blocks
+    .filter((block) => looksLikeHtml(block.content) || /(^|\n)\s*content\s*:\s*[>|-]/i.test(block.content))
+    .sort((a, b) => b.content.length - a.content.length);
+
+  if (structuralCandidates.length > 0) {
+    const content = structuralCandidates[0].content.trim();
+    return looksLikeYamlCard(content) ? content : wrapHtmlAsYaml(content);
+  }
+
   const cleanedBody = stripHtmlComments(normalizedBody);
   if (looksLikeYamlCard(cleanedBody)) {
     const lines = cleanedBody.split("\n");
@@ -191,6 +230,13 @@ const extractYamlContent = (body) => {
     if (start !== -1) {
       return lines.slice(start).join("\n").trim();
     }
+  }
+
+  const htmlStart = normalizedBody.search(
+    /<(?:style|script|div|section|article|ha-card|ha-icon|template|canvas|svg)\b/i,
+  );
+  if (htmlStart !== -1) {
+    return wrapHtmlAsYaml(normalizedBody.slice(htmlStart).trim());
   }
 
   return "";
