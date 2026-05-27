@@ -545,6 +545,26 @@ const writeModules = async (discussions, options = {}) => {
     numeric: true,
   }));
   fs.writeFileSync("store.json", `${JSON.stringify(modules, null, 2)}\n`);
+  fs.writeFileSync(
+    "sync-report.json",
+    `${JSON.stringify(
+      {
+        generated: modules.map((module) => ({
+          id: module.id,
+          name: module.name,
+          file: module.file,
+        })),
+        skipped: skipped.map((result) => ({
+          id: result.discussion.id,
+          title: result.discussion.title,
+          reason: result.reason,
+          url: result.discussion.url,
+        })),
+      },
+      null,
+      2,
+    )}\n`,
+  );
   options.log?.(`Generated ${modules.length} modules (${skipped.length} skipped)`);
 
   return { modules, skipped };

@@ -33,7 +33,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git pull --rebase origin main || true
-          git add mods/ store.json scripts/
+          git add mods/ store.json sync-report.json scripts/
           [ -d images ] && git add images/
           git diff --staged --quiet || git commit -m "sync: update modules from discussions"
           git push
