@@ -85,7 +85,7 @@ const hasUnsafeContent = (yaml) => {
     /<iframe\b/i,
     /javascript:/i,
     /data:text\/html/i,
-    /\son\w+\s*=/i,
+    /<[^>]+\son\w+\s*=/i,
   ];
   return dangerous.some((pattern) => pattern.test(yaml));
 };
@@ -462,13 +462,12 @@ const discussionToModule = async (source, options = {}) => {
 };
 
 const discussionSources = (disc) => {
-  const fallbackTitle = titleFromBody(disc.body) || disc.title;
   const sources = [
     {
       ...disc,
       id: disc.number,
       kind: "discussion",
-      title: fallbackTitle,
+      title: disc.title,
       number: disc.number,
     },
   ];

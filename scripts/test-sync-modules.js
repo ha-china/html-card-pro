@@ -7,6 +7,7 @@ const {
   extractYamlContent,
   discussionToModule,
   discussionSources,
+  hasUnsafeContent,
   writeModules,
 } = require("./sync-modules");
 
@@ -30,6 +31,10 @@ content: |
   <div class="card">OK</div>`;
 
 const run = async () => {
+  assert.strictEqual(hasUnsafeContent("const onlineData = {};"), false);
+  assert.strictEqual(hasUnsafeContent("root._onHassUpdate = () => {};"), false);
+  assert.strictEqual(hasUnsafeContent("<button onclick=\"run()\">"), true);
+
   assert.strictEqual(
     (
       await discussionToModule(
