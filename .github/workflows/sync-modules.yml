@@ -1,6 +1,11 @@
 name: Sync Discussions to Store
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/sync-modules.yml'
+      - 'scripts/sync-modules.js'
   discussion:
     types: [created, edited, deleted]
   workflow_dispatch:
