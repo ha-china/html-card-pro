@@ -33,6 +33,12 @@
   ],
   "skipped": [
     {
+      "id": 13,
+      "title": "用 html-pro-card 打造 Claw Assistant 仪表盘配置面板",
+      "reason": "no html-pro-card code block",
+      "url": "https://github.com/ha-china/html-card-pro/discussions/13"
+    },
+    {
       "id": "11-comment-1",
       "title": "Minecraft 风格的 Home Assistant 平板中控仪表盘",
       "reason": "no html-pro-card code block",
