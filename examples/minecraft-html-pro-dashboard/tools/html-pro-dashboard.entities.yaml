@@ -1,0 +1,45 @@
+# Minecraft html-pro-card 仪表盘实体映射
+#
+# 只改右侧实体 ID，然后运行：
+#   node tools/generate-html-pro-dashboard.js
+#
+# 生成文件：
+#   templates/html-pro-dashboard.generated.yaml
+#   .deploy/lovelace.minecraft-html-pro-dashboard
+
+dashboard:
+  title: Minecraft HTML Pro Dashboard
+  view_title: Minecraft HTML Pro
+  path: minecraft-html-pro
+  icon: mdi:minecraft
+
+entities:
+  livingLight: light.living_room_lights
+  bedroomLight: light.bedroom_lights
+  gardenLight: light.garden_light_strip
+  kitchenSocket: switch.kitchen_socket
+  climate: climate.living_room_ac
+  media: media_player.living_room_speaker
+  lock: lock.front_door
+  door: binary_sensor.front_door_contact
+  livingPresence: binary_sensor.living_room_presence
+  bedroomPresence: binary_sensor.bedroom_presence
+  kitchenPresence: binary_sensor.kitchen_presence
+  livingTemp: sensor.living_room_temperature
+  livingHum: sensor.living_room_humidity
+  bedroomTemp: sensor.bedroom_temperature
+  bedroomHum: sensor.bedroom_humidity
+  kitchenTemp: sensor.kitchen_temperature
+  outdoorTemp: sensor.outdoor_temperature
+  outdoorHum: sensor.outdoor_humidity
+  pm25: sensor.pm25
+  power: sensor.current_power
+  energyToday: sensor.energy_cost_today
+  energyMonth: sensor.energy_cost_month
+  weather: weather.home
+  time: sensor.time
+  date: sensor.date
+  sceneHome: scene.home_mode
+  sceneNight: scene.good_night
+  sceneWelcome: scene.welcome_home
+  sceneAway: scene.away_mode

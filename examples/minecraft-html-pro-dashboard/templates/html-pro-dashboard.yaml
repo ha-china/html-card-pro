@@ -1,0 +1,622 @@
+# Minecraft html-pro-card 全屏仪表盘模板
+# 依赖：custom:html-pro-card
+# 图片目录：/config/www/minecraft-dashboard/
+# 使用前请把 entities 和脚本中的实体 ID 替换成自己的 Home Assistant 实体。
+
+type: custom:html-pro-card
+do_not_parse: true
+ignore_line_breaks: true
+update_interval: 5000
+entities:
+  - light.living_room_lights
+  - light.bedroom_lights
+  - light.garden_light_strip
+  - switch.kitchen_socket
+  - climate.living_room_ac
+  - media_player.living_room_speaker
+  - lock.front_door
+  - binary_sensor.front_door_contact
+  - binary_sensor.living_room_presence
+  - binary_sensor.bedroom_presence
+  - binary_sensor.kitchen_presence
+  - sensor.living_room_temperature
+  - sensor.living_room_humidity
+  - sensor.bedroom_temperature
+  - sensor.bedroom_humidity
+  - sensor.kitchen_temperature
+  - sensor.outdoor_temperature
+  - sensor.outdoor_humidity
+  - sensor.pm25
+  - sensor.current_power
+  - sensor.energy_cost_today
+  - sensor.energy_cost_month
+  - sensor.time
+  - sensor.date
+  - weather.home
+  - scene.home_mode
+  - scene.good_night
+  - scene.welcome_home
+  - scene.away_mode
+content: |
+  <style>
+    :host { display:block; }
+    ha-card { border:0; box-shadow:none; background:transparent; overflow:hidden; }
+    .mc-shell {
+      min-height: calc(100vh - 16px);
+      padding: 18px;
+      box-sizing: border-box;
+      display: grid;
+      grid-template-columns: 184px minmax(0, 1fr);
+      gap: 18px;
+      color: #fff;
+      font-family: var(--paper-font-body1_-_font-family, inherit);
+      background:
+        linear-gradient(180deg, rgba(18, 11, 7, .36), rgba(18, 11, 7, .54)),
+        url("/local/minecraft-dashboard/base-texture.jpg") center / cover no-repeat;
+    }
+    h1, h2, h3, p { margin:0; font:inherit; }
+    button { font:inherit; }
+    .muted { color: rgba(255,255,255,.68); }
+    .side {
+      min-height: calc(100vh - 52px);
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+    .profile {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 4px 8px;
+    }
+    .profile img {
+      width: 54px;
+      height: 54px;
+      object-fit: cover;
+      border-radius: 15px;
+      border: 1px solid rgba(255,255,255,.2);
+      box-shadow: 0 16px 36px rgba(0,0,0,.26);
+    }
+    .profile b { display:block; font-size:16px; font-weight:950; }
+    .profile span { display:block; margin-top:3px; font-size:12px; color:#8ee46d; font-weight:900; }
+    .nav { display:grid; gap:7px; }
+    .nav button {
+      min-height: 45px;
+      border: 1px solid transparent;
+      border-radius: 15px;
+      padding: 0 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: rgba(255,255,255,.68);
+      background: transparent;
+      cursor: pointer;
+      text-align: left;
+      transition: transform .16s ease, background .16s ease, border-color .16s ease, color .16s ease;
+      text-shadow: 0 2px 14px rgba(0,0,0,.54);
+    }
+    .nav button:hover { transform: translateY(-1px); background: rgba(255,255,255,.07); color:#fff; }
+    .nav button.active { color:#fff; background: rgba(118, 166, 79, .22); border-color: rgba(175, 224, 112, .25); }
+    .nav ha-icon { --mdc-icon-size: 21px; color: currentColor; }
+    .side-art {
+      margin-top: auto;
+      min-height: 148px;
+      border-radius: 22px;
+      overflow: hidden;
+      box-shadow: 0 22px 58px rgba(0,0,0,.32);
+    }
+    .side-art img { width:100%; height:100%; object-fit:cover; display:block; }
+    .stage {
+      position: relative;
+      min-height: calc(100vh - 52px);
+      border-radius: 30px;
+      overflow: hidden;
+      background:
+        linear-gradient(90deg, rgba(15, 9, 5, .42), rgba(15, 9, 5, .04) 46%, rgba(15, 9, 5, .42)),
+        url("/local/minecraft-dashboard/stage-background.jpg") center / cover no-repeat;
+      box-shadow: 0 32px 98px rgba(0,0,0,.38);
+    }
+    .stage::before {
+      content:"";
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.12), inset 0 -110px 190px rgba(0,0,0,.26);
+      z-index:0;
+    }
+    .page {
+      position:absolute;
+      inset:0;
+      z-index:1;
+      display:none;
+      padding:24px;
+      box-sizing:border-box;
+      overflow:auto;
+    }
+    .page.active { display:block; }
+    .home-grid {
+      min-height:100%;
+      display:grid;
+      grid-template-columns: minmax(0, 2.75fr) minmax(292px, .95fr);
+      grid-template-rows: auto 1fr auto;
+      grid-template-areas: "hero rail" "spacer rail" "bottom rail";
+      gap:16px;
+    }
+    .hero { grid-area:hero; max-width: 610px; text-shadow: 0 3px 18px rgba(0,0,0,.52); }
+    .hero h1 { font-size:30px; line-height:1.08; font-weight:950; }
+    .hero p { margin-top:8px; font-size:14px; color:rgba(255,255,255,.82); }
+    .weather-pill {
+      margin-top:15px;
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      min-height:38px;
+      padding:0 13px 0 5px;
+      border-radius:999px;
+      background: rgba(18, 10, 5, .44);
+      border: 1px solid rgba(255,255,255,.14);
+      cursor:pointer;
+    }
+    .weather-icon {
+      width:32px;
+      height:32px;
+      border-radius: 12px;
+      display:grid;
+      place-items:center;
+      color:#ffd66d;
+      background:rgba(255,255,255,.12);
+    }
+    .weather-icon ha-icon { --mdc-icon-size:21px; }
+    .bottom { grid-area:bottom; display:grid; gap:16px; align-self:end; }
+    .section-title { display:flex; align-items:end; justify-content:space-between; gap:12px; margin-bottom:10px; text-shadow:0 3px 16px rgba(0,0,0,.55); }
+    .section-title h2 { font-size:17px; font-weight:950; }
+    .section-title p { font-size:12px; color:rgba(255,255,255,.68); }
+    .device-grid { display:grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap:12px; }
+    .device {
+      min-height:150px;
+      padding:15px;
+      box-sizing:border-box;
+      border:1px solid rgba(255,255,255,.52);
+      border-radius:18px;
+      display:grid;
+      grid-template-rows:auto 1fr auto;
+      gap:10px;
+      background:rgba(243,239,229,.95);
+      color:#2b221c;
+      box-shadow:0 18px 48px rgba(0,0,0,.26);
+      cursor:pointer;
+      transition:transform .16s ease, box-shadow .16s ease, background .18s ease;
+    }
+    .device:hover, .room:hover, .scene:hover { transform: translateY(-2px); }
+    .device:active, .scene:active { transform: scale(.985); }
+    .device.on-yellow { background:#e9c875; color:#31230e; }
+    .device.on-blue { background:#8fc2ea; color:#142a3d; }
+    .device.on-purple { background:#b595df; color:#291a3f; }
+    .device.on-green { background:#9dcb78; color:#1c3013; }
+    .device.on-red { background:#db8d75; color:#3c1d14; }
+    .device.off { background:rgba(243,239,229,.95); color:#2b221c; }
+    .device.unavailable { filter:saturate(.45); opacity:.76; }
+    .device-top { display:flex; justify-content:space-between; align-items:flex-start; gap:8px; }
+    .device img { width:54px; height:54px; object-fit:cover; border-radius:15px; border:1px solid rgba(0,0,0,.1); }
+    .badge { min-height:24px; min-width:34px; padding:0 8px; border-radius:999px; display:grid; place-items:center; font-size:11px; font-weight:950; background:rgba(0,0,0,.1); }
+    .device-copy { align-self:end; }
+    .device-copy b { display:block; font-size:15px; line-height:1.1; font-weight:950; overflow-wrap:anywhere; }
+    .device-copy span { display:block; margin-top:4px; font-size:12px; color:rgba(37,27,19,.62); font-weight:800; }
+    .control-row { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+    .state-word { font-size:13px; font-weight:950; }
+    .switch { width:43px; height:24px; border-radius:999px; background:rgba(35,27,21,.18); position:relative; flex:0 0 auto; }
+    .switch::after { content:""; position:absolute; top:4px; left:4px; width:16px; height:16px; border-radius:999px; background:#f7f0e7; box-shadow:0 2px 8px rgba(0,0,0,.2); transition:left .18s ease; }
+    .switch.on { background:#5fa848; }
+    .switch.on::after { left:23px; }
+    .room-grid { display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:12px; }
+    .room { min-height:148px; aspect-ratio: 4 / 3; position:relative; overflow:hidden; border-radius:20px; border:1px solid rgba(255,255,255,.14); box-shadow:0 18px 52px rgba(0,0,0,.28); cursor:pointer; }
+    .room img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+    .room::after { content:""; position:absolute; inset:0; background:linear-gradient(180deg, transparent 38%, rgba(12,8,5,.64)); }
+    .room div { position:absolute; left:14px; right:14px; bottom:14px; z-index:1; text-shadow:0 3px 14px rgba(0,0,0,.75); }
+    .room b { display:block; font-size:17px; font-weight:950; }
+    .room span { display:block; margin-top:3px; font-size:12px; color:rgba(255,255,255,.76); font-weight:850; }
+    .rail { grid-area:rail; display:grid; gap:14px; align-content:start; }
+    .glass {
+      border-radius:20px;
+      padding:15px;
+      background:rgba(32,14,3,.94);
+      border:1px solid rgba(255,255,255,.11);
+      box-shadow:0 20px 58px rgba(0,0,0,.24);
+    }
+    .clock-card { display:flex; justify-content:space-between; align-items:center; gap:12px; min-height:58px; }
+    .clock-time { font-size:30px; line-height:1; font-weight:950; }
+    .clock-date { margin-top:4px; font-size:12px; color:rgba(255,255,255,.68); }
+    .metric-list { display:grid; gap:12px; margin-top:12px; }
+    .metric { display:grid; grid-template-columns:30px 1fr auto; align-items:center; gap:10px; }
+    .dot { width:28px; height:28px; border-radius:10px; display:grid; place-items:center; font-weight:950; }
+    .dot.temp { background:rgba(216,82,72,.22); color:#ff958d; }
+    .dot.hum { background:rgba(74,151,226,.22); color:#94ceff; }
+    .dot.air { background:rgba(112,185,86,.22); color:#9ee779; }
+    .metric small { color:rgba(255,255,255,.64); font-size:12px; }
+    .metric b { font-size:14px; font-weight:950; }
+    .energy-main { margin-top:5px; font-size:36px; line-height:1; font-weight:950; }
+    .energy-main small { font-size:13px; color:rgba(255,255,255,.66); }
+    .bars { height:80px; display:flex; align-items:end; gap:6px; margin-top:14px; }
+    .bars span { flex:1; min-height:12px; border-radius:6px 6px 2px 2px; background:linear-gradient(180deg, #91e571, #457a35); }
+    .scene-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px; }
+    .scene { min-height:82px; border:1px solid rgba(255,255,255,.14); border-radius:16px; padding:10px; color:#fff; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px; cursor:pointer; }
+    .scene ha-icon { --mdc-icon-size:23px; }
+    .scene b { font-size:13px; font-weight:950; }
+    .scene span { font-size:11px; color:rgba(255,255,255,.74); }
+    .scene.home { background:rgba(142,176,74,.55); }
+    .scene.night { background:rgba(38,62,103,.58); }
+    .scene.welcome { background:rgba(175,91,52,.55); }
+    .scene.away { background:rgba(84,58,130,.58); }
+    .subpage-head { margin-bottom:16px; display:flex; align-items:center; gap:12px; text-shadow:0 3px 18px rgba(0,0,0,.55); }
+    .subpage-head ha-icon { --mdc-icon-size:30px; }
+    .subpage-head h2 { font-size:26px; line-height:1.1; font-weight:950; }
+    .subpage-head p { margin-top:4px; color:rgba(255,255,255,.7); font-size:13px; }
+    .panel-grid { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:12px; }
+    .wide-grid { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:12px; }
+    .entity-row { display:flex; align-items:center; justify-content:space-between; gap:10px; min-height:46px; border-radius:14px; padding:10px 12px; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.1); }
+    .entity-row span { color:rgba(255,255,255,.68); font-size:12px; }
+    .entity-row b { font-weight:950; }
+    .log-list { display:grid; gap:10px; }
+    .log { border-left:4px solid #8ee46d; }
+    .log.warn { border-left-color:#ffd36b; }
+    .log.danger { border-left-color:#ff8f83; }
+    @media (max-width: 1180px) {
+      .mc-shell { grid-template-columns:78px minmax(0, 1fr); }
+      .profile .copy, .nav span, .side-art { display:none; }
+      .nav button { justify-content:center; padding:0; }
+      .home-grid { grid-template-columns:1fr; grid-template-areas:"hero" "bottom" "rail"; }
+      .rail { grid-template-columns:repeat(2, minmax(0, 1fr)); }
+      .device-grid { grid-template-columns:repeat(3, minmax(0, 1fr)); }
+      .panel-grid { grid-template-columns:repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 760px) {
+      .mc-shell { grid-template-columns:1fr; padding:10px; }
+      .side { min-height:auto; }
+      .profile, .side-art { display:none; }
+      .nav { grid-template-columns:repeat(6, minmax(0, 1fr)); }
+      .nav button { min-height:42px; border-radius:13px; }
+      .stage { min-height:calc(100vh - 76px); border-radius:22px; }
+      .page { padding:14px; }
+      .hero h1 { font-size:24px; }
+      .device-grid, .room-grid, .rail, .panel-grid, .wide-grid { grid-template-columns:1fr; }
+    }
+  </style>
+
+  <div class="mc-shell">
+    <aside class="side">
+      <div class="profile">
+        <img src="/local/minecraft-dashboard/avatar-steve.jpg" alt="">
+        <div class="copy"><b>Alex</b><span>在线</span></div>
+      </div>
+      <nav class="nav">
+        <button class="active" data-page="home" type="button"><ha-icon icon="mdi:home"></ha-icon><span>首页</span></button>
+        <button data-page="devices" type="button"><ha-icon icon="mdi:devices"></ha-icon><span>设备</span></button>
+        <button data-page="scenes" type="button"><ha-icon icon="mdi:palette-swatch"></ha-icon><span>场景</span></button>
+        <button data-page="rooms" type="button"><ha-icon icon="mdi:door"></ha-icon><span>房间</span></button>
+        <button data-page="energy" type="button"><ha-icon icon="mdi:lightning-bolt"></ha-icon><span>能源</span></button>
+        <button data-page="logs" type="button"><ha-icon icon="mdi:clipboard-text-clock"></ha-icon><span>日志</span></button>
+      </nav>
+      <div class="side-art"><img src="/local/minecraft-dashboard/decor-wolf-lantern.jpg" alt=""></div>
+    </aside>
+
+    <main class="stage">
+      <section class="page active" data-page-view="home">
+        <div class="home-grid">
+          <header class="hero">
+            <h1>我的世界智能宅</h1>
+            <p>用方块世界管理灯光、空调、能源和回家场景。</p>
+            <button class="weather-pill" id="weather-action" type="button">
+              <span class="weather-icon"><ha-icon id="weather-icon" icon="mdi:weather-partly-cloudy"></ha-icon></span>
+              <span><b id="weather-summary">--</b> · <span id="out-temp">--</span>°C</span>
+            </button>
+          </header>
+
+          <section class="bottom">
+            <div>
+              <div class="section-title"><h2>常用设备</h2><p>根据状态自动变色</p></div>
+              <div class="device-grid">
+                <button class="device" id="card-light" data-entity="light.living_room_lights" data-action="toggle" type="button">
+                  <span class="device-top"><img src="/local/minecraft-dashboard/icon-light.jpg" alt=""><em class="badge" id="light-badge">--</em></span>
+                  <span class="device-copy"><b>客厅灯光</b><span>Living Room</span></span>
+                  <span class="control-row"><strong class="state-word" id="light-state">--</strong><i class="switch" id="light-switch"></i></span>
+                </button>
+                <button class="device" id="card-climate" data-entity="climate.living_room_ac" data-action="more-info" type="button">
+                  <span class="device-top"><img src="/local/minecraft-dashboard/icon-ac.jpg" alt=""><em class="badge" id="climate-badge">--</em></span>
+                  <span class="device-copy"><b>中央空调</b><span>Climate</span></span>
+                  <span class="control-row"><strong class="state-word" id="climate-state">--</strong><i class="switch" id="climate-switch"></i></span>
+                </button>
+                <button class="device" id="card-media" data-entity="media_player.living_room_speaker" data-action="more-info" type="button">
+                  <span class="device-top"><img src="/local/minecraft-dashboard/icon-speaker.jpg" alt=""><em class="badge">媒体</em></span>
+                  <span class="device-copy"><b>背景音乐</b><span>Media</span></span>
+                  <span class="control-row"><strong class="state-word" id="media-state">--</strong><ha-icon icon="mdi:music-note"></ha-icon></span>
+                </button>
+                <button class="device" id="card-lock" data-entity="lock.front_door" data-action="more-info" type="button">
+                  <span class="device-top"><img src="/local/minecraft-dashboard/icon-lock.jpg" alt=""><em class="badge">安全</em></span>
+                  <span class="device-copy"><b>入户门锁</b><span>Door Lock</span></span>
+                  <span class="control-row"><strong class="state-word" id="lock-state">--</strong><ha-icon id="lock-icon" icon="mdi:lock"></ha-icon></span>
+                </button>
+                <button class="device" id="card-garden" data-entity="light.garden_light_strip" data-action="toggle" type="button">
+                  <span class="device-top"><img src="/local/minecraft-dashboard/icon-garden-light.jpg" alt=""><em class="badge">花园</em></span>
+                  <span class="device-copy"><b>花园灯带</b><span>Garden</span></span>
+                  <span class="control-row"><strong class="state-word" id="garden-state">--</strong><i class="switch" id="garden-switch"></i></span>
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <div class="section-title"><h2>房间入口</h2><p>空间状态快照</p></div>
+              <div class="room-grid">
+                <button class="room" data-page-jump="rooms" type="button"><img src="/local/minecraft-dashboard/room-living.jpg" alt=""><div><b>客厅</b><span id="room-living">--</span></div></button>
+                <button class="room" data-page-jump="rooms" type="button"><img src="/local/minecraft-dashboard/room-bedroom.jpg" alt=""><div><b>卧室</b><span id="room-bedroom">--</span></div></button>
+                <button class="room" data-page-jump="rooms" type="button"><img src="/local/minecraft-dashboard/room-kitchen.jpg" alt=""><div><b>厨房</b><span id="room-kitchen">--</span></div></button>
+                <button class="room" data-page-jump="rooms" type="button"><img src="/local/minecraft-dashboard/room-garden.jpg" alt=""><div><b>花园</b><span id="room-garden">--</span></div></button>
+              </div>
+            </div>
+          </section>
+
+          <aside class="rail">
+            <section class="glass clock-card">
+              <div><div class="clock-time" id="clock-time">--:--</div><div class="clock-date" id="clock-date">----/--/--</div></div>
+              <ha-icon icon="mdi:clock-outline"></ha-icon>
+            </section>
+            <section class="glass">
+              <div class="section-title"><h2>环境</h2><p>传感器</p></div>
+              <div class="metric-list">
+                <div class="metric"><span class="dot temp">温</span><small>客厅温度</small><b><span id="env-temp">--</span>°C</b></div>
+                <div class="metric"><span class="dot hum">湿</span><small>客厅湿度</small><b><span id="env-hum">--</span>%</b></div>
+                <div class="metric"><span class="dot air">气</span><small>PM2.5</small><b><span id="pm25-value">--</span></b></div>
+              </div>
+            </section>
+            <section class="glass">
+              <p class="muted">今日用电</p>
+              <div class="energy-main"><span id="energy-today">--</span><small> 度</small></div>
+              <div class="bars" id="energy-bars"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+            </section>
+            <section class="glass">
+              <div class="section-title"><h2>快捷场景</h2><p>二次确认</p></div>
+              <div class="scene-grid">
+                <button class="scene home" data-scene="scene.home_mode" data-name="回家模式" type="button"><ha-icon icon="mdi:home-import-outline"></ha-icon><b>回家</b><span>灯光与空调</span></button>
+                <button class="scene night" data-scene="scene.good_night" data-name="晚安模式" type="button"><ha-icon icon="mdi:weather-night"></ha-icon><b>晚安</b><span>关闭公共区</span></button>
+                <button class="scene welcome" data-scene="scene.welcome_home" data-name="迎宾模式" type="button"><ha-icon icon="mdi:door-open"></ha-icon><b>迎宾</b><span>打开主场景</span></button>
+                <button class="scene away" data-scene="scene.away_mode" data-name="离家模式" type="button"><ha-icon icon="mdi:exit-run"></ha-icon><b>离家</b><span>节能防护</span></button>
+              </div>
+            </section>
+          </aside>
+        </div>
+      </section>
+
+      <section class="page" data-page-view="devices">
+        <div class="subpage-head"><ha-icon icon="mdi:devices"></ha-icon><div><h2>设备总览</h2><p>html-pro-card 内部页面，不依赖自定义 JS 卡片。</p></div></div>
+        <div class="panel-grid">
+          <div class="glass entity-row"><div><b>客厅灯光</b><span>light.living_room_lights</span></div><strong id="device-list-light">--</strong></div>
+          <div class="glass entity-row"><div><b>卧室灯光</b><span>light.bedroom_lights</span></div><strong id="device-list-bedroom">--</strong></div>
+          <div class="glass entity-row"><div><b>厨房插座</b><span>switch.kitchen_socket</span></div><strong id="device-list-kitchen">--</strong></div>
+          <div class="glass entity-row"><div><b>客厅空调</b><span>climate.living_room_ac</span></div><strong id="device-list-climate">--</strong></div>
+          <div class="glass entity-row"><div><b>背景音乐</b><span>media_player.living_room_speaker</span></div><strong id="device-list-media">--</strong></div>
+          <div class="glass entity-row"><div><b>入户门锁</b><span>lock.front_door</span></div><strong id="device-list-lock">--</strong></div>
+        </div>
+      </section>
+
+      <section class="page" data-page-view="scenes">
+        <div class="subpage-head"><ha-icon icon="mdi:palette-swatch"></ha-icon><div><h2>场景控制</h2><p>点击场景会弹出确认，减少误触。</p></div></div>
+        <div class="wide-grid">
+          <button class="glass scene home" data-scene="scene.home_mode" data-name="回家模式" type="button"><ha-icon icon="mdi:home-import-outline"></ha-icon><b>回家模式</b><span>灯光 / 空调 / 音乐</span></button>
+          <button class="glass scene night" data-scene="scene.good_night" data-name="晚安模式" type="button"><ha-icon icon="mdi:weather-night"></ha-icon><b>晚安模式</b><span>关闭公共区域</span></button>
+          <button class="glass scene welcome" data-scene="scene.welcome_home" data-name="迎宾模式" type="button"><ha-icon icon="mdi:door-open"></ha-icon><b>迎宾模式</b><span>客厅氛围灯</span></button>
+          <button class="glass scene away" data-scene="scene.away_mode" data-name="离家模式" type="button"><ha-icon icon="mdi:exit-run"></ha-icon><b>离家模式</b><span>门锁 / 节能 / 防护</span></button>
+        </div>
+      </section>
+
+      <section class="page" data-page-view="rooms">
+        <div class="subpage-head"><ha-icon icon="mdi:door"></ha-icon><div><h2>房间状态</h2><p>按空间查看传感器与在线状态。</p></div></div>
+        <div class="panel-grid">
+          <div class="glass entity-row"><div><b>客厅</b><span id="rooms-living-detail">--</span></div><ha-icon icon="mdi:sofa"></ha-icon></div>
+          <div class="glass entity-row"><div><b>卧室</b><span id="rooms-bedroom-detail">--</span></div><ha-icon icon="mdi:bed"></ha-icon></div>
+          <div class="glass entity-row"><div><b>厨房</b><span id="rooms-kitchen-detail">--</span></div><ha-icon icon="mdi:countertop"></ha-icon></div>
+          <div class="glass entity-row"><div><b>花园</b><span id="rooms-garden-detail">--</span></div><ha-icon icon="mdi:flower"></ha-icon></div>
+        </div>
+      </section>
+
+      <section class="page" data-page-view="energy">
+        <div class="subpage-head"><ha-icon icon="mdi:lightning-bolt"></ha-icon><div><h2>能源面板</h2><p>当前功率、今日用电和本月累计。</p></div></div>
+        <div class="panel-grid">
+          <div class="glass"><p class="muted">当前功率</p><div class="energy-main"><span id="energy-power">--</span><small> W</small></div></div>
+          <div class="glass"><p class="muted">今日用电</p><div class="energy-main"><span id="energy-today-2">--</span><small> 度</small></div></div>
+          <div class="glass"><p class="muted">本月用电</p><div class="energy-main"><span id="energy-month">--</span><small> 度</small></div></div>
+        </div>
+      </section>
+
+      <section class="page" data-page-view="logs">
+        <div class="subpage-head"><ha-icon icon="mdi:clipboard-text-clock"></ha-icon><div><h2>运行日志</h2><p>仪表盘本地状态摘要。</p></div></div>
+        <div class="log-list">
+          <div class="glass log"><b>仪表盘已加载</b><p class="muted">custom:html-pro-card / Minecraft Dashboard</p></div>
+          <div class="glass log warn"><b>请替换实体 ID</b><p class="muted">模板内使用的是公开占位实体。</p></div>
+          <div class="glass log danger"><b>场景带确认</b><p class="muted">执行前会弹窗确认，避免误触。</p></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const ENTITY = {
+      livingLight: "light.living_room_lights",
+      bedroomLight: "light.bedroom_lights",
+      gardenLight: "light.garden_light_strip",
+      kitchenSocket: "switch.kitchen_socket",
+      climate: "climate.living_room_ac",
+      media: "media_player.living_room_speaker",
+      lock: "lock.front_door",
+      door: "binary_sensor.front_door_contact",
+      livingPresence: "binary_sensor.living_room_presence",
+      bedroomPresence: "binary_sensor.bedroom_presence",
+      kitchenPresence: "binary_sensor.kitchen_presence",
+      livingTemp: "sensor.living_room_temperature",
+      livingHum: "sensor.living_room_humidity",
+      bedroomTemp: "sensor.bedroom_temperature",
+      bedroomHum: "sensor.bedroom_humidity",
+      kitchenTemp: "sensor.kitchen_temperature",
+      outdoorTemp: "sensor.outdoor_temperature",
+      outdoorHum: "sensor.outdoor_humidity",
+      pm25: "sensor.pm25",
+      power: "sensor.current_power",
+      energyToday: "sensor.energy_cost_today",
+      energyMonth: "sensor.energy_cost_month",
+      weather: "weather.home",
+      time: "sensor.time",
+      date: "sensor.date",
+    };
+
+    const val = (id, fallback = "--") => hass.states[id]?.state ?? fallback;
+    const attr = (id, key, fallback = "") => hass.states[id]?.attributes?.[key] ?? fallback;
+    const txt = (selector, value) => { const el = $(selector); if (el) el.textContent = value; };
+    const fmt = (value, digits = 1) => {
+      const number = Number.parseFloat(value);
+      return Number.isFinite(number) ? number.toFixed(digits) : "--";
+    };
+    const activeState = (state) => ["on", "playing", "cool", "heat", "dry", "fan_only", "auto", "unlocked"].includes(state);
+    const stateCN = (state) => {
+      const map = { on: "开启", off: "关闭", playing: "播放中", paused: "暂停", idle: "待机", cool: "制冷", heat: "制热", auto: "自动", locked: "已锁", unlocked: "已开", unavailable: "离线", unknown: "未知" };
+      return map[state] || state || "--";
+    };
+    const weatherCN = (state) => {
+      const map = { sunny: "晴朗", clear: "晴朗", cloudy: "多云", partlycloudy: "局部多云", rainy: "下雨", pouring: "大雨", snowy: "下雪", fog: "有雾", windy: "有风", hail: "冰雹", lightning: "雷电" };
+      return map[state] || state || "--";
+    };
+    const weatherIcon = (state) => {
+      const map = { sunny: "mdi:weather-sunny", clear: "mdi:weather-sunny", cloudy: "mdi:weather-cloudy", partlycloudy: "mdi:weather-partly-cloudy", rainy: "mdi:weather-rainy", pouring: "mdi:weather-pouring", snowy: "mdi:weather-snowy", fog: "mdi:weather-fog", windy: "mdi:weather-windy", hail: "mdi:weather-hail", lightning: "mdi:weather-lightning" };
+      return map[state] || "mdi:weather-partly-cloudy";
+    };
+    const setDevice = (selector, entityId, tone) => {
+      const el = $(selector);
+      if (!el) return;
+      const state = val(entityId, "unknown");
+      el.classList.remove("on-yellow", "on-blue", "on-purple", "on-green", "on-red", "off", "unavailable");
+      if (state === "unavailable" || state === "unknown") el.classList.add("unavailable");
+      else el.classList.add(activeState(state) ? tone : "off");
+    };
+    const setSwitch = (selector, on) => {
+      const el = $(selector);
+      if (!el) return;
+      el.classList.toggle("on", Boolean(on));
+    };
+    const openMoreInfo = (entityId) => {
+      if (window.claw?.moreInfo) claw.moreInfo(entityId);
+      else if (window.claw?.fire) claw.fire("hass-more-info", { entityId });
+      else root.dispatchEvent(new CustomEvent("hass-more-info", { detail: { entityId }, bubbles: true, composed: true }));
+    };
+
+    function showPage(page) {
+      $$(".nav button").forEach((button) => button.classList.toggle("active", button.dataset.page === page));
+      $$("[data-page-view]").forEach((view) => view.classList.toggle("active", view.dataset.pageView === page));
+    }
+
+    function bindOnce() {
+      if (root.__mcHtmlProDashboardBound) return;
+      root.__mcHtmlProDashboardBound = true;
+
+      $$(".nav button").forEach((button) => button.addEventListener("click", () => showPage(button.dataset.page)));
+      $$("[data-page-jump]").forEach((button) => button.addEventListener("click", () => showPage(button.dataset.pageJump)));
+      $$("[data-action]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const entityId = button.dataset.entity;
+          if (!entityId) return;
+          if (button.dataset.action === "toggle") {
+            const domain = entityId.split(".")[0];
+            hass.callService(domain, val(entityId) === "on" ? "turn_off" : "turn_on", { entity_id: entityId });
+          } else {
+            openMoreInfo(entityId);
+          }
+        });
+      });
+      $$("#weather-action").forEach((button) => button.addEventListener("click", () => openMoreInfo(ENTITY.weather)));
+      $$("[data-scene]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const entityId = button.dataset.scene;
+          const name = button.dataset.name || entityId;
+          if (!entityId) return;
+          if (window.confirm && !window.confirm("确认执行场景：" + name + "？")) return;
+          hass.callService("scene", "turn_on", { entity_id: entityId });
+        });
+      });
+    }
+
+    function renderAll() {
+      const now = new Date();
+      txt("#clock-time", val(ENTITY.time, now.toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" })));
+      txt("#clock-date", val(ENTITY.date, now.toLocaleDateString("zh-CN")));
+
+      const weatherState = val(ENTITY.weather, "--");
+      txt("#weather-summary", weatherCN(weatherState));
+      txt("#out-temp", fmt(val(ENTITY.outdoorTemp), 1));
+      $("#weather-icon")?.setAttribute("icon", weatherIcon(weatherState));
+
+      const lightState = val(ENTITY.livingLight, "unknown");
+      txt("#light-badge", stateCN(lightState));
+      txt("#light-state", stateCN(lightState));
+      setSwitch("#light-switch", lightState === "on");
+      setDevice("#card-light", ENTITY.livingLight, "on-yellow");
+
+      const climateState = val(ENTITY.climate, "unknown");
+      const climateTemp = attr(ENTITY.climate, "current_temperature", val(ENTITY.livingTemp));
+      txt("#climate-badge", stateCN(climateState));
+      txt("#climate-state", fmt(climateTemp, 1) + "°C");
+      setSwitch("#climate-switch", activeState(climateState));
+      setDevice("#card-climate", ENTITY.climate, "on-blue");
+
+      const mediaState = val(ENTITY.media, "unknown");
+      txt("#media-state", stateCN(mediaState));
+      setDevice("#card-media", ENTITY.media, "on-purple");
+
+      const lockState = val(ENTITY.lock, "unknown");
+      txt("#lock-state", stateCN(lockState));
+      $("#lock-icon")?.setAttribute("icon", lockState === "unlocked" ? "mdi:lock-open-variant" : "mdi:lock");
+      setDevice("#card-lock", ENTITY.lock, lockState === "unlocked" ? "on-red" : "on-green");
+
+      const gardenState = val(ENTITY.gardenLight, "unknown");
+      txt("#garden-state", stateCN(gardenState));
+      setSwitch("#garden-switch", gardenState === "on");
+      setDevice("#card-garden", ENTITY.gardenLight, "on-yellow");
+
+      txt("#env-temp", fmt(val(ENTITY.livingTemp), 1));
+      txt("#env-hum", fmt(val(ENTITY.livingHum), 0));
+      txt("#pm25-value", fmt(val(ENTITY.pm25), 0));
+
+      const livingText = (val(ENTITY.livingPresence) === "on" ? "有人" : "无人") + " · " + fmt(val(ENTITY.livingTemp), 1) + "°C · " + fmt(val(ENTITY.livingHum), 0) + "%";
+      const bedroomText = (val(ENTITY.bedroomPresence) === "on" ? "有人" : "无人") + " · " + fmt(val(ENTITY.bedroomTemp), 1) + "°C · " + fmt(val(ENTITY.bedroomHum), 0) + "%";
+      const kitchenText = (val(ENTITY.kitchenPresence) === "on" ? "有人" : "无人") + " · " + fmt(val(ENTITY.kitchenTemp), 1) + "°C";
+      const gardenText = (gardenState === "on" ? "灯带开" : "灯带关") + " · 湿度 " + fmt(val(ENTITY.outdoorHum), 0) + "%";
+      txt("#room-living", livingText);
+      txt("#room-bedroom", bedroomText);
+      txt("#room-kitchen", kitchenText);
+      txt("#room-garden", gardenText);
+      txt("#rooms-living-detail", livingText);
+      txt("#rooms-bedroom-detail", bedroomText);
+      txt("#rooms-kitchen-detail", kitchenText);
+      txt("#rooms-garden-detail", gardenText);
+
+      txt("#device-list-light", stateCN(lightState));
+      txt("#device-list-bedroom", stateCN(val(ENTITY.bedroomLight, "unknown")));
+      txt("#device-list-kitchen", stateCN(val(ENTITY.kitchenSocket, "unknown")));
+      txt("#device-list-climate", stateCN(climateState));
+      txt("#device-list-media", stateCN(mediaState));
+      txt("#device-list-lock", stateCN(lockState));
+
+      const power = fmt(val(ENTITY.power), 0);
+      const today = fmt(val(ENTITY.energyToday), 1);
+      const month = fmt(val(ENTITY.energyMonth), 1);
+      txt("#energy-power", power);
+      txt("#energy-today", today);
+      txt("#energy-today-2", today);
+      txt("#energy-month", month);
+      const base = Number.parseFloat(power) || 0;
+      $$("#energy-bars span").forEach((bar, index) => {
+        const height = Math.max(14, Math.min(92, 22 + ((base / 18 + index * 9) % 70)));
+        bar.style.height = height + "%";
+      });
+    }
+
+    bindOnce();
+    renderAll();
+    root._watchedEntities = Object.values(ENTITY);
+    root._onHassUpdate = renderAll;
+  </script>

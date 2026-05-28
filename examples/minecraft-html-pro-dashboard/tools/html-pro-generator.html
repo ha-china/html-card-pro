@@ -1,0 +1,726 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Minecraft HTML Pro 生成器</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #14100c;
+      --panel: #21160f;
+      --panel-2: #2b1e15;
+      --line: rgba(255,255,255,.13);
+      --text: #f5efe7;
+      --muted: rgba(245,239,231,.68);
+      --green: #8bdc65;
+      --gold: #e8c36b;
+      --red: #f08b7f;
+      --blue: #86c4ef;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        linear-gradient(rgba(18, 13, 8, .78), rgba(18, 13, 8, .88)),
+        url("./base-texture.jpg") center / cover fixed;
+      color: var(--text);
+      font: 14px/1.5 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    button, input, select, textarea { font: inherit; }
+    button {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px 13px;
+      background: #3a291c;
+      color: var(--text);
+      cursor: pointer;
+      font-weight: 800;
+    }
+    button:hover { border-color: rgba(139,220,101,.45); }
+    button.primary { background: #5b8f3d; border-color: rgba(183,236,127,.42); color: #10150c; }
+    button.ghost { background: transparent; }
+    input, textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px 11px;
+      background: rgba(0,0,0,.22);
+      color: var(--text);
+      outline: none;
+    }
+    input:focus, textarea:focus { border-color: rgba(139,220,101,.58); box-shadow: 0 0 0 3px rgba(139,220,101,.12); }
+    textarea {
+      min-height: 240px;
+      resize: vertical;
+      font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+      font-size: 12px;
+      line-height: 1.45;
+    }
+    .shell {
+      width: min(1440px, calc(100% - 28px));
+      margin: 0 auto;
+      padding: 24px 0 34px;
+    }
+    .hero {
+      min-height: 170px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 190px;
+      gap: 18px;
+      align-items: end;
+      margin-bottom: 16px;
+      padding: 22px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background:
+        linear-gradient(90deg, rgba(22,14,8,.74), rgba(22,14,8,.18)),
+        url("./stage-background.jpg") center / cover;
+      box-shadow: 0 20px 70px rgba(0,0,0,.3);
+    }
+    .hero h1 { margin: 0; font-size: 30px; line-height: 1.05; font-weight: 950; }
+    .hero p { margin: 8px 0 0; color: var(--muted); max-width: 720px; }
+    .hero img { width: 190px; height: 132px; object-fit: cover; border-radius: 8px; border: 1px solid var(--line); }
+    .grid {
+      display: grid;
+      grid-template-columns: 380px minmax(0, 1fr);
+      gap: 16px;
+      align-items: start;
+    }
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(33, 22, 15, .94);
+      box-shadow: 0 16px 50px rgba(0,0,0,.22);
+    }
+    .card h2, .card h3 { margin: 0; font-size: 15px; font-weight: 950; }
+    .card p { margin: 5px 0 0; color: var(--muted); }
+    .card-head, .card-body { padding: 16px; }
+    .card-head { border-bottom: 1px solid var(--line); }
+    .stack { display: grid; gap: 12px; }
+    .row { display: grid; gap: 7px; }
+    label { color: var(--muted); font-size: 12px; font-weight: 800; }
+    .actions { display: flex; flex-wrap: wrap; gap: 9px; }
+    .actions .wide { flex: 1 1 100%; }
+    .status {
+      min-height: 40px;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      background: rgba(0,0,0,.2);
+      color: var(--muted);
+      border: 1px solid var(--line);
+      overflow-wrap: anywhere;
+    }
+    .status.ok { color: var(--green); }
+    .status.warn { color: var(--gold); }
+    .status.err { color: var(--red); }
+    .mapping-toolbar {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto auto;
+      gap: 9px;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(0,0,0,.12);
+    }
+    .map-list { display: grid; }
+    .map-row {
+      display: grid;
+      grid-template-columns: 185px minmax(0, 1fr) 84px;
+      gap: 10px;
+      align-items: center;
+      padding: 12px 16px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+    }
+    .map-row:last-child { border-bottom: 0; }
+    .map-key b { display: block; font-weight: 950; }
+    .map-key span { display: block; margin-top: 2px; color: var(--muted); font-size: 12px; }
+    .domain-pill {
+      display: inline-flex;
+      padding: 3px 7px;
+      border-radius: 999px;
+      color: #14100c;
+      background: var(--gold);
+      font-size: 11px;
+      font-weight: 950;
+    }
+    .domain-pill.light { background: #efd66b; }
+    .domain-pill.sensor { background: #86c4ef; }
+    .domain-pill.binary_sensor { background: #aeea8b; }
+    .domain-pill.scene { background: #c4a0ef; }
+    .domain-pill.climate { background: #80cce9; }
+    .domain-pill.media_player { background: #d2a2ec; }
+    .domain-pill.lock { background: #e7a681; }
+    .tabs { display: flex; gap: 8px; padding: 12px 16px; border-bottom: 1px solid var(--line); }
+    .tabs button.active { background: #5b8f3d; color: #10150c; }
+    .output-panel { display: none; padding: 16px; }
+    .output-panel.active { display: grid; gap: 10px; }
+    .split-actions { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+    .entity-count { color: var(--green); font-weight: 950; }
+    .small { font-size: 12px; color: var(--muted); }
+    @media (max-width: 980px) {
+      .hero { grid-template-columns: 1fr; }
+      .hero img { display: none; }
+      .grid { grid-template-columns: 1fr; }
+      .map-row { grid-template-columns: 1fr; }
+      .mapping-toolbar { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <section class="hero">
+      <div>
+        <h1>Minecraft HTML Pro 生成器</h1>
+        <p>从 Home Assistant 实时读取实体，选择映射后生成 `custom:html-pro-card` YAML 和 Lovelace storage JSON。</p>
+      </div>
+      <img src="./decor-wolf-lantern.jpg" alt="">
+    </section>
+
+    <div class="grid">
+      <aside class="card">
+        <div class="card-head">
+          <h2>连接 Home Assistant</h2>
+          <p>建议从 HA 用户资料里创建一个长期访问令牌。本页面不保存令牌。</p>
+        </div>
+        <div class="card-body stack">
+          <div class="row">
+            <label for="ha-url">HA 地址</label>
+            <input id="ha-url" autocomplete="off">
+          </div>
+          <div class="row">
+            <label for="ha-token">长期访问令牌</label>
+            <input id="ha-token" type="password" autocomplete="off" placeholder="粘贴 token 后点击读取实体">
+          </div>
+          <div class="actions">
+            <button class="primary" id="load-entities" type="button">读取实体</button>
+            <button class="ghost" id="load-template" type="button">重载模板</button>
+          </div>
+          <div class="status" id="status">等待连接。</div>
+          <div class="small">
+            同源部署路径：<br>
+            <code>/local/minecraft-dashboard/html-pro-generator.html</code>
+          </div>
+        </div>
+
+        <div class="card-head">
+          <h2>生成设置</h2>
+        </div>
+        <div class="card-body stack">
+          <div class="row">
+            <label for="dashboard-title">仪表盘标题</label>
+            <input id="dashboard-title" value="Minecraft HTML Pro Dashboard">
+          </div>
+          <div class="row">
+            <label for="view-title">页面标题</label>
+            <input id="view-title" value="Minecraft HTML Pro">
+          </div>
+          <div class="row">
+            <label for="dashboard-path">面板路径</label>
+            <input id="dashboard-path" value="minecraft-html-pro">
+          </div>
+          <div class="actions">
+            <button class="primary" id="generate" type="button">生成文件</button>
+            <button class="primary wide" id="sync-dashboard" type="button">一键同步到 HA 仪表盘</button>
+            <button id="download-map" type="button">下载映射表</button>
+          </div>
+        </div>
+      </aside>
+
+      <section class="card">
+        <div class="card-head">
+          <h2>实体映射</h2>
+          <p>可以先自动推荐，再逐项手动改。共 <span class="entity-count" id="loaded-count">0</span> 个实体。</p>
+        </div>
+        <div class="mapping-toolbar">
+          <input id="filter" placeholder="过滤字段，例如 灯光 / sensor / 客厅">
+          <button id="auto-map" type="button">自动推荐</button>
+          <button id="clear-map" type="button">清空</button>
+        </div>
+        <datalist id="entity-options"></datalist>
+        <div class="map-list" id="map-list"></div>
+      </section>
+    </div>
+
+    <section class="card" style="margin-top:16px;">
+      <div class="tabs">
+        <button class="active" data-tab="yaml" type="button">YAML</button>
+        <button data-tab="storage" type="button">Storage JSON</button>
+        <button data-tab="mapping" type="button">映射 YAML</button>
+      </div>
+      <div class="output-panel active" data-panel="yaml">
+        <div class="split-actions"><h3>templates/html-pro-dashboard.generated.yaml</h3><button data-copy="yaml-output" type="button">复制</button></div>
+        <textarea id="yaml-output" spellcheck="false"></textarea>
+      </div>
+      <div class="output-panel" data-panel="storage">
+        <div class="split-actions"><h3>.deploy/lovelace.minecraft-html-pro-dashboard</h3><button data-copy="storage-output" type="button">复制</button></div>
+        <textarea id="storage-output" spellcheck="false"></textarea>
+      </div>
+      <div class="output-panel" data-panel="mapping">
+        <div class="split-actions"><h3>tools/html-pro-dashboard.entities.yaml</h3><button data-copy="mapping-output" type="button">复制</button></div>
+        <textarea id="mapping-output" spellcheck="false"></textarea>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const defaults = {
+      livingLight: "light.living_room_lights",
+      bedroomLight: "light.bedroom_lights",
+      gardenLight: "light.garden_light_strip",
+      kitchenSocket: "switch.kitchen_socket",
+      climate: "climate.living_room_ac",
+      media: "media_player.living_room_speaker",
+      lock: "lock.front_door",
+      door: "binary_sensor.front_door_contact",
+      livingPresence: "binary_sensor.living_room_presence",
+      bedroomPresence: "binary_sensor.bedroom_presence",
+      kitchenPresence: "binary_sensor.kitchen_presence",
+      livingTemp: "sensor.living_room_temperature",
+      livingHum: "sensor.living_room_humidity",
+      bedroomTemp: "sensor.bedroom_temperature",
+      bedroomHum: "sensor.bedroom_humidity",
+      kitchenTemp: "sensor.kitchen_temperature",
+      outdoorTemp: "sensor.outdoor_temperature",
+      outdoorHum: "sensor.outdoor_humidity",
+      pm25: "sensor.pm25",
+      power: "sensor.current_power",
+      energyToday: "sensor.energy_cost_today",
+      energyMonth: "sensor.energy_cost_month",
+      weather: "weather.home",
+      time: "sensor.time",
+      date: "sensor.date",
+      sceneHome: "scene.home_mode",
+      sceneNight: "scene.good_night",
+      sceneWelcome: "scene.welcome_home",
+      sceneAway: "scene.away_mode",
+    };
+
+    const definitions = [
+      ["livingLight", "客厅灯光", "light", ["客厅", "living", "light", "灯"]],
+      ["bedroomLight", "卧室灯光", "light", ["卧室", "bedroom", "light", "灯"]],
+      ["gardenLight", "花园灯带", "light", ["花园", "庭院", "garden", "yard", "light", "灯带"]],
+      ["kitchenSocket", "厨房插座", "switch", ["厨房", "kitchen", "socket", "插座"]],
+      ["climate", "客厅空调", "climate", ["客厅", "living", "ac", "空调", "climate"]],
+      ["media", "背景音乐", "media_player", ["客厅", "living", "speaker", "music", "音箱", "音乐"]],
+      ["lock", "入户门锁", "lock", ["front", "door", "lock", "门锁", "入户"]],
+      ["door", "入户门磁", "binary_sensor", ["front", "door", "contact", "门磁", "入户"]],
+      ["livingPresence", "客厅人体", "binary_sensor", ["客厅", "living", "presence", "occupancy", "人体"]],
+      ["bedroomPresence", "卧室人体", "binary_sensor", ["卧室", "bedroom", "presence", "occupancy", "人体"]],
+      ["kitchenPresence", "厨房人体", "binary_sensor", ["厨房", "kitchen", "presence", "occupancy", "人体"]],
+      ["livingTemp", "客厅温度", "sensor", ["客厅", "living", "temperature", "temp", "温度"]],
+      ["livingHum", "客厅湿度", "sensor", ["客厅", "living", "humidity", "hum", "湿度"]],
+      ["bedroomTemp", "卧室温度", "sensor", ["卧室", "bedroom", "temperature", "temp", "温度"]],
+      ["bedroomHum", "卧室湿度", "sensor", ["卧室", "bedroom", "humidity", "hum", "湿度"]],
+      ["kitchenTemp", "厨房温度", "sensor", ["厨房", "kitchen", "temperature", "temp", "温度"]],
+      ["outdoorTemp", "室外温度", "sensor", ["室外", "户外", "outdoor", "temperature", "temp", "温度"]],
+      ["outdoorHum", "室外湿度", "sensor", ["室外", "户外", "outdoor", "humidity", "hum", "湿度"]],
+      ["pm25", "PM2.5", "sensor", ["pm25", "pm2_5", "pm2.5", "空气", "air"]],
+      ["power", "当前功率", "sensor", ["power", "功率", "current"]],
+      ["energyToday", "今日用电", "sensor", ["energy", "today", "daily", "今日", "用电"]],
+      ["energyMonth", "本月用电", "sensor", ["energy", "month", "monthly", "本月", "用电"]],
+      ["weather", "天气", "weather", ["weather", "天气"]],
+      ["time", "时间", "sensor", ["time", "时间"]],
+      ["date", "日期", "sensor", ["date", "日期"]],
+      ["sceneHome", "回家模式", "scene", ["home", "回家"]],
+      ["sceneNight", "晚安模式", "scene", ["night", "good_night", "晚安"]],
+      ["sceneWelcome", "迎宾模式", "scene", ["welcome", "迎宾"]],
+      ["sceneAway", "离家模式", "scene", ["away", "离家"]],
+    ].map(([key, label, domain, keywords]) => ({ key, label, domain, keywords }));
+
+    let states = [];
+    let templateText = "";
+    let mappingValues = { ...defaults };
+
+    const $ = (selector) => document.querySelector(selector);
+    const $$ = (selector) => [...document.querySelectorAll(selector)];
+    const setStatus = (message, type = "") => {
+      const el = $("#status");
+      el.textContent = message;
+      el.className = `status ${type}`;
+    };
+
+    function escapeRegExp(value) {
+      return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    }
+
+    function replaceAllLiteral(input, from, to) {
+      if (!from || from === to) return input;
+      return input.replace(new RegExp(escapeRegExp(from), "g"), to);
+    }
+
+    function unique(values) {
+      return [...new Set(values.map((value) => String(value || "").trim()).filter(Boolean))];
+    }
+
+    function entityObjectBlock(entities) {
+      return `  const ENTITY = {\n${Object.entries(entities).map(([key, value]) => `    ${key}: ${JSON.stringify(value)},`).join("\n")}\n  };`;
+    }
+
+    function entitiesYamlBlock(entities) {
+      return ["entities:", ...unique(Object.values(entities)).map((entityId) => `  - ${entityId}`)].join("\n");
+    }
+
+    function yamlScalar(value) {
+      const text = String(value || "");
+      return /^[a-zA-Z0-9_.:/-]+$/.test(text) ? text : JSON.stringify(text);
+    }
+
+    function buildMappingYaml(entities) {
+      return [
+        "dashboard:",
+        `  title: ${yamlScalar($("#dashboard-title").value)}`,
+        `  view_title: ${yamlScalar($("#view-title").value)}`,
+        `  path: ${yamlScalar($("#dashboard-path").value)}`,
+        "  icon: mdi:minecraft",
+        "",
+        "entities:",
+        ...Object.entries(entities).map(([key, value]) => `  ${key}: ${yamlScalar(value)}`),
+        "",
+      ].join("\n");
+    }
+
+    function parseCardForStorage(yamlText) {
+      const contentStart = yamlText.indexOf("content: |\n");
+      if (contentStart === -1) throw new Error("模板缺少 content: |");
+      const header = yamlText.slice(0, contentStart).split(/\r?\n/);
+      const content = yamlText.slice(contentStart + "content: |\n".length)
+        .split(/\r?\n/)
+        .map((line) => line.startsWith("  ") ? line.slice(2) : line)
+        .join("\n");
+      const entities = [];
+      let inEntities = false;
+      for (const line of header) {
+        if (line.trim() === "entities:") {
+          inEntities = true;
+          continue;
+        }
+        if (inEntities && line.startsWith("  - ")) {
+          entities.push(line.slice(4).trim());
+          continue;
+        }
+        if (inEntities && line && !line.startsWith("  - ")) inEntities = false;
+      }
+      return {
+        type: "custom:html-pro-card",
+        do_not_parse: true,
+        ignore_line_breaks: true,
+        update_interval: 5000,
+        entities,
+        content,
+      };
+    }
+
+    function buildStorage(card) {
+      return {
+        version: 1,
+        minor_version: 1,
+        key: "lovelace.minecraft-html-pro-dashboard",
+        data: {
+          config: {
+            title: $("#dashboard-title").value || "Minecraft HTML Pro Dashboard",
+            views: [{
+              title: $("#view-title").value || "Minecraft HTML Pro",
+              path: $("#dashboard-path").value || "minecraft-html-pro",
+              icon: "mdi:minecraft",
+              type: "panel",
+              cards: [card],
+            }],
+          },
+        },
+      };
+    }
+
+    function buildLovelaceConfig(card) {
+      return {
+        title: $("#dashboard-title").value || "Minecraft HTML Pro Dashboard",
+        views: [{
+          title: $("#view-title").value || "Minecraft HTML Pro",
+          path: "home",
+          icon: "mdi:minecraft",
+          type: "panel",
+          cards: [card],
+        }],
+      };
+    }
+
+    function generateFromTemplate(entities) {
+      if (!templateText) throw new Error("模板还没有加载。");
+      let source = templateText;
+      Object.entries(defaults).forEach(([key, defaultEntityId]) => {
+        source = replaceAllLiteral(source, defaultEntityId, entities[key] || defaultEntityId);
+      });
+      source = source.replace(/entities:\n(?:  - .+\n)+content: \|/, `${entitiesYamlBlock(entities)}\ncontent: |`);
+      source = source.replace(/  const ENTITY = \{[\s\S]*?\n  \};/, entityObjectBlock(entities));
+      return source;
+    }
+
+    function friendlyText(entity) {
+      return `${entity.entity_id} ${entity.attributes?.friendly_name || ""}`.toLowerCase();
+    }
+
+    function scoreEntity(def, entity) {
+      const domain = entity.entity_id.split(".")[0];
+      if (domain !== def.domain) return -1000;
+      const text = friendlyText(entity);
+      let score = 0;
+      for (const keyword of def.keywords) {
+        if (text.includes(String(keyword).toLowerCase())) score += 10;
+      }
+      if (text.includes(def.key.toLowerCase())) score += 4;
+      if (entity.state !== "unavailable" && entity.state !== "unknown") score += 2;
+      return score;
+    }
+
+    function recommendFor(def) {
+      const ranked = states
+        .map((entity) => ({ entity, score: scoreEntity(def, entity) }))
+        .filter((item) => item.score > -1000)
+        .sort((a, b) => b.score - a.score || a.entity.entity_id.localeCompare(b.entity.entity_id));
+      return ranked[0]?.entity?.entity_id || defaults[def.key];
+    }
+
+    function currentEntities() {
+      $$("[data-map-key]").forEach((input) => {
+        mappingValues[input.dataset.mapKey] = input.value.trim();
+      });
+      return Object.fromEntries(definitions.map((def) => [def.key, mappingValues[def.key] || defaults[def.key]]));
+    }
+
+    function renderEntityOptions() {
+      const list = $("#entity-options");
+      list.innerHTML = states.map((entity) => {
+        const name = entity.attributes?.friendly_name || "";
+        return `<option value="${entity.entity_id}" label="${name}"></option>`;
+      }).join("");
+      $("#loaded-count").textContent = String(states.length);
+    }
+
+    function renderMappings() {
+      const filter = $("#filter").value.trim().toLowerCase();
+      const rows = definitions.filter((def) => {
+        if (!filter) return true;
+        return `${def.key} ${def.label} ${def.domain}`.toLowerCase().includes(filter);
+      }).map((def) => `
+        <div class="map-row">
+          <div class="map-key"><b>${def.label}</b><span>${def.key}</span></div>
+          <input data-map-key="${def.key}" list="entity-options" value="${mappingValues[def.key] || defaults[def.key] || ""}">
+          <span class="domain-pill ${def.domain}">${def.domain}</span>
+        </div>
+      `).join("");
+      $("#map-list").innerHTML = rows;
+      $$("[data-map-key]").forEach((input) => {
+        input.addEventListener("input", () => {
+          mappingValues[input.dataset.mapKey] = input.value.trim();
+        });
+      });
+    }
+
+    async function loadTemplate() {
+      const candidates = [
+        "./html-pro-dashboard.yaml",
+        "./html-pro-dashboard.generated.yaml",
+        "../templates/html-pro-dashboard.yaml",
+      ];
+      let lastError;
+      for (const url of candidates) {
+        try {
+          const response = await fetch(url, { cache: "no-store" });
+          if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
+          templateText = await response.text();
+          setStatus(`模板已加载：${url}`, "ok");
+          return;
+        } catch (error) {
+          lastError = error;
+        }
+      }
+      setStatus(`模板加载失败：${lastError?.message || "未知错误"}`, "err");
+    }
+
+    async function loadEntities() {
+      const base = $("#ha-url").value.trim().replace(/\/$/, "") || window.location.origin;
+      const token = $("#ha-token").value.trim();
+      if (!token) {
+        setStatus("请先粘贴长期访问令牌。", "warn");
+        return;
+      }
+      setStatus("正在读取 /api/states ...", "warn");
+      const response = await fetch(`${base}/api/states`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
+      states = await response.json();
+      states.sort((a, b) => a.entity_id.localeCompare(b.entity_id));
+      renderEntityOptions();
+      setStatus(`已读取 ${states.length} 个实体。`, "ok");
+    }
+
+    function autoMap() {
+      definitions.forEach((def) => {
+        mappingValues[def.key] = recommendFor(def);
+        const input = document.querySelector(`[data-map-key="${def.key}"]`);
+        if (input) input.value = mappingValues[def.key];
+      });
+      setStatus("已按 domain 和名称关键词自动推荐。请快速检查关键设备。", "ok");
+    }
+
+    function generate() {
+      const entities = currentEntities();
+      const yaml = generateFromTemplate(entities);
+      const card = parseCardForStorage(yaml);
+      const storage = buildStorage(card);
+      $("#yaml-output").value = yaml;
+      $("#storage-output").value = JSON.stringify(storage, null, 2);
+      $("#mapping-output").value = buildMappingYaml(entities);
+      setStatus(`已生成：${card.entities.length} 个实体，路径 /${$("#dashboard-path").value || "minecraft-html-pro"}`, "ok");
+      return { yaml, card, storage, mapping: buildMappingYaml(entities) };
+    }
+
+    function connectWebSocket(baseUrl, token) {
+      const wsUrl = `${baseUrl.replace(/^http/, "ws")}/api/websocket`;
+      let id = 1;
+      let socket;
+      const pending = new Map();
+
+      const send = (message) => new Promise((resolve, reject) => {
+        const msgId = id++;
+        pending.set(msgId, { resolve, reject });
+        socket.send(JSON.stringify({ id: msgId, ...message }));
+      });
+
+      return new Promise((resolve, reject) => {
+        socket = new WebSocket(wsUrl);
+        socket.addEventListener("error", () => reject(new Error("WebSocket 连接失败。")));
+        socket.addEventListener("message", (event) => {
+          const message = JSON.parse(event.data);
+          if (message.type === "auth_required") {
+            socket.send(JSON.stringify({ type: "auth", access_token: token }));
+            return;
+          }
+          if (message.type === "auth_invalid") {
+            reject(new Error(message.message || "认证失败。"));
+            socket.close();
+            return;
+          }
+          if (message.type === "auth_ok") {
+            resolve({
+              send,
+              close: () => socket.close(),
+            });
+            return;
+          }
+          if (message.id && pending.has(message.id)) {
+            const task = pending.get(message.id);
+            pending.delete(message.id);
+            if (message.success === false) task.reject(new Error(message.error?.message || message.error?.code || "WebSocket 命令失败。"));
+            else task.resolve(message.result);
+          }
+        });
+      });
+    }
+
+    async function syncDashboard() {
+      const base = $("#ha-url").value.trim().replace(/\/$/, "") || window.location.origin;
+      const token = $("#ha-token").value.trim();
+      const urlPath = ($("#dashboard-path").value || "minecraft-html-pro").trim();
+      const title = ($("#dashboard-title").value || "Minecraft HTML Pro Dashboard").trim();
+      if (!token) {
+        setStatus("请先粘贴长期访问令牌。", "warn");
+        return;
+      }
+      if (!urlPath.includes("-")) {
+        setStatus("HA 要求 dashboard 路径包含连字符，例如 minecraft-html-pro。", "warn");
+        return;
+      }
+
+      const { card } = generate();
+      const config = buildLovelaceConfig(card);
+      setStatus("正在连接 HA WebSocket ...", "warn");
+      const ws = await connectWebSocket(base, token);
+      try {
+        let dashboards = [];
+        try {
+          dashboards = await ws.send({ type: "lovelace/dashboards/list" });
+        } catch (error) {
+          throw new Error(`读取 dashboard 列表失败：${error.message}`);
+        }
+        const dashboardItems = Array.isArray(dashboards)
+          ? dashboards
+          : dashboards?.dashboards || dashboards?.items || [];
+        const exists = dashboardItems.some((item) => item.url_path === urlPath || item.id === urlPath);
+
+        if (!exists) {
+          setStatus(`正在创建新仪表盘：/${urlPath}`, "warn");
+          await ws.send({
+            type: "lovelace/dashboards/create",
+            url_path: urlPath,
+            mode: "storage",
+            title,
+            icon: "mdi:minecraft",
+            show_in_sidebar: true,
+            require_admin: false,
+          });
+        } else {
+          setStatus(`仪表盘已存在，正在更新：/${urlPath}`, "warn");
+        }
+
+        await ws.send({
+          type: "lovelace/config/save",
+          url_path: urlPath,
+          config,
+        });
+        setStatus(`同步完成：/${urlPath}。打开侧边栏里的“${title}”测试。`, "ok");
+      } finally {
+        ws.close();
+      }
+    }
+
+    function downloadText(filename, text) {
+      const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }
+
+    $("#ha-url").value = window.location.origin.startsWith("http") ? window.location.origin : "http://homeassistant.local:8123";
+    renderMappings();
+    loadTemplate();
+
+    $("#load-template").addEventListener("click", loadTemplate);
+    $("#load-entities").addEventListener("click", () => loadEntities().catch((error) => setStatus(`读取失败：${error.message}`, "err")));
+    $("#auto-map").addEventListener("click", autoMap);
+    $("#clear-map").addEventListener("click", () => {
+      mappingValues = Object.fromEntries(definitions.map((def) => [def.key, ""]));
+      $$("[data-map-key]").forEach((input) => { input.value = ""; });
+      setStatus("已清空映射。", "warn");
+    });
+    $("#filter").addEventListener("input", renderMappings);
+    $("#generate").addEventListener("click", () => {
+      try { generate(); } catch (error) { setStatus(`生成失败：${error.message}`, "err"); }
+    });
+    $("#sync-dashboard").addEventListener("click", () => {
+      syncDashboard().catch((error) => setStatus(`同步失败：${error.message}`, "err"));
+    });
+    $("#download-map").addEventListener("click", () => {
+      downloadText("html-pro-dashboard.entities.yaml", buildMappingYaml(currentEntities()));
+    });
+    $$(".tabs button").forEach((button) => {
+      button.addEventListener("click", () => {
+        $$(".tabs button").forEach((item) => item.classList.toggle("active", item === button));
+        $$("[data-panel]").forEach((panel) => panel.classList.toggle("active", panel.dataset.panel === button.dataset.tab));
+      });
+    });
+    $$("[data-copy]").forEach((button) => {
+      button.addEventListener("click", async () => {
+        const textarea = document.getElementById(button.dataset.copy);
+        await navigator.clipboard.writeText(textarea.value);
+        setStatus("已复制到剪贴板。", "ok");
+      });
+    });
+  </script>
+</body>
+</html>
