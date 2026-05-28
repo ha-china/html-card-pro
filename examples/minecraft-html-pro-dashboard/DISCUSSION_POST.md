@@ -40,7 +40,7 @@ lovelace/config/save
 
 ## 文件
 
-完整包我整理成了一个公开仓库，包含：
+完整包已通过 PR 提交到 `ha-china/html-card-pro` 仓库，包含：
 
 - `templates/html-pro-dashboard.yaml`：可直接复制到 Lovelace 的 html-pro-card 模板。
 - `tools/html-pro-generator.html`：网页端实体读取和一键同步工具。
@@ -52,9 +52,21 @@ lovelace/config/save
 - `docs/handoff/`：给后续大模型或开发者接手的脱敏文档。
 - `html-pro-minecraft-dashboard-share.zip`：包含上述文件的完整压缩包。
 
-仓库地址：
+上游仓库地址：
 
-https://github.com/xyiqq/html-pro-minecraft-dashboard
+https://github.com/ha-china/html-card-pro
+
+PR 地址：
+
+https://github.com/ha-china/html-card-pro/pull/15
+
+资料目录：
+
+https://github.com/ha-china/html-card-pro/tree/main/examples/minecraft-html-pro-dashboard
+
+在 PR 合并前，可以先看这里：
+
+https://github.com/xyiqq/html-card-pro/tree/add-minecraft-html-pro-dashboard-example/examples/minecraft-html-pro-dashboard
 
 ## 实体映射示例
 
