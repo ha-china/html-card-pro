@@ -33,6 +33,12 @@
   ],
   "skipped": [
     {
+      "id": 14,
+      "title": "Minecraft 风格 Home Assistant 仪表盘模板（html-pro-card + 网页实体生成器）",
+      "reason": "no html-pro-card code block",
+      "url": "https://github.com/ha-china/html-card-pro/discussions/14"
+    },
+    {
       "id": 13,
       "title": "用 html-pro-card 打造 Claw Assistant 仪表盘配置面板",
       "reason": "no html-pro-card code block",
