@@ -1,0 +1,1408 @@
+# Generated from GitHub Discussions by sync-modules.
+# 空调卡片
+# Author: klhd2023
+# Version: 1.0
+# Description: 
+# Tags: 
+# Image: https://cdn.jsdelivr.net/gh/ha-china/html-card-pro@main/images/12.png
+# Link: https://github.com/ha-china/html-card-pro/discussions/12
+# ID: 12
+
+type: custom:html-pro-card
+do_not_parse: true
+content: |
+  <style>
+      .ac-mini-card,
+      .ac-mini-card * {
+        box-sizing: border-box;
+      }
+  
+      .ac-mini-card {
+        --accent: var(--blue-color, #007aff);
+        --accent-soft: color-mix(in srgb, var(--accent) 9%, transparent);
+        --line: color-mix(in srgb, var(--primary-text-color) 9%, transparent);
+  
+        width: 100%;
+        min-height: 78px;
+        padding: 0;
+        border-radius: 10px;
+        display: grid;
+        grid-template-columns: 0.9fr 0.95fr 1.18fr;
+        align-items: stretch;
+        color: var(--primary-text-color);
+        font: inherit;
+        background:
+          radial-gradient(circle at 72% 22%, var(--accent-soft), transparent 38%),
+          color-mix(in srgb, var(--primary-text-color) 2%, transparent);
+        border: 1px solid color-mix(in srgb, var(--primary-text-color) 6%, var(--divider-color));
+        box-shadow: 0 10px 28px color-mix(in srgb, var(--primary-text-color) 4%, transparent);
+        overflow: hidden;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        transition: transform 0.16s ease, opacity 0.2s ease;
+      }
+  
+      .ac-mini-card:active {
+        transform: scale(0.985);
+      }
+  
+      .ac-mini-card[data-mode="off"] {
+        --accent: var(--grey-color, #8e8e93);
+      }
+  
+      .ac-mini-card[data-mode="cool"] {
+        --accent: var(--blue-color, #007aff);
+      }
+  
+      .ac-mini-card[data-mode="heat"] {
+        --accent: var(--orange-color, #ff9500);
+      }
+  
+      .ac-mini-card[data-mode="dry"] {
+        --accent: var(--green-color, #34c759);
+      }
+  
+      .ac-mini-card[data-mode="fan_only"] {
+        --accent: var(--cyan-color, #32ade6);
+      }
+  
+      .ac-mini-card[data-mode="auto"],
+      .ac-mini-card[data-mode="heat_cool"] {
+        --accent: var(--purple-color, #af52de);
+      }
+  
+      .ac-mini-card[data-mode="unavailable"],
+      .ac-mini-card[data-mode="unknown"] {
+        opacity: 0.62;
+      }
+  
+      .segment {
+        position: relative;
+        min-width: 0;
+        min-height: 78px;
+        padding: 15px 18px;
+        display: grid;
+        align-content: center;
+      }
+  
+      .segment + .segment::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 18px;
+        bottom: 18px;
+        width: 1px;
+        background: var(--line);
+        border-radius: 10px;
+      }
+  
+      .room-segment {
+        gap: 7px;
+        justify-items: start;
+        padding-left: 20px;
+        padding-right: 14px;
+      }
+  
+      .mini-label {
+        font-size: 10px;
+        line-height: 1;
+        font-weight: 760;
+        letter-spacing: 0.1em;
+        color: var(--secondary-text-color);
+        text-transform: uppercase;
+        white-space: nowrap;
+      }
+  
+      .room-name {
+        font-size: 22px;
+        line-height: 1;
+        font-weight: 840;
+        letter-spacing: -0.065em;
+        color: var(--primary-text-color);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+  
+      .mode-segment {
+        justify-items: center;
+        gap: 10px;
+        text-align: center;
+        padding-left: 16px;
+        padding-right: 16px;
+      }
+  
+      .mode-top {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        color: var(--accent);
+      }
+  
+      .mode-top ha-icon {
+        --mdc-icon-size: 18px;
+        flex: 0 0 auto;
+      }
+  
+      .mode-text {
+        font-size: 12px;
+        line-height: 1;
+        font-weight: 850;
+        letter-spacing: 0.08em;
+        color: var(--accent);
+        white-space: nowrap;
+      }
+  
+      .mode-bar {
+        width: 52px;
+        height: 4px;
+        border-radius: 10px;
+        background: color-mix(in srgb, var(--primary-text-color) 9%, transparent);
+        overflow: hidden;
+      }
+  
+      .mode-bar-fill {
+        width: 30px;
+        height: 100%;
+        border-radius: inherit;
+        background: var(--accent);
+        box-shadow: 0 4px 12px color-mix(in srgb, var(--accent) 24%, transparent);
+      }
+  
+      .ac-mini-card[data-mode="off"] .mode-bar-fill,
+      .ac-mini-card[data-mode="unavailable"] .mode-bar-fill,
+      .ac-mini-card[data-mode="unknown"] .mode-bar-fill {
+        width: 16px;
+      }
+  
+      .temp-segment {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+        align-items: center;
+        align-content: center;
+        padding-left: 18px;
+        padding-right: 18px;
+      }
+  
+      .temp-item {
+        min-width: 0;
+        display: grid;
+        gap: 7px;
+        justify-items: start;
+      }
+  
+      .temp-label {
+        font-size: 10px;
+        line-height: 1;
+        font-weight: 760;
+        letter-spacing: 0.1em;
+        color: var(--secondary-text-color);
+        white-space: nowrap;
+      }
+  
+      .temp-value {
+        display: flex;
+        align-items: flex-start;
+        gap: 2px;
+        color: var(--primary-text-color);
+        font-variant-numeric: tabular-nums;
+      }
+  
+      .temp-number {
+        font-size: 22px;
+        line-height: 0.9;
+        font-weight: 850;
+        letter-spacing: -0.07em;
+        white-space: nowrap;
+      }
+  
+      .temp-unit {
+        margin-top: 2px;
+        font-size: 10px;
+        line-height: 1;
+        font-weight: 760;
+        color: var(--secondary-text-color);
+        white-space: nowrap;
+      }
+  
+      .temp-item.set .temp-label,
+      .temp-item.set .temp-value,
+      .temp-item.set .temp-unit {
+        color: var(--accent);
+      }
+  
+      .temp-item.set .temp-unit {
+        opacity: 0.82;
+      }
+  
+      @media (max-width: 430px) {
+        .ac-mini-card {
+          grid-template-columns: 0.82fr 0.92fr 1.2fr;
+        }
+  
+        .segment {
+          min-height: 76px;
+          padding: 14px 12px;
+        }
+  
+        .room-segment {
+          padding-left: 16px;
+          padding-right: 10px;
+        }
+  
+        .room-name {
+          font-size: 21px;
+        }
+  
+        .mode-text {
+          font-size: 11px;
+          letter-spacing: 0.05em;
+        }
+  
+        .mode-bar {
+          width: 46px;
+        }
+  
+        .mode-bar-fill {
+          width: 27px;
+        }
+  
+        .temp-segment {
+          gap: 10px;
+          padding-left: 14px;
+          padding-right: 14px;
+        }
+  
+        .temp-number {
+          font-size: 20px;
+        }
+  
+        .mini-label,
+        .temp-label {
+          font-size: 9px;
+        }
+      }
+    </style>
+  
+    <div class="ac-mini-card" data-role="mini-card" data-mode="unknown"
+    aria-label="打开空调控制面板">
+      <section class="segment room-segment">
+        <div class="mini-label">ROOM</div>
+        <div class="room-name" data-role="mini-room">书房</div>
+      </section>
+  
+      <section class="segment mode-segment">
+        <div class="mode-top">
+          <ha-icon data-role="mini-mode-icon" icon="mdi:air-conditioner"></ha-icon>
+          <div class="mode-text" data-role="mini-mode-text">读取中</div>
+        </div>
+        <div class="mode-bar">
+          <div class="mode-bar-fill"></div>
+        </div>
+      </section>
+  
+      <section class="segment temp-segment">
+        <div class="temp-item now">
+          <div class="temp-label">当前</div>
+          <div class="temp-value">
+            <span class="temp-number" data-role="mini-now-temp">--</span>
+            <span class="temp-unit">°C</span>
+          </div>
+        </div>
+  
+        <div class="temp-item set">
+          <div class="temp-label">设定</div>
+          <div class="temp-value">
+            <span class="temp-number" data-role="mini-set-temp">--</span>
+            <span class="temp-unit">°C</span>
+          </div>
+        </div>
+      </section>
+    </div>
+  
+    <script>
+      (() => {
+        if (root.__studyRoomAcMiniFullScreenPanelInit) return;
+        root.__studyRoomAcMiniFullScreenPanelInit = true;
+  
+        const ENTITY = 'climate.xiaomi_cn_575727496_m9';
+        const SLEEP = 'switch.xiaomi_cn_575727496_m9_sleep_mode_p_2_11';
+        const WIND = 'switch.xiaomi_cn_575727496_m9_un_straight_blowing_p_2_15';
+        const ECO = 'switch.xiaomi_cn_575727496_m9_eco_p_2_7';
+        const ROOM_TEMP = 'sensor.miaomiaoc_cn_blt_3_1duk7jbdc5o00_t9_temperature_p_3_1001';
+        const HUMIDITY = 'sensor.miaomiaoc_cn_blt_3_1duk7jbdc5o00_t9_relative_humidity_p_3_1002';
+  
+        const $ = (selector) => root.querySelector(selector);
+        const stateOf = (id) => hass.states[id];
+  
+        const modeMap = {
+          off: { text: '已关闭', icon: 'mdi:power' },
+          cool: { text: '制冷中', icon: 'mdi:snowflake' },
+          heat: { text: '制热中', icon: 'mdi:fire' },
+          dry: { text: '除湿中', icon: 'mdi:water-percent' },
+          fan_only: { text: '送风中', icon: 'mdi:fan' },
+          auto: { text: '自动', icon: 'mdi:autorenew' },
+          heat_cool: { text: '自动', icon: 'mdi:autorenew' },
+          unavailable: { text: '离线', icon: 'mdi:alert-circle-outline' },
+          unknown: { text: '未知', icon: 'mdi:help-circle-outline' }
+        };
+  
+        const panelModeText = {
+          off: '关闭模式',
+          cool: '制冷模式',
+          heat: '制热模式',
+          dry: '除湿模式',
+          fan_only: '送风模式',
+          unavailable: '设备不可用',
+          unknown: '状态未知'
+        };
+  
+        const fanLabels = {
+          auto: '自动',
+          silent: '静音',
+          quiet: '静音',
+          low: '低速',
+          medium: '中速',
+          middle: '中速',
+          high: '强力',
+          turbo: '强力',
+          strong: '强力'
+        };
+  
+        const unavailable = (state) => {
+          return !state || state.state === 'unknown' || state.state === 'unavailable';
+        };
+  
+        const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+  
+        const formatNumber = (value) => {
+          const number = Number(value);
+          if (!Number.isFinite(number)) return '--';
+          return Number.isInteger(number) ? String(number) : number.toFixed(1);
+        };
+  
+        const formatTemp = (value, unit = false) => {
+          const text = formatNumber(value);
+          if (text === '--') return '--';
+          return unit ? `${text}°C` : text;
+        };
+  
+        const formatSensor = (id, fallbackUnit = '') => {
+          const state = stateOf(id);
+          if (unavailable(state)) return '--';
+  
+          const unit = state.attributes?.unit_of_measurement || fallbackUnit;
+          const number = Number(state.state);
+  
+          if (Number.isFinite(number)) {
+            const text = Number.isInteger(number) ? String(number) : number.toFixed(1);
+            return `${text}${unit}`;
+          }
+  
+          return `${state.state}${unit}`;
+        };
+  
+        const call = (domain, service, data) => {
+          hass.callService(domain, service, data);
+        };
+  
+        const normalizeTemperature = (value, step) => {
+          const raw = String(step);
+          const decimals = raw.includes('.') ? raw.split('.')[1].length : 0;
+          return Number(value.toFixed(decimals));
+        };
+  
+        const canSetTemperature = (state) => {
+          const attrs = state?.attributes || {};
+          const hvac = state?.state;
+          const target = Number(attrs.temperature);
+          return ['cool', 'heat'].includes(hvac) && Number.isFinite(target);
+        };
+  
+        const setHvacMode = (mode) => {
+          if (!mode) return;
+  
+          call('climate', 'set_hvac_mode', {
+            entity_id: ENTITY,
+            hvac_mode: mode
+          });
+        };
+  
+        const togglePower = () => {
+          const state = stateOf(ENTITY);
+          if (!state) return;
+  
+          const modes = Array.isArray(state.attributes?.hvac_modes)
+            ? state.attributes.hvac_modes
+            : [];
+  
+          if (state.state !== 'off') {
+            setHvacMode('off');
+            return;
+          }
+  
+          if (modes.includes('cool')) {
+            setHvacMode('cool');
+            return;
+          }
+  
+          setHvacMode(modes.find((mode) => mode !== 'off') || 'cool');
+        };
+  
+        const adjustTemperature = (direction) => {
+          const state = stateOf(ENTITY);
+          if (!canSetTemperature(state)) return;
+  
+          const attrs = state.attributes || {};
+          const step = Number(attrs.target_temp_step ?? 1) || 1;
+          const min = Number(attrs.min_temp ?? 16);
+          const max = Number(attrs.max_temp ?? 30);
+          const current = Number(attrs.temperature);
+  
+          const next = normalizeTemperature(
+            clamp(current + direction * step, min, max),
+            step
+          );
+  
+          call('climate', 'set_temperature', {
+            entity_id: ENTITY,
+            temperature: next,
+            hvac_mode: state.state
+          });
+        };
+  
+        const labelFan = (value) => {
+          const raw = String(value || '');
+          if (!raw) return '--';
+          const key = raw.toLowerCase();
+          return fanLabels[key] || raw.replaceAll('_', ' ');
+        };
+  
+        const rebuildFanOptions = (select, modes, currentFan) => {
+          const safeModes = Array.isArray(modes) ? modes.slice() : [];
+  
+          if (currentFan && !safeModes.includes(currentFan)) {
+            safeModes.unshift(currentFan);
+          }
+  
+          const key = safeModes.join('|');
+  
+          if (select.dataset.options === key) return;
+  
+          select.dataset.options = key;
+          select.replaceChildren();
+  
+          if (!safeModes.length) {
+            const option = document.createElement('option');
+            option.value = '';
+            option.textContent = '无可用档位';
+            option.disabled = true;
+            option.selected = true;
+            select.appendChild(option);
+            return;
+          }
+  
+          safeModes.forEach((mode) => {
+            const option = document.createElement('option');
+            option.value = mode;
+            option.textContent = labelFan(mode);
+            select.appendChild(option);
+          });
+        };
+  
+        const renderToggle = (scope, entity, selector, textSelector, onText, offText) => {
+          const button = scope.querySelector(selector);
+          const text = scope.querySelector(textSelector);
+          const state = stateOf(entity);
+          const value = state?.state || 'unknown';
+  
+          if (!button) return;
+  
+          button.dataset.state = value;
+          button.disabled = value === 'unknown' || value === 'unavailable';
+  
+          if (text) {
+            text.textContent = value === 'on' ? onText : offText;
+          }
+        };
+  
+        const renderMini = () => {
+          const state = stateOf(ENTITY);
+          const card = $('[data-role="mini-card"]');
+          const modeIcon = $('[data-role="mini-mode-icon"]');
+          const modeText = $('[data-role="mini-mode-text"]');
+          const nowTemp = $('[data-role="mini-now-temp"]');
+          const setTemp = $('[data-role="mini-set-temp"]');
+          const room = $('[data-role="mini-room"]');
+  
+          if (!card || !modeIcon || !modeText || !nowTemp || !setTemp) return;
+  
+          const mode = state?.state || 'unknown';
+          const attrs = state?.attributes || {};
+          const info = modeMap[mode] || modeMap.unknown;
+  
+          card.dataset.mode = mode;
+          modeIcon.setAttribute('icon', info.icon);
+          modeText.textContent = info.text;
+  
+          if (room) {
+            room.textContent = attrs.friendly_name
+              ? attrs.friendly_name.replace('空调', '').trim() || attrs.friendly_name
+              : '书房';
+          }
+  
+          nowTemp.textContent = formatNumber(stateOf(ROOM_TEMP)?.state ?? attrs.current_temperature);
+          setTemp.textContent = formatNumber(attrs.temperature);
+        };
+  
+        const renderPanel = (wrapper) => {
+          if (!wrapper || !wrapper.isConnected) return;
+  
+          const q = (selector) => wrapper.querySelector(selector);
+          const qa = (selector) => Array.from(wrapper.querySelectorAll(selector));
+  
+          const state = stateOf(ENTITY);
+          const attrs = state?.attributes || {};
+          const hvac = state?.state || 'unknown';
+          const card = q('[data-role="panel-card"]');
+  
+          if (!card) return;
+  
+          const modes = Array.isArray(attrs.hvac_modes) ? attrs.hvac_modes : [];
+          const fanModes = Array.isArray(attrs.fan_modes) ? attrs.fan_modes : [];
+          const currentFan = attrs.fan_mode || '';
+          const active = hvac !== 'off' && hvac !== 'unknown' && hvac !== 'unavailable';
+  
+          card.dataset.hvac = hvac;
+  
+          q('[data-role="panel-title"]').textContent = attrs.friendly_name || '空调';
+          q('[data-role="panel-state-text"]').textContent = `${modeMap[hvac]?.text || hvac} · ${hvac === 'unavailable' ? '离线' : '在线'}`;
+          q('[data-role="panel-target-temp"]').textContent = formatTemp(attrs.temperature);
+          q('[data-role="panel-mode-text"]').textContent = panelModeText[hvac] || hvac || '状态未知';
+          q('[data-role="panel-room-temp-text"]').textContent = `室内温度 ${formatSensor(ROOM_TEMP, '°C')}`;
+          q('[data-role="panel-humidity-text"]').textContent = `室内湿度 ${formatSensor(HUMIDITY, '%')}`;
+  
+          const power = q('[data-action="power"]');
+  
+          if (power) {
+            power.dataset.on = active ? 'true' : 'false';
+            power.disabled = hvac === 'unknown' || hvac === 'unavailable';
+          }
+  
+          qa('[data-action="temp-down"], [data-action="temp-up"]').forEach((button) => {
+            button.disabled = !canSetTemperature(state);
+          });
+  
+          qa('[data-action="mode"]').forEach((button) => {
+            const mode = button.dataset.mode;
+            const supported = !modes.length || modes.includes(mode);
+  
+            button.classList.toggle('is-active', hvac === mode);
+            button.disabled = !supported || hvac === 'unknown' || hvac === 'unavailable';
+          });
+  
+          const fanSelect = q('[data-role="panel-fan-select"]');
+  
+          if (fanSelect) {
+            rebuildFanOptions(fanSelect, fanModes, currentFan);
+  
+            if (currentFan) {
+              fanSelect.value = currentFan;
+            }
+  
+            fanSelect.disabled = !fanModes.length || hvac === 'unknown' || hvac === 'unavailable';
+          }
+  
+          renderToggle(wrapper, WIND, '[data-entity="' + WIND + '"]', '[data-role="panel-wind-text"]', '已开启', '防直吹');
+          renderToggle(wrapper, SLEEP, '[data-entity="' + SLEEP + '"]', '[data-role="panel-sleep-text"]', '已开启', '未开启');
+          renderToggle(wrapper, ECO, '[data-entity="' + ECO + '"]', '[data-role="panel-eco-text"]', '已开启', '未开启');
+        };
+  
+        const closeOverlay = () => {
+          const wrapper = root.__studyRoomAcFullScreenOverlay;
+          if (!wrapper) return;
+  
+          wrapper.classList.add('is-closing');
+  
+          window.setTimeout(() => {
+            wrapper.remove();
+            root.__studyRoomAcFullScreenOverlay = null;
+          }, 180);
+        };
+  
+        const openOverlay = () => {
+          if (root.__studyRoomAcFullScreenOverlay && root.__studyRoomAcFullScreenOverlay.isConnected) {
+            root.__studyRoomAcFullScreenOverlay.remove();
+            root.__studyRoomAcFullScreenOverlay = null;
+          }
+  
+          const wrapper = document.createElement('div');
+          wrapper.className = 'ac-control-overlay';
+  
+          wrapper.innerHTML = `
+            <style>
+              .ac-control-overlay,
+              .ac-control-overlay * {
+                box-sizing: border-box;
+              }
+  
+              .ac-control-overlay {
+                position: fixed;
+                inset: 0;
+                z-index: 99999;
+                pointer-events: auto;
+                color: var(--primary-text-color);
+                font: inherit;
+                opacity: 1;
+                background: #edf6ff;
+                transition: opacity 0.18s ease;
+              }
+  
+              .ac-control-overlay.is-closing {
+                opacity: 0;
+              }
+  
+              .ac-full-page {
+                position: absolute;
+                inset: 0;
+                width: 100vw;
+                height: 100vh;
+                height: 100dvh;
+                overflow: auto;
+                background: #edf6ff;
+              }
+  
+              .ac-panel,
+              .ac-panel * {
+                box-sizing: border-box;
+              }
+  
+              .ac-panel {
+                --mode-color: #2f7df6;
+                --mode-soft: rgba(47, 125, 246, 0.12);
+                --mode-mid: rgba(47, 125, 246, 0.22);
+                --text-main: #17243a;
+                --text-sub: #7d8fa8;
+                --card-shadow: 0 14px 32px rgba(48, 83, 132, 0.15);
+  
+                width: 100%;
+                min-height: 100vh;
+                min-height: 100dvh;
+                padding: calc(22px + env(safe-area-inset-top)) 22px calc(24px + env(safe-area-inset-bottom));
+                margin: 0;
+                border-radius: 10px;
+                overflow: hidden;
+                color: var(--text-main);
+                font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif;
+                background:
+                  radial-gradient(circle at 50% 21%, var(--mode-soft), transparent 35%),
+                  linear-gradient(180deg, #f7fbff 0%, #edf6ff 100%);
+              }
+  
+              .ac-panel[data-hvac="cool"] {
+                --mode-color: #2f7df6;
+                --mode-soft: rgba(47, 125, 246, 0.13);
+                --mode-mid: rgba(47, 125, 246, 0.23);
+              }
+  
+              .ac-panel[data-hvac="heat"] {
+                --mode-color: #ff8a2a;
+                --mode-soft: rgba(255, 138, 42, 0.14);
+                --mode-mid: rgba(255, 138, 42, 0.24);
+              }
+  
+              .ac-panel[data-hvac="dry"] {
+                --mode-color: #20b86a;
+                --mode-soft: rgba(32, 184, 106, 0.13);
+                --mode-mid: rgba(32, 184, 106, 0.22);
+              }
+  
+              .ac-panel[data-hvac="fan_only"] {
+                --mode-color: #20a8d8;
+                --mode-soft: rgba(32, 168, 216, 0.13);
+                --mode-mid: rgba(32, 168, 216, 0.23);
+              }
+  
+              .ac-panel[data-hvac="off"],
+              .ac-panel[data-hvac="unknown"],
+              .ac-panel[data-hvac="unavailable"] {
+                --mode-color: #94a3b8;
+                --mode-soft: rgba(148, 163, 184, 0.13);
+                --mode-mid: rgba(148, 163, 184, 0.22);
+              }
+  
+              .ac-header {
+                display: grid;
+                grid-template-columns: minmax(0, 1fr) auto;
+                gap: 12px;
+                align-items: start;
+              }
+  
+              .title-block {
+                min-width: 0;
+                display: grid;
+                gap: 8px;
+              }
+  
+              .room-title {
+                font-size: 20px;
+                line-height: 1.05;
+                font-weight: 800;
+                letter-spacing: -0.04em;
+                color: #263751;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+              }
+  
+              .status-row {
+                display: flex;
+                align-items: center;
+                gap: 7px;
+                min-width: 0;
+                color: var(--text-sub);
+                font-size: 12px;
+                font-weight: 700;
+              }
+  
+              .status-dot {
+                width: 7px;
+                height: 7px;
+                border-radius: 10px;
+                background: var(--mode-color);
+                box-shadow: 0 0 0 4px var(--mode-soft);
+                flex: 0 0 auto;
+              }
+  
+              .header-actions {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+              }
+  
+              .title-icon-btn {
+                width: 40px;
+                height: 40px;
+                border: 0;
+                border-radius: 10px;
+                display: grid;
+                place-items: center;
+                background: rgba(255, 255, 255, 0.78);
+                box-shadow: 0 8px 18px rgba(58, 96, 145, 0.12);
+                cursor: pointer;
+                padding: 0;
+                -webkit-tap-highlight-color: transparent;
+                transition: transform 0.15s ease, background 0.2s ease, color 0.2s ease, opacity 0.2s ease;
+              }
+  
+              .title-icon-btn:active {
+                transform: scale(0.94);
+              }
+  
+              .title-icon-btn:disabled {
+                opacity: 0.45;
+                cursor: default;
+              }
+  
+              .title-icon-btn ha-icon {
+                --mdc-icon-size: 21px;
+              }
+  
+              .power-btn {
+                color: var(--mode-color);
+              }
+  
+              .power-btn[data-on="true"] {
+                color: #ffffff;
+                background: var(--mode-color);
+                box-shadow: 0 10px 22px var(--mode-mid);
+              }
+  
+              .close-btn {
+                color: #7d8fa8;
+              }
+  
+              .hero {
+                padding: clamp(74px, 13vh, 112px) 0 clamp(44px, 8vh, 62px);
+                text-align: center;
+              }
+  
+              .target {
+                display: inline-flex;
+                align-items: flex-start;
+                color: var(--mode-color);
+                text-shadow: 0 18px 36px var(--mode-soft);
+                font-variant-numeric: tabular-nums;
+              }
+  
+              .target-num {
+                font-size: clamp(90px, 28vw, 126px);
+                line-height: 0.82;
+                font-weight: 620;
+                letter-spacing: -0.085em;
+              }
+  
+              .target-unit {
+                margin-top: 7px;
+                margin-left: 5px;
+                font-size: 38px;
+                line-height: 1;
+                font-weight: 680;
+              }
+  
+              .mode-label {
+                margin-top: 24px;
+                color: var(--mode-color);
+                font-size: 14px;
+                font-weight: 760;
+              }
+  
+              .sensor-text-row {
+                margin-top: 10px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                gap: 10px;
+                color: var(--text-sub);
+                font-size: 14px;
+                line-height: 1;
+                font-weight: 700;
+                font-variant-numeric: tabular-nums;
+              }
+  
+              .sensor-dot {
+                width: 4px;
+                height: 4px;
+                border-radius: 10px;
+                background: color-mix(in srgb, var(--text-sub) 55%, transparent);
+              }
+  
+              .temp-actions {
+                margin: 0 auto clamp(38px, 6vh, 54px);
+                display: flex;
+                justify-content: center;
+                gap: 44px;
+              }
+  
+              .round-btn {
+                width: 64px;
+                height: 64px;
+                border: 0;
+                border-radius: 10px;
+                display: grid;
+                place-items: center;
+                color: var(--mode-color);
+                background: linear-gradient(145deg, rgba(255,255,255,0.96), rgba(229,239,252,0.94));
+                box-shadow:
+                  0 14px 28px rgba(63, 102, 158, 0.15),
+                  inset 0 1px 1px rgba(255,255,255,0.92);
+                cursor: pointer;
+                padding: 0;
+                -webkit-tap-highlight-color: transparent;
+                transition: transform 0.15s ease, opacity 0.15s ease;
+              }
+  
+              .round-btn:active {
+                transform: scale(0.94);
+              }
+  
+              .round-btn:disabled {
+                opacity: 0.38;
+                cursor: default;
+              }
+  
+              .round-btn ha-icon {
+                --mdc-icon-size: 26px;
+              }
+  
+              .section + .section {
+                margin-top: 24px;
+              }
+  
+              .section-title {
+                margin: 0 0 14px 6px;
+                color: #5b6f8a;
+                font-size: 13px;
+                line-height: 1;
+                font-weight: 800;
+              }
+  
+              .mode-pill {
+                height: 72px;
+                padding: 7px;
+                border-radius: 10px;
+                display: grid;
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+                gap: 4px;
+                background: rgba(226, 237, 251, 0.86);
+                box-shadow:
+                  inset 0 2px 5px rgba(99, 128, 171, 0.08),
+                  0 12px 26px rgba(69, 103, 153, 0.10);
+              }
+  
+              .mode-btn {
+                --btn-color: #2f7df6;
+  
+                border: 0;
+                border-radius: 10px;
+                background: transparent;
+                color: #73859e;
+                display: grid;
+                justify-items: center;
+                align-content: center;
+                gap: 6px;
+                cursor: pointer;
+                font: inherit;
+                font-size: 11px;
+                font-weight: 780;
+                padding: 0;
+                -webkit-tap-highlight-color: transparent;
+                transition: transform 0.15s ease, background 0.18s ease, color 0.18s ease;
+              }
+  
+              .mode-btn[data-mode="cool"] {
+                --btn-color: #2f7df6;
+              }
+  
+              .mode-btn[data-mode="heat"] {
+                --btn-color: #ff8a2a;
+              }
+  
+              .mode-btn[data-mode="dry"] {
+                --btn-color: #20b86a;
+              }
+  
+              .mode-btn[data-mode="fan_only"] {
+                --btn-color: #20a8d8;
+              }
+  
+              .mode-btn ha-icon {
+                --mdc-icon-size: 21px;
+                color: var(--btn-color);
+                opacity: 0.72;
+              }
+  
+              .mode-btn.is-active {
+                color: var(--btn-color);
+                background: rgba(255, 255, 255, 0.96);
+                box-shadow: 0 8px 20px rgba(57, 93, 145, 0.12);
+              }
+  
+              .mode-btn.is-active ha-icon {
+                opacity: 1;
+              }
+  
+              .mode-btn:active {
+                transform: scale(0.96);
+              }
+  
+              .mode-btn:disabled {
+                opacity: 0.35;
+                cursor: default;
+              }
+  
+              .fan-row {
+                height: 60px;
+                border-radius: 10px;
+                padding: 0 14px;
+                display: grid;
+                grid-template-columns: 38px minmax(0, 1fr) auto;
+                gap: 12px;
+                align-items: center;
+                background: rgba(255,255,255,0.74);
+                box-shadow: var(--card-shadow);
+              }
+  
+              .fan-icon {
+                width: 38px;
+                height: 38px;
+                border-radius: 10px;
+                display: grid;
+                place-items: center;
+                color: #20a8d8;
+                background: rgba(32, 168, 216, 0.12);
+              }
+  
+              .fan-icon ha-icon {
+                --mdc-icon-size: 20px;
+              }
+  
+              .fan-copy {
+                min-width: 0;
+                display: grid;
+                gap: 5px;
+              }
+  
+              .fan-main {
+                color: #334964;
+                font-size: 14px;
+                line-height: 1;
+                font-weight: 820;
+              }
+  
+              .fan-sub {
+                color: var(--text-sub);
+                font-size: 11px;
+                line-height: 1;
+                font-weight: 650;
+              }
+  
+              .select-box {
+                position: relative;
+                display: grid;
+                place-items: center;
+              }
+  
+              .fan-select {
+                width: 126px;
+                height: 38px;
+                border: 0;
+                outline: none;
+                border-radius: 10px;
+                padding: 0 32px 0 12px;
+                color: var(--mode-color);
+                background: linear-gradient(145deg, rgba(255,255,255,0.96), rgba(235,243,253,0.94));
+                box-shadow: inset 0 0 0 1px var(--mode-soft);
+                font: inherit;
+                font-size: 13px;
+                font-weight: 850;
+                appearance: none;
+                -webkit-appearance: none;
+                cursor: pointer;
+                text-align: center;
+              }
+  
+              .select-box::after {
+                content: "";
+                position: absolute;
+                right: 12px;
+                top: 50%;
+                width: 7px;
+                height: 7px;
+                border-right: 2px solid var(--mode-color);
+                border-bottom: 2px solid var(--mode-color);
+                transform: translateY(-65%) rotate(45deg);
+                pointer-events: none;
+                opacity: 0.75;
+              }
+  
+              .fan-select:disabled {
+                opacity: 0.45;
+                cursor: default;
+              }
+  
+              .bottom-grid {
+                display: grid;
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+                gap: 14px;
+                margin-top: 18px;
+              }
+  
+              .mini-card {
+                min-height: 110px;
+                padding: 16px 12px 14px;
+                border: 0;
+                border-radius: 10px;
+                background: linear-gradient(145deg, rgba(255,255,255,0.88), rgba(229,239,251,0.92));
+                box-shadow: var(--card-shadow);
+                color: #5f718b;
+                text-align: left;
+                font: inherit;
+                cursor: pointer;
+                -webkit-tap-highlight-color: transparent;
+                display: grid;
+                align-content: space-between;
+                transition: transform 0.15s ease, opacity 0.15s ease;
+              }
+  
+              .mini-card:active {
+                transform: scale(0.97);
+              }
+  
+              .mini-card:disabled {
+                opacity: 0.45;
+                cursor: default;
+              }
+  
+              .mini-icon {
+                width: 34px;
+                height: 34px;
+                border-radius: 10px;
+                display: grid;
+                place-items: center;
+                background: rgba(47, 125, 246, 0.11);
+                color: #2f7df6;
+              }
+  
+              .mini-card[data-kind="sleep"] .mini-icon {
+                background: rgba(124, 109, 240, 0.12);
+                color: #7c6df0;
+              }
+  
+              .mini-card[data-kind="eco"] .mini-icon {
+                background: rgba(37, 196, 107, 0.13);
+                color: #25c46b;
+              }
+  
+              .mini-card[data-state="on"] {
+                background: linear-gradient(145deg, rgba(255,255,255,0.96), rgba(219,236,255,0.96));
+                box-shadow:
+                  0 16px 32px var(--mode-soft),
+                  inset 0 0 0 1px var(--mode-soft);
+              }
+  
+              .mini-icon ha-icon {
+                --mdc-icon-size: 20px;
+              }
+  
+              .mini-label {
+                margin-top: 12px;
+                color: #7c8da4;
+                font-size: 12px;
+                font-weight: 750;
+              }
+  
+              .mini-value {
+                margin-top: 4px;
+                color: #12203a;
+                font-size: 15px;
+                line-height: 1.05;
+                font-weight: 900;
+                word-break: keep-all;
+              }
+  
+              @media (max-width: 390px) {
+                .ac-panel {
+                  padding-left: 18px;
+                  padding-right: 18px;
+                }
+  
+                .header-actions {
+                  gap: 7px;
+                }
+  
+                .title-icon-btn {
+                  width: 38px;
+                  height: 38px;
+                }
+  
+                .hero {
+                  padding-top: 78px;
+                  padding-bottom: 46px;
+                }
+  
+                .target-num {
+                  font-size: clamp(84px, 29vw, 116px);
+                }
+  
+                .fan-select {
+                  width: 112px;
+                }
+  
+                .bottom-grid {
+                  gap: 10px;
+                }
+              }
+            </style>
+  
+            <div class="ac-full-page">
+              <div class="ac-panel" data-role="panel-card" data-hvac="unknown">
+                <header class="ac-header">
+                  <div class="title-block">
+                    <div class="room-title" data-role="panel-title">空调</div>
+                    <div class="status-row">
+                      <span class="status-dot"></span>
+                      <span data-role="panel-state-text">读取中 · 在线</span>
+                    </div>
+                  </div>
+  
+                  <div class="header-actions">
+                    <button class="title-icon-btn power-btn" type="button" data-action="power" data-on="false" aria-label="切换空调电源">
+                      <ha-icon icon="mdi:power"></ha-icon>
+                    </button>
+  
+                    <button class="title-icon-btn close-btn" type="button" data-action="close" aria-label="关闭空调控制面板">
+                      <ha-icon icon="mdi:close"></ha-icon>
+                    </button>
+                  </div>
+                </header>
+  
+                <section class="hero">
+                  <div class="target">
+                    <span class="target-num" data-role="panel-target-temp">--</span>
+                    <span class="target-unit">°</span>
+                  </div>
+  
+                  <div class="mode-label" data-role="panel-mode-text">读取中</div>
+  
+                  <div class="sensor-text-row">
+                    <span data-role="panel-room-temp-text">室内温度 --</span>
+                    <span class="sensor-dot"></span>
+                    <span data-role="panel-humidity-text">室内湿度 --</span>
+                  </div>
+                </section>
+  
+                <div class="temp-actions">
+                  <button class="round-btn" type="button" data-action="temp-down" aria-label="降低温度">
+                    <ha-icon icon="mdi:minus"></ha-icon>
+                  </button>
+  
+                  <button class="round-btn" type="button" data-action="temp-up" aria-label="升高温度">
+                    <ha-icon icon="mdi:plus"></ha-icon>
+                  </button>
+                </div>
+  
+                <section class="section">
+                  <div class="section-title">模式选择</div>
+                  <div class="mode-pill">
+                    <button class="mode-btn" type="button" data-action="mode" data-mode="cool">
+                      <ha-icon icon="mdi:snowflake"></ha-icon>
+                      <span>制冷</span>
+                    </button>
+  
+                    <button class="mode-btn" type="button" data-action="mode" data-mode="heat">
+                      <ha-icon icon="mdi:white-balance-sunny"></ha-icon>
+                      <span>制热</span>
+                    </button>
+  
+                    <button class="mode-btn" type="button" data-action="mode" data-mode="dry">
+                      <ha-icon icon="mdi:water-outline"></ha-icon>
+                      <span>除湿</span>
+                    </button>
+  
+                    <button class="mode-btn" type="button" data-action="mode" data-mode="fan_only">
+                      <ha-icon icon="mdi:weather-windy"></ha-icon>
+                      <span>送风</span>
+                    </button>
+                  </div>
+                </section>
+  
+                <section class="section">
+                  <div class="section-title">风速调节</div>
+                  <div class="fan-row">
+                    <div class="fan-icon">
+                      <ha-icon icon="mdi:fan"></ha-icon>
+                    </div>
+  
+                    <div class="fan-copy">
+                      <div class="fan-main">风速</div>
+                      <div class="fan-sub">下拉选择档位</div>
+                    </div>
+  
+                    <div class="select-box">
+                      <select class="fan-select" data-role="panel-fan-select" aria-label="选择风速"></select>
+                    </div>
+                  </div>
+                </section>
+  
+                <section class="bottom-grid">
+                  <button class="mini-card" type="button" data-action="toggle" data-kind="wind" data-entity="${WIND}">
+                    <div class="mini-icon">
+                      <ha-icon icon="mdi:swap-vertical"></ha-icon>
+                    </div>
+                    <div>
+                      <div class="mini-label">风向</div>
+                      <div class="mini-value" data-role="panel-wind-text">防直吹</div>
+                    </div>
+                  </button>
+  
+                  <button class="mini-card" type="button" data-action="toggle" data-kind="sleep" data-entity="${SLEEP}">
+                    <div class="mini-icon">
+                      <ha-icon icon="mdi:bed-outline"></ha-icon>
+                    </div>
+                    <div>
+                      <div class="mini-label">睡眠</div>
+                      <div class="mini-value" data-role="panel-sleep-text">未开启</div>
+                    </div>
+                  </button>
+  
+                  <button class="mini-card" type="button" data-action="toggle" data-kind="eco" data-entity="${ECO}">
+                    <div class="mini-icon">
+                      <ha-icon icon="mdi:leaf"></ha-icon>
+                    </div>
+                    <div>
+                      <div class="mini-label">节能</div>
+                      <div class="mini-value" data-role="panel-eco-text">未开启</div>
+                    </div>
+                  </button>
+                </section>
+              </div>
+            </div>
+          `;
+  
+          const host = typeof overlay !== 'undefined' && overlay ? overlay : document.body;
+          host.appendChild(wrapper);
+          root.__studyRoomAcFullScreenOverlay = wrapper;
+  
+          wrapper.addEventListener('click', (event) => {
+            const target = event.target.closest('[data-action]');
+            if (!target || !wrapper.contains(target) || target.disabled) return;
+  
+            const action = target.dataset.action;
+  
+            if (action === 'close') {
+              closeOverlay();
+              return;
+            }
+  
+            if (action === 'power') {
+              togglePower();
+            }
+  
+            if (action === 'temp-down') {
+              adjustTemperature(-1);
+            }
+  
+            if (action === 'temp-up') {
+              adjustTemperature(1);
+            }
+  
+            if (action === 'mode') {
+              setHvacMode(target.dataset.mode);
+            }
+  
+            if (action === 'toggle') {
+              const entityId = target.dataset.entity;
+              if (!entityId) return;
+  
+              call(entityId.split('.')[0], 'toggle', {
+                entity_id: entityId
+              });
+            }
+          });
+  
+          const fanSelect = wrapper.querySelector('[data-role="panel-fan-select"]');
+  
+          if (fanSelect) {
+            fanSelect.addEventListener('change', () => {
+              if (!fanSelect.value) return;
+  
+              call('climate', 'set_fan_mode', {
+                entity_id: ENTITY,
+                fan_mode: fanSelect.value
+              });
+            });
+          }
+  
+          renderPanel(wrapper);
+        };
+  
+        $('[data-role="mini-card"]').addEventListener('click', openOverlay);
+  
+        root._watchedEntities = [ENTITY, SLEEP, WIND, ECO, ROOM_TEMP, HUMIDITY];
+  
+        root._onHassUpdate = () => {
+          renderMini();
+  
+          if (root.__studyRoomAcFullScreenOverlay && root.__studyRoomAcFullScreenOverlay.isConnected) {
+            renderPanel(root.__studyRoomAcFullScreenOverlay);
+          }
+        };
+  
+        renderMini();
+      })();
+    </script>
+  `
+  <img width="1440" height="3527" alt="弹出卡片" src="https://github.com/user-attachments/assets/6b3805df-fb23-4bb6-81ab-092b7204eeb5" />
+  <img width="1440" height="356" alt="一级卡片" src="https://github.com/user-attachments/assets/446a370f-5cc5-41be-b6c1-3148292fc170" />

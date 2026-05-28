@@ -1,5 +1,16 @@
 [
   {
+    "id": 12,
+    "name": "空调卡片",
+    "version": "1.0",
+    "creator": "klhd2023",
+    "description": "",
+    "tags": [],
+    "image": "https://cdn.jsdelivr.net/gh/ha-china/html-card-pro@main/images/12.png",
+    "link": "https://github.com/ha-china/html-card-pro/discussions/12",
+    "file": "mods/12-module-12.yaml"
+  },
+  {
     "id": 11,
     "name": "Minecraft 风格的 Home Assistant 平板中控仪表盘",
     "version": "1.0",

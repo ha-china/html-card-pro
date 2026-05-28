@@ -1,6 +1,11 @@
 {
   "generated": [
     {
+      "id": 12,
+      "name": "空调卡片",
+      "file": "mods/12-module-12.yaml"
+    },
+    {
       "id": 11,
       "name": "Minecraft 风格的 Home Assistant 平板中控仪表盘",
       "file": "mods/11-minecraft-home-assistant.yaml"
