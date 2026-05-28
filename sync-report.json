@@ -1,6 +1,11 @@
 {
   "generated": [
     {
+      "id": 16,
+      "name": "自适应电池状态监控系统 / Adaptive Battery Monitoring System",
+      "file": "mods/16-adaptive-battery-monitoring-system.yaml"
+    },
+    {
       "id": 12,
       "name": "空调卡片",
       "file": "mods/12-module-12.yaml"

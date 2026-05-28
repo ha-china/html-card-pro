@@ -1,5 +1,18 @@
 [
   {
+    "id": 16,
+    "name": "自适应电池状态监控系统 / Adaptive Battery Monitoring System",
+    "version": "1.0",
+    "creator": "fenglibo51",
+    "description": "",
+    "tags": [
+      "Style"
+    ],
+    "image": "https://cdn.jsdelivr.net/gh/ha-china/html-card-pro@main/images/16.png",
+    "link": "https://github.com/ha-china/html-card-pro/discussions/16",
+    "file": "mods/16-adaptive-battery-monitoring-system.yaml"
+  },
+  {
     "id": 12,
     "name": "空调卡片",
     "version": "1.0",

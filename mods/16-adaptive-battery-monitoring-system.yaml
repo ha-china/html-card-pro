@@ -1,0 +1,511 @@
+# Generated from GitHub Discussions by sync-modules.
+# 自适应电池状态监控系统 / Adaptive Battery Monitoring System
+# Author: fenglibo51
+# Version: 1.0
+# Description: 
+# Tags: Style
+# Image: https://cdn.jsdelivr.net/gh/ha-china/html-card-pro@main/images/16.png
+# Link: https://github.com/ha-china/html-card-pro/discussions/16
+# ID: 16
+
+type: custom:html-pro-card
+do_not_parse: true
+content: |
+  {% set ns = namespace(items=[]) %}
+  {% for s in states.sensor %}
+    {% if s.attributes.device_class | default('') == 'battery' %}
+      {% if 'power' not in s.entity_id and 'energy' not in s.entity_id and 'voltage' not in s.entity_id and 'consumption' not in s.entity_id %}
+        {% if s.state not in ['unavailable', 'unknown', 'none', ''] %}
+          {% set pct = s.state | int(-1) %}
+          {% if pct >= 0 and pct <= 20 %}
+            {% set name = s.attributes.friendly_name | default(s.entity_id) %}
+            {# 核心文本切除引擎：一并斩断 电池/电量/低电量/充电/干电池 以及英文 Battery Level #}
+            {% set clean_name = name | replace('电池','' ) | replace('电量','') | replace('低电量','') | replace('充电','') | replace('干电池','') | replace('Battery Level','') | replace('battery level','') | trim %}
+            
+            {% set matched_icon = 'mdi:battery' %}
+            {% set ns.items = ns.items + [[pct, clean_name, s.entity_id, matched_icon]] %}
+          {% endif %}
+        {% endif %}
+      {% endif %}
+    {% endif %}
+  {% endfor %}
+  {% set sorted_items = ns.items | sort(attribute=0) %}
+  {% set total_count = sorted_items|count %}
+  
+  <div class="dribbble-luxury-card">
+    <div class="card-widget-header">
+      <span class="header-left-title">BATTERY · 电池状态监控</span>
+      <span class="header-right-status">{{ total_count }} 个设备需要更换电池/充电</span>
+    </div>
+  
+    <div class="apple-header-main">
+      <div class="title-with-indicator">
+        <div class="led-embedded-dot"></div>
+        <h2>低电量预警</h2>
+      </div>
+      <div class="apple-badge badge-critical">注意</div>
+    </div>
+  
+    <div class="card-content-matrix">
+      {% if total_count > 0 %}
+        <div class="apple-list-vertical">
+          {% for item in sorted_items[:5] %}
+            {% set current_pct = item[0] %}
+            {% if current_pct <= 5 %}
+              {% set dynamic_color = '#FF3B30' %} {% set icon_bg = 'rgba(255, 59, 48, 0.08)' %}
+            {% elif current_pct <= 12 %}
+              {% set dynamic_color = '#FF453A' %} {% set icon_bg = 'rgba(255, 69, 58, 0.06)' %}
+            {% else %}
+              {% set dynamic_color = '#FF5E55' %} {% set icon_bg = 'rgba(255, 94, 85, 0.05)' %}
+            {% endif %}
+  
+            <div class="apple-list-item" clickAction="more-info" clickEntity="{{ item[2] }}">
+              <div class="item-pure-glass-bg"></div>
+              <div class="item-left-alignment-box">
+                <div class="dribbble-icon-pod" style="background: {{ icon_bg }} !important; color: {{ dynamic_color }} !important;">
+                  <ha-icon icon="{{ item[3] }}"></ha-icon>
+                </div>
+                <div class="text-meta-box">
+                  <span class="device-name-text">{{ item[1] }}</span>
+                  <span class="device-sub-text">续航不足，建议及时更换</span>
+                </div>
+              </div>
+              <div class="item-right-energy-zone">
+                <div class="apple-capsule-rail">
+                  <div class="apple-capsule-fill" style="width: {{ current_pct }}%; background: {{ dynamic_color }} !important;"></div>
+                </div>
+                <span class="apple-static-percent" style="color: {{ dynamic_color }} !important;">{{ current_pct }}%</span>
+              </div>
+              <div class="hud-right-edge-track">
+                <div class="hud-fluid-dot" style="background: linear-gradient(to bottom, rgba(255,59,48,0), {{ dynamic_color }} 50%, rgba(255,59,48,0)) !important;"></div>
+              </div>
+            </div>
+          {% endfor %}
+  
+          {% if total_count > 5 %}
+            <details class="apple-adaptive-drawer">
+              <summary class="drawer-trigger-bar">
+                <span class="trigger-text text-close">▼ 展开其余 {{ total_count - 5 }} 个低电量终端</span>
+                <span class="trigger-text text-open">▲ 收起其余 {{ total_count - 5 }} 个低电量终端</span>
+              </summary>
+              <div class="drawer-inner-padding-box">
+                {% for item in sorted_items[5:] %}
+                  {% set current_pct = item[0] %}
+                  {% if current_pct <= 5 %}
+                    {% set dynamic_color = '#FF3B30' %} {% set icon_bg = 'rgba(255, 59, 48, 0.08)' %}
+                  {% elif current_pct <= 12 %}
+                    {% set dynamic_color = '#FF453A' %} {% set icon_bg = 'rgba(255, 69, 58, 0.06)' %}
+                  {% else %}
+                    {% set dynamic_color = '#FF5E55' %} {% set icon_bg = 'rgba(255, 94, 85, 0.05)' %}
+                  {% endif %}
+  
+                  <div class="apple-list-item" clickAction="more-info" clickEntity="{{ item[2] }}">
+                    <div class="item-pure-glass-bg"></div>
+                    <div class="item-left-alignment-box">
+                      <div class="dribbble-icon-pod" style="background: {{ icon_bg }} !important; color: {{ dynamic_color }} !important;">
+                        <ha-icon icon="{{ item[3] }}"></ha-icon>
+                      </div>
+                      <div class="text-meta-box">
+                        <span class="device-name-text">{{ item[1] }}</span>
+                        <span class="device-sub-text">续航不足，建议及时更换</span>
+                      </div>
+                    </div>
+                    <div class="item-right-energy-zone">
+                      <div class="apple-capsule-rail">
+                        <div class="apple-capsule-fill" style="width: {{ current_pct }}%; background: {{ dynamic_color }} !important;"></div>
+                      </div>
+                      <span class="apple-static-percent" style="color: {{ dynamic_color }} !important;">{{ current_pct }}%</span>
+                    </div>
+                    <div class="hud-right-edge-track">
+                      <div class="hud-fluid-dot" style="background: linear-gradient(to bottom, rgba(255,59,48,0), {{ dynamic_color }} 50%, rgba(255,59,48,0)) !important;"></div>
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+            </details>
+          {% endif %}
+        </div>
+      {% else %}
+        <div class="apple-empty-banner">
+          <svg viewBox="0 0 24 24" class="empty-icon"><path fill="currentColor" d="M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M11,16.5L18,9.5L16.58,8.08L11,13.67L7.92,10.59L6.5,12L11,16.5Z"/></svg>
+          <span>所有设备电量充足 // 运行状态良好</span>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+  
+  <style>
+  :host { --ha-card-background: transparent !important; --ha-card-box-shadow: none !important; --ha-card-border-width: 0px !important; --ha-card-border-color: transparent !important; display: block !important; margin-bottom: 14px !important; }
+  .dribbble-luxury-card { background: var(--ha-card-background, var(--card-background-color, rgba(255, 255, 255, 0.45))) !important; border-radius: 10px !important; padding: 16px !important; box-sizing: border-box !important; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif !important; position: relative !important; overflow: hidden !important; border: 1px solid var(--ha-card-border-color, var(--divider-color, rgba(0, 0, 0, 0.04))) !important; box-shadow: var(--ha-card-box-shadow, none) !important; }
+  .card-widget-header { display: flex !important; justify-content: space-between !important; font-size: 10px !important; font-weight: 600 !important; color: var(--secondary-text-color, #86868b) !important; opacity: 0.7 !important; margin-bottom: 12px !important; letter-spacing: 0.3px !important; }
+  .apple-header-main { display: flex !important; justify-content: space-between !important; align-items: center !important; margin-bottom: 14px !important; }
+  .title-with-indicator { display: flex !important; align-items: center !important; gap: 8px !important; }
+  .title-with-indicator h2 { font-size: 15px !important; font-weight: 700 !important; color: var(--primary-text-color, #1d1d1f) !important; margin: 0 !important; letter-spacing: -0.2px !important; }
+  .apple-badge { font-size: 9px !important; font-weight: 700 !important; padding: 2px 8px !important; border-radius: 10px !important; }
+  .badge-critical { background: rgba(255, 59, 48, 0.1) !important; color: #ff3b30 !important; }
+  .led-embedded-dot { width: 5px !important; height: 5px !important; border-radius: 10px !important; background: #ff3b30 !important; box-shadow: 0 0 6px rgba(255, 59, 48, 0.6) !important; animation: dribbble-micro-dot-glow 3.5s infinite ease-in-out !important; }
+  .apple-list-vertical { display: flex !important; flex-direction: column !important; gap: 8px !important; }
+  .apple-list-item { background: var(--secondary-background-color, rgba(0, 0, 0, 0.02)) !important; border: 1px solid var(--divider-color, rgba(0, 0, 0, 0.04)) !important; border-radius: 10px !important; padding: 12px 20px 12px 16px !important; display: flex !important; align-items: center !important; justify-content: space-between !important; position: relative !important; overflow: hidden !important; }
+  .item-pure-glass-bg { position: absolute !important; inset: 0 !important; z-index: 1 !important; pointer-events: none !important; }
+  .item-left-alignment-box { display: flex !important; align-items: center !important; gap: 10px !important; position: relative !important; z-index: 2 !important; flex: 1 !important; min-width: 0 !important; }
+  .dribbble-icon-pod { width: 32px !important; height: 32px !important; border-radius: 10px !important; display: flex !important; align-items: center !important; justify-content: center !important; flex-shrink: 0 !important; }
+  .dribbble-icon-pod ha-icon { --mdc-icon-size: 16px !important; }
+  .text-meta-box { display: flex !important; flex-direction: column !important; gap: 2px !important; min-width: 0 !important; flex: 1 !important; }
+  .device-name-text { font-size: 13px !important; font-weight: 600 !important; color: var(--primary-text-color, #1d1d1f) !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
+  .device-sub-text { font-size: 10px !important; color: var(--secondary-text-color, #86868b) !important; font-weight: 500 !important; opacity: 0.8; }
+  .item-right-energy-zone { display: flex !important; align-items: center !important; gap: 12px !important; position: relative !important; z-index: 2 !important; margin-right: 6px !important; flex-shrink: 0 !important; }
+  .apple-capsule-rail { width: 42px !important; height: 8px !important; background: repeating-linear-gradient(45deg, var(--divider-color, rgba(0, 0, 0, 0.08)), var(--divider-color, rgba(0, 0, 0, 0.08)) 1.5px, transparent 1.5px, transparent 4px) !important; border-radius: 10px !important; overflow: hidden !important; display: flex !important; }
+  .apple-capsule-fill { height: 100% !important; border-radius: 10px !important; }
+  .apple-static-percent { font-size: 13px !important; font-weight: 700 !important; min-width: 32px !important; text-align: right !important; }
+  .hud-right-edge-track { position: absolute !important; right: 0 !important; top: 0 !important; width: 2.5px !important; height: 100% !important; background: rgba(0, 0, 0, 0.005) !important; z-index: 3 !important; }
+  .hud-fluid-dot { position: absolute !important; left: 0 !important; width: 100% !important; height: 24px !important; animation: hud-gravity-drop 2.2s infinite linear !important; }
+  .apple-adaptive-drawer { display: contents !important; }
+  .apple-adaptive-drawer:not([open]) .drawer-inner-padding-box { position: absolute !important; transform: scale(0) !important; opacity: 0 !important; pointer-events: none !important; }
+  .apple-adaptive-drawer[open] .drawer-inner-padding-box { display: flex !important; flex-direction: column !important; gap: 8px !important; }
+  .drawer-trigger-bar { background: var(--secondary-background-color, rgba(0, 0, 0, 0.015)) !important; border: 1px dashed var(--divider-color, rgba(0, 0, 0, 0.06)) !important; border-radius: 10px !important; padding: 10px !important; text-align: center !important; cursor: pointer !important; list-style: none !important; margin-top: 4px !important; order: 999 !important; }
+  .drawer-trigger-bar::-webkit-details-marker { display: none !important; }
+  .drawer-trigger-bar:hover { background: rgba(0, 0, 0, 0.03) !important; }
+  .trigger-text { font-size: 11px !important; font-weight: 600 !important; color: var(--secondary-text-color, #86868b) !important; letter-spacing: 0.2px; }
+  .drawer-trigger-bar .text-open { display: none !important; }
+  .drawer-trigger-bar .text-close { display: inline !important; }
+  .apple-adaptive-drawer[open] .drawer-trigger-bar .text-open { display: inline !important; }
+  .apple-adaptive-drawer[open] .drawer-trigger-bar .text-close { display: none !important; }
+  .apple-adaptive-drawer[open] .drawer-trigger-bar { border-style: solid !important; background: rgba(0, 0, 0, 0.02) !important; }
+  .apple-adaptive-drawer .apple-list-item { margin-bottom: 0px !important; }
+  @keyframes hud-gravity-drop { 0% { top: -35%; opacity: 0; } 25% { opacity: 0.75; } 75% { opacity: 0.75; } 100% { top: 105%; opacity: 0; } }
+  @keyframes dribbble-micro-dot-glow { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; box-shadow: 0 0 8px rgba(255, 59, 48, 0.8) !important; } }
+  </style>
+  ```
+  
+  </details>
+  
+  ---
+  
+  # 🟠 Warning Battery Card / 中电量提示卡片
+  
+  <details>
+  <summary>点击展开 / Click to expand</summary>
+  
+  ```html
+  {% set ns = namespace(items=[]) %}
+  {% for s in states.sensor %}
+    {% if s.attributes.device_class | default('') == 'battery' %}
+      {% if 'power' not in s.entity_id and 'energy' not in s.entity_id and 'voltage' not in s.entity_id and 'consumption' not in s.entity_id %}
+        {% if s.state not in ['unavailable', 'unknown', 'none', ''] %}
+          {% set pct = s.state | int(-1) %}
+          {% if pct > 20 and pct <= 50 %}
+            {% set name = s.attributes.friendly_name | default(s.entity_id) %}
+            {# 核心文本切除引擎：一并斩断 电池/电量/低电量/充电/干电池 以及英文 Battery Level #}
+            {% set clean_name = name | replace('电池','' ) | replace('电量','') | replace('低电量','') | replace('充电','') | replace('干电池','') | replace('Battery Level','') | replace('battery level','') | trim %}
+            
+            {% set matched_icon = 'mdi:battery' %}
+            {% set ns.items = ns.items + [[pct, clean_name, s.entity_id, matched_icon]] %}
+          {% endif %}
+        {% endif %}
+      {% endif %}
+    {% endif %}
+  {% endfor %}
+  {% set sorted_items = ns.items | sort(attribute=0) %}
+  {% set total_count = sorted_items|count %}
+  
+  <div class="dribbble-luxury-card">
+    <div class="card-widget-header">
+      <span class="header-left-title">BATTERY · 电池状态监控</span>
+      <span class="header-right-status">{{ total_count }} 个设备电量稍低</span>
+    </div>
+  
+    <div class="apple-header-main">
+      <div class="title-with-indicator">
+        <div class="led-embedded-dot"></div>
+        <h2>中电量提示</h2>
+      </div>
+      <div class="apple-badge badge-warning">提示</div>
+    </div>
+  
+    <div class="card-content-matrix">
+      {% if total_count > 0 %}
+        <div class="apple-list-vertical">
+          {% for item in sorted_items[:5] %}
+            {% set current_pct = item[0] %}
+            {% set dynamic_color = '#FF9F0A' %}
+            {% set icon_bg = 'rgba(255, 159, 10, 0.06)' %}
+  
+            <div class="apple-list-item" clickAction="more-info" clickEntity="{{ item[2] }}">
+              <div class="item-pure-glass-bg"></div>
+              <div class="item-left-alignment-box">
+                <div class="dribbble-icon-pod" style="background: {{ icon_bg }} !important; color: {{ dynamic_color }} !important;">
+                  <ha-icon icon="{{ item[3] }}"></ha-icon>
+                </div>
+                <div class="text-meta-box">
+                  <span class="device-name-text">{{ item[1] }}</span>
+                  <span class="device-sub-text">续航稍低，请留意电量</span>
+                </div>
+              </div>
+              <div class="item-right-energy-zone">
+                <div class="apple-capsule-rail">
+                  <div class="apple-capsule-fill" style="width: {{ current_pct }}%; background: {{ dynamic_color }} !important;"></div>
+                </div>
+                <span class="apple-static-percent" style="color: {{ dynamic_color }} !important;">{{ current_pct }}%</span>
+              </div>
+              <div class="hud-right-edge-track">
+                <div class="hud-fluid-dot-up" style="background: linear-gradient(to top, rgba(255,159,10,0), {{ dynamic_color }} 50%, rgba(255,159,10,0)) !important;"></div>
+              </div>
+            </div>
+          {% endfor %}
+  
+          {% if total_count > 5 %}
+            <details class="apple-adaptive-drawer">
+              <summary class="drawer-trigger-bar">
+                <span class="trigger-text text-close">▼ 展开其余 {{ total_count - 5 }} 个中电量终端</span>
+                <span class="trigger-text text-open">▲ 收起其余 {{ total_count - 5 }} 个中电量终端</span>
+              </summary>
+              <div class="drawer-inner-padding-box">
+                {% for item in sorted_items[5:] %}
+                  {% set current_pct = item[0] %}
+                  {% set dynamic_color = '#FF9F0A' %}
+                  {% set icon_bg = 'rgba(255, 159, 10, 0.06)' %}
+  
+                  <div class="apple-list-item" clickAction="more-info" clickEntity="{{ item[2] }}">
+                    <div class="item-pure-glass-bg"></div>
+                    <div class="item-left-alignment-box">
+                      <div class="dribbble-icon-pod" style="background: {{ icon_bg }} !important; color: {{ dynamic_color }} !important;">
+                        <ha-icon icon="{{ item[3] }}"></ha-icon>
+                      </div>
+                      <div class="text-meta-box">
+                        <span class="device-name-text">{{ item[1] }}</span>
+                        <span class="device-sub-text">续航稍低，请留意电量</span>
+                      </div>
+                    </div>
+                    <div class="item-right-energy-zone">
+                      <div class="apple-capsule-rail">
+                        <div class="apple-capsule-fill" style="width: {{ current_pct }}%; background: {{ dynamic_color }} !important;"></div>
+                      </div>
+                      <span class="apple-static-percent" style="color: {{ dynamic_color }} !important;">{{ current_pct }}%</span>
+                    </div>
+                    <div class="hud-right-edge-track">
+                      <div class="hud-fluid-dot-up" style="background: linear-gradient(to top, rgba(255,159,10,0), {{ dynamic_color }} 50%, rgba(255,159,10,0)) !important;"></div>
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+            </details>
+          {% endif %}
+        </div>
+      {% else %}
+        <div class="apple-empty-banner">
+          <svg viewBox="0 0 24 24" class="empty-icon"><path fill="currentColor" d="M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M11,16.5L18,9.5L16.58,8.08L11,13.67L7.92,10.59L6.5,12L11,16.5Z"/></svg>
+          <span>当前无中度消耗设备</span>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+  
+  <style>
+  :host { --ha-card-background: transparent !important; --ha-card-box-shadow: none !important; --ha-card-border-width: 0px !important; --ha-card-border-color: transparent !important; display: block !important; margin-bottom: 14px !important; }
+  .dribbble-luxury-card { background: var(--ha-card-background, var(--card-background-color, rgba(255, 255, 255, 0.45))) !important; border-radius: 10px !important; padding: 16px !important; box-sizing: border-box !important; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif !important; position: relative !important; overflow: hidden !important; border: 1px solid var(--ha-card-border-color, var(--divider-color, rgba(0, 0, 0, 0.04))) !important; box-shadow: var(--ha-card-box-shadow, none) !important; }
+  .card-widget-header { display: flex !important; justify-content: space-between !important; font-size: 10px !important; font-weight: 600 !important; color: var(--secondary-text-color, #86868b) !important; opacity: 0.7 !important; margin-bottom: 12px !important; letter-spacing: 0.3px !important; }
+  .apple-header-main { display: flex !important; justify-content: space-between !important; align-items: center !important; margin-bottom: 14px !important; }
+  .title-with-indicator { display: flex !important; align-items: center !important; gap: 8px !important; }
+  .title-with-indicator h2 { font-size: 15px !important; font-weight: 700 !important; color: var(--primary-text-color, #1d1d1f) !important; margin: 0 !important; letter-spacing: -0.2px !important; }
+  .apple-badge { font-size: 9px !important; font-weight: 700 !important; padding: 2px 8px !important; border-radius: 10px !important; }
+  .badge-warning { background: rgba(255, 159, 10, 0.1) !important; color: #ff9f0a !important; }
+  .led-embedded-dot { width: 5px !important; height: 5px !important; border-radius: 10px !important; background: #ff9f0a !important; box-shadow: 0 0 6px rgba(255, 159, 10, 0.6) !important; animation: dribbble-micro-dot-glow 3.5s infinite ease-in-out !important; }
+  .apple-list-vertical { display: flex !important; flex-direction: column !important; gap: 8px !important; }
+  .apple-list-item { background: var(--secondary-background-color, rgba(0, 0, 0, 0.02)) !important; border: 1px solid var(--divider-color, rgba(0, 0, 0, 0.04)) !important; border-radius: 10px !important; padding: 12px 20px 12px 16px !important; display: flex !important; align-items: center !important; justify-content: space-between !important; position: relative !important; overflow: hidden !important; }
+  .item-pure-glass-bg { position: absolute !important; inset: 0 !important; z-index: 1 !important; pointer-events: none !important; }
+  .item-left-alignment-box { display: flex !important; align-items: center !important; gap: 10px !important; position: relative !important; z-index: 2 !important; flex: 1 !important; min-width: 0 !important; }
+  .dribbble-icon-pod { width: 32px !important; height: 32px !important; border-radius: 10px !important; display: flex !important; align-items: center !important; justify-content: center !important; flex-shrink: 0 !important; }
+  .dribbble-icon-pod ha-icon { --mdc-icon-size: 16px !important; }
+  .text-meta-box { display: flex !important; flex-direction: column !important; gap: 2px !important; min-width: 0 !important; flex: 1 !important; }
+  .device-name-text { font-size: 13px !important; font-weight: 600 !important; color: var(--primary-text-color, #1d1d1f) !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
+  .device-sub-text { font-size: 10px !important; color: var(--secondary-text-color, #86868b) !important; font-weight: 500 !important; opacity: 0.8; }
+  .item-right-energy-zone { display: flex !important; align-items: center !important; gap: 12px !important; position: relative !important; z-index: 2 !important; margin-right: 6px !important; flex-shrink: 0 !important; }
+  .apple-capsule-rail { width: 42px !important; height: 8px !important; background: repeating-linear-gradient(45deg, var(--divider-color, rgba(0, 0, 0, 0.08)), var(--divider-color, rgba(0, 0, 0, 0.08)) 1.5px, transparent 1.5px, transparent 4px) !important; border-radius: 10px !important; overflow: hidden !important; display: flex !important; }
+  .apple-capsule-fill { height: 100% !important; border-radius: 10px !important; }
+  .apple-static-percent { font-size: 13px !important; font-weight: 700 !important; min-width: 32px !important; text-align: right !important; }
+  .hud-right-edge-track { position: absolute !important; right: 0 !important; top: 0 !important; width: 2.5px !important; height: 100% !important; background: rgba(0, 0, 0, 0.005) !important; z-index: 3 !important; }
+  .hud-fluid-dot-up { position: absolute !important; left: 0 !important; width: 100% !important; height: 24px !important; animation: hud-gravity-rise 2.2s infinite linear !important; }
+  .apple-adaptive-drawer { display: contents !important; }
+  .apple-adaptive-drawer:not([open]) .drawer-inner-padding-box { position: absolute !important; transform: scale(0) !important; opacity: 0 !important; pointer-events: none !important; }
+  .apple-adaptive-drawer[open] .drawer-inner-padding-box { display: flex !important; flex-direction: column !important; gap: 8px !important; }
+  .drawer-trigger-bar { background: var(--secondary-background-color, rgba(0, 0, 0, 0.015)) !important; border: 1px dashed var(--divider-color, rgba(0, 0, 0, 0.06)) !important; border-radius: 10px !important; padding: 10px !important; text-align: center !important; cursor: pointer !important; list-style: none !important; margin-top: 4px !important; order: 999 !important; }
+  .drawer-trigger-bar::-webkit-details-marker { display: none !important; }
+  .drawer-trigger-bar:hover { background: rgba(0, 0, 0, 0.03) !important; }
+  .trigger-text { font-size: 11px !important; font-weight: 600 !important; color: var(--secondary-text-color, #86868b) !important; letter-spacing: 0.2px; }
+  .drawer-trigger-bar .text-open { display: none !important; }
+  .drawer-trigger-bar .text-close { display: inline !important; }
+  .apple-adaptive-drawer[open] .drawer-trigger-bar .text-open { display: inline !important; }
+  .apple-adaptive-drawer[open] .drawer-trigger-bar .text-close { display: none !important; }
+  .apple-adaptive-drawer[open] .drawer-trigger-bar { border-style: solid !important; background: rgba(0, 0, 0, 0.02) !important; }
+  .apple-adaptive-drawer .apple-list-item { margin-bottom: 0px !important; }
+  @keyframes hud-gravity-rise { 0% { top: 105%; opacity: 0; } 25% { opacity: 0.75; } 75% { opacity: 0.75; } 100% { top: -35%; opacity: 0; } }
+  @keyframes dribbble-micro-dot-glow { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; box-shadow: 0 0 8px rgba(255, 159, 10, 0.8) !important; } }
+  </style>
+  ```
+  
+  </details>
+  
+  ---
+  
+  # 🟢 Healthy Battery Card / 电量充足卡片
+  
+  <details>
+  <summary>点击展开 / Click to expand</summary>
+  
+  ```html
+  {% set ns = namespace(items=[]) %}
+  {% for s in states.sensor %}
+    {% if s.attributes.device_class | default('') == 'battery' %}
+      {% if 'power' not in s.entity_id and 'energy' not in s.entity_id and 'voltage' not in s.entity_id and 'consumption' not in s.entity_id %}
+        {% if s.state not in ['unavailable', 'unknown', 'none', ''] %}
+          {% set pct = s.state | int(-1) %}
+          {% if pct > 50 and pct <= 100 %}
+            {% set name = s.attributes.friendly_name | default(s.entity_id) %}
+            {# 核心文本切除引擎：一并斩断 电池/电量/低电量/充电/干电池 以及英文 Battery Level #}
+            {% set clean_name = name | replace('电池','' ) | replace('电量','') | replace('低电量','') | replace('充电','') | replace('干电池','') | replace('Battery Level','') | replace('battery level','') | trim %}
+            
+            {% set matched_icon = 'mdi:battery' %}
+            {% set ns.items = ns.items + [[pct, clean_name, s.entity_id, matched_icon]] %}
+          {% endif %}
+        {% endif %}
+      {% endif %}
+    {% endif %}
+  {% endfor %}
+  {% set sorted_items = ns.items | sort(attribute=0, reverse=true) %}
+  {% set total_count = sorted_items|count %}
+  
+  <div class="dribbble-luxury-card">
+    <div class="card-widget-header">
+      <span class="header-left-title">BATTERY · 电池状态监控</span>
+      <span class="header-right-status">{{ total_count }} 个设备状态良好</span>
+    </div>
+  
+    <div class="apple-header-main">
+      <div class="title-with-indicator">
+        <div class="led-embedded-dot"></div>
+        <h2>电量充足</h2>
+      </div>
+      <div class="apple-badge badge-healthy">安全</div>
+    </div>
+  
+    <div class="card-content-matrix">
+      {% if total_count > 0 %}
+        <div class="apple-list-vertical">
+          {% for item in sorted_items[:5] %}
+            {% set current_pct = item[0] %}
+            {% set dynamic_color = '#30D158' %}
+            {% set icon_bg = 'rgba(48, 209, 88, 0.06)' %}
+  
+            <div class="apple-list-item" clickAction="more-info" clickEntity="{{ item[2] }}">
+              <div class="item-pure-glass-bg"></div>
+              <div class="item-left-alignment-box">
+                <div class="dribbble-icon-pod" style="background: {{ icon_bg }} !important; color: {{ dynamic_color }} !important;">
+                  <ha-icon icon="{{ item[3] }}"></ha-icon>
+                </div>
+                <div class="text-meta-box">
+                  <span class="device-name-text">{{ item[1] }}</span>
+                  <span class="device-sub-text">能源充沛，续航无忧</span>
+                </div>
+              </div>
+              <div class="item-right-energy-zone">
+                <div class="apple-capsule-rail">
+                  <div class="apple-capsule-fill" style="width: {{ current_pct }}%; background: {{ dynamic_color }} !important;"></div>
+                </div>
+                <span class="apple-static-percent" style="color: {{ dynamic_color }} !important;">{{ current_pct }}%</span>
+              </div>
+              <div class="hud-right-edge-track">
+                <div class="hud-fluid-dot-pure-static" style="background: linear-gradient(to bottom, rgba(48,209,88,0), {{ dynamic_color }} 50%, rgba(48,209,88,0)) !important;"></div>
+              </div>
+            </div>
+          {% endfor %}
+  
+          {% if total_count > 5 %}
+            <details class="apple-adaptive-drawer">
+              <summary class="drawer-trigger-bar">
+                <span class="trigger-text text-close">▼ 展开其余 {{ total_count - 5 }} 个充足电量终端</span>
+                <span class="trigger-text text-open">▲ 收起其余 {{ total_count - 5 }} 个充足电量终端</span>
+              </summary>
+              <div class="drawer-inner-padding-box">
+                {% for item in sorted_items[5:] %}
+                  {% set current_pct = item[0] %}
+                  {% set dynamic_color = '#30D158' %}
+                  {% set icon_bg = 'rgba(48, 209, 88, 0.06)' %}
+  
+                  <div class="apple-list-item" clickAction="more-info" clickEntity="{{ item[2] }}">
+                    <div class="item-pure-glass-bg"></div>
+                    <div class="item-left-alignment-box">
+                      <div class="dribbble-icon-pod" style="background: {{ icon_bg }} !important; color: {{ dynamic_color }} !important;">
+                        <ha-icon icon="{{ item[3] }}"></ha-icon>
+                      </div>
+                      <div class="text-meta-box">
+                        <span class="device-name-text">{{ item[1] }}</span>
+                        <span class="device-sub-text">能源充沛，续航无忧</span>
+                      </div>
+                    </div>
+                    <div class="item-right-energy-zone">
+                      <div class="apple-capsule-rail">
+                        <div class="apple-capsule-fill" style="width: {{ current_pct }}%; background: {{ dynamic_color }} !important;"></div>
+                      </div>
+                      <span class="apple-static-percent" style="color: {{ dynamic_color }} !important;">{{ current_pct }}%</span>
+                    </div>
+                    <div class="hud-right-edge-track">
+                      <div class="hud-fluid-dot-pure-static" style="background: linear-gradient(to bottom, rgba(48,209,88,0), {{ dynamic_color }} 50%, rgba(48,209,88,0)) !important;"></div>
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+            </details>
+          {% endif %}
+        </div>
+      {% else %}
+        <div class="apple-empty-banner">
+          <svg viewBox="0 0 24 24" class="empty-icon"><path fill="currentColor" d="M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M11,16.5L18,9.5L16.58,8.08L11,13.67L7.92,10.59L6.5,12L11,16.5Z"/></svg>
+          <span>暂无高电量设备</span>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+  
+  <style>
+  :host { --ha-card-background: transparent !important; --ha-card-box-shadow: none !important; --ha-card-border-width: 0px !important; --ha-card-border-color: transparent !important; display: block !important; margin-bottom: 14px !important; }
+  .dribbble-luxury-card { background: var(--ha-card-background, var(--card-background-color, rgba(255, 255, 255, 0.45))) !important; border-radius: 10px !important; padding: 16px !important; box-sizing: border-box !important; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif !important; position: relative !important; overflow: hidden !important; border: 1px solid var(--ha-card-border-color, var(--divider-color, rgba(0, 0, 0, 0.04))) !important; box-shadow: var(--ha-card-box-shadow, none) !important; }
+  .card-widget-header { display: flex !important; justify-content: space-between !important; font-size: 10px !important; font-weight: 600 !important; color: var(--secondary-text-color, #86868b) !important; opacity: 0.7 !important; margin-bottom: 12px !important; letter-spacing: 0.3px !important; }
+  .apple-header-main { display: flex !important; justify-content: space-between !important; align-items: center !important; margin-bottom: 14px !important; }
+  .title-with-indicator { display: flex !important; align-items: center !important; gap: 8px !important; }
+  .title-with-indicator h2 { font-size: 15px !important; font-weight: 700 !important; color: var(--primary-text-color, #1d1d1f) !important; margin: 0 !important; letter-spacing: -.2px !important; }
+  .apple-badge { font-size: 9px !important; font-weight: 700 !important; padding: 2px 8px !important; border-radius: 10px !important; }
+  .badge-healthy { background: rgba(52,199,89,.1) !important; color: #30d158 !important; }
+  .led-embedded-dot { width: 5px !important; height: 5px !important; border-radius: 10px !important; background: #30d158 !important; box-shadow: 0 0 6px rgba(48,209,88,.6) !important; animation: dribbble-micro-dot-glow 3.5s infinite ease-in-out !important; }
+  .apple-list-vertical { display: flex !important; flex-direction: column !important; gap: 8px !important; }
+  .apple-list-item { background: var(--secondary-background-color, rgba(0, 0, 0, 0.02)) !important; border: 1px solid var(--divider-color, rgba(0, 0, 0, 0.04)) !important; border-radius: 10px !important; padding: 12px 20px 12px 16px !important; display: flex !important; align-items: center !important; justify-content: space-between !important; position: relative !important; overflow: hidden !important; }
+  .item-pure-glass-bg { position: absolute !important; inset: 0 !important; z-index: 1 !important; pointer-events: none !important; }
+  .item-left-alignment-box { display: flex !important; align-items: center !important; gap: 10px !important; position: relative !important; z-index: 2 !important; flex: 1 !important; min-width: 0 !important; }
+  .dribbble-icon-pod { width: 32px !important; height: 32px !important; border-radius: 10px !important; display: flex !important; align-items: center !important; justify-content: center !important; flex-shrink: 0 !important; }
+  .dribbble-icon-pod ha-icon { --mdc-icon-size: 16px !important; }
+  .text-meta-box { display: flex !important; flex-direction: column !important; gap: 2px !important; min-width: 0 !important; flex: 1 !important; }
+  .device-name-text { font-size: 13px !important; font-weight: 600 !important; color: var(--primary-text-color, #1d1d1f) !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
+  .device-sub-text { font-size: 10px !important; color: var(--secondary-text-color, #86868b) !important; font-weight: 500 !important; opacity: .8; }
+  .item-right-energy-zone { display: flex !important; align-items: center !important; gap: 12px !important; position: relative !important; z-index: 2 !important; margin-right: 6px !important; flex-shrink: 0 !important; }
+  .apple-capsule-rail { width: 42px !important; height: 8px !important; background: repeating-linear-gradient(45deg, var(--divider-color, rgba(0, 0, 0, 0.08)), var(--divider-color, rgba(0, 0, 0, 0.08)) 1.5px, transparent 1.5px, transparent 4px) !important; border-radius: 10px !important; overflow: hidden !important; display: flex !important; }
+  .apple-capsule-fill { height: 100% !important; border-radius: 10px !important; }
+  .apple-static-percent { font-size: 13px !important; font-weight: 700 !important; min-width: 32px !important; text-align: right !important; }
+  .hud-right-edge-track { position: absolute !important; right: 0 !important; top: 0 !important; width: 2.5px !important; height: 100% !important; background: rgba(0, 0, 0, 0.005) !important; z-index: 3 !important; }
+  .hud-fluid-dot-pure-static { position: absolute !important; left: 0 !important; width: 100% !important; height: 36px !important; top: calc(50% - 18px) !important; animation: hud-traditional-pure-breath 4.5s infinite ease-in-out !important; animation-delay: -2.25s !important; will-change: opacity, filter !important; transform: translateZ(0) !important; backface-visibility: hidden !important; pointer-events: none !important; }
+  .apple-adaptive-drawer { display: contents !important; }
+  .apple-adaptive-drawer:not([open]) .drawer-inner-padding-box { position: absolute !important; transform: scale(0) !important; opacity: 0 !important; pointer-events: none !important; }
+  .apple-adaptive-drawer[open] .drawer-inner-padding-box { display: flex !important; flex-direction: column !important; gap: 8px !important; }
+  .drawer-trigger-bar { background: var(--secondary-background-color, rgba(0, 0, 0, 0.015)) !important; border: 1px dashed var(--divider-color, rgba(0, 0, 0, 0.06)) !important; border-radius: 10px !important; padding: 10px !important; text-align: center !important; cursor: pointer !important; list-style: none !important; margin-top: 4px !important; order: 999 !important; }
+  .drawer-trigger-bar::-webkit-details-marker { display: none !important; }
+  .drawer-trigger-bar:hover { background: rgba(0, 0, 0, 0.03) !important; }
+  .trigger-text { font-size: 11px !important; font-weight: 600 !important; color: var(--secondary-text-color, #86868b) !important; letter-spacing: .2px; }
+  .drawer-trigger-bar .text-open { display: none !important; }
+  .drawer-trigger-bar .text-close { display: inline !important; }
+  .apple-adaptive-drawer[open] .drawer-trigger-bar .text-open { display: inline !important; }
+  .apple-adaptive-drawer[open] .drawer-trigger-bar .text-close { display: none !important; }
+  .apple-adaptive-drawer[open] .drawer-trigger-bar { border-style: solid !important; background: rgba(0, 0, 0, 0.02) !important; }
+  @keyframes hud-traditional-pure-breath { 0%,100% { opacity: .12; filter: blur(0px); transform: scaleY(.92); } 50% { opacity: .92; filter: blur(.45px); transform: scaleY(1.08); } }
+  @keyframes dribbble-micro-dot-glow { 0%,100% { opacity: .5; } 50% { opacity: 1; box-shadow: 0 0 8px rgba(48, 209, 88, .8) !important; } }
+  </style>
+  ```
+  
+  </details>
