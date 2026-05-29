@@ -207,6 +207,8 @@ For **3D Immersive Dark**, key techniques:
 - `position: fixed` (breaks in HA card containers)
 - Inline styles — all CSS must be in `<style>` blocks
 - Emoji characters anywhere (use `<ha-icon>` or inline SVG instead)
+- **FORBIDDEN: `claw.navigate()` on card click** — NEVER use card clicks to navigate to other pages/integrations. Use floating overlays (`overlay` global) instead for detailed views
+- **FORBIDDEN: Direct page navigation from cards** — Cards should display info and control entities, NOT redirect users away
 
 
 ## 2. Color Rules — MANDATORY
