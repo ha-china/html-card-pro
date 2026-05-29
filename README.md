@@ -560,6 +560,58 @@ Full-power interface available inside `<script>`:
     hass.config          // HA configuration
     hass.themes          // Available themes
     hass.language        // Current language
+    hass.connection      // WebSocket connection object
+    hass.callService()   // Direct service call
+    hass.callApi()       // Direct API call
+
+#### Alternative Methods (Supplement to claw)
+
+Besides claw API, you can also use these native approaches:
+
+**Direct hass object access:**
+
+    <script>
+      // hass is available as a global in card context
+      const state = hass.states["light.bedroom"];
+      hass.callService("light", "toggle", { entity_id: "light.bedroom" });
+    </script>
+
+**WebSocket via hass.connection:**
+
+    <script>
+      // Direct WebSocket message
+      const result = await hass.connection.sendMessagePromise({
+        type: "config/entity_registry/list"
+      });
+      
+      // Subscribe to events
+      hass.connection.subscribeEvents((event) => {
+        console.log("Event:", event);
+      }, "state_changed");
+    </script>
+
+**DOM Event Listeners:**
+
+    <script>
+      // Listen for hass updates
+      window.addEventListener("hass-updated", (e) => {
+        console.log("Hass updated:", e.detail);
+      });
+      
+      // Listen for state changes via custom event
+      document.addEventListener("state-changed", (e) => {
+        console.log("State changed:", e.detail.entityId);
+      });
+      
+      // Fire custom events
+      claw.fire("hass-more-info", { entityId: "light.bedroom" });
+    </script>
+
+**Choose the right approach:**
+- **claw API** - Recommended for most cases, clean and consistent
+- **hass object** - When you need direct access to HA internals
+- **hass.connection** - For advanced WebSocket operations not covered by claw.ws
+- **Event listeners** - For reactive patterns and cross-component communication
 
 #### DOM Utilities
 
