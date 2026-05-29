@@ -37,19 +37,6 @@ type: module
 
 5. Restart Home Assistant and clear your browser cache
 
-### Verify Installation
-
-After installation, create a test card:
-
-```yaml
-type: custom:html-pro-card
-content: |
-  <div style="padding:20px;text-align:center;">
-    <ha-icon icon="mdi:check-circle" style="color:var(--success-color);--mdc-icon-size:48px;"></ha-icon>
-    <p style="margin-top:12px;color:var(--primary-text-color);">HTML Pro Card is working!</p>
-  </div>
-```
-
 ---
 
 ## AI Prompt Engineering
