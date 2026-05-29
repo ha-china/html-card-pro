@@ -2,9 +2,7 @@
 # Apple TV Remote
 # Author: knoop7
 # Version: 1.0
-# Description: This module provides an Apple TV Remote for HTML Pro Card. With exquisite UI design and GSAP physics animations, it delivers the ultimate remote control experience.
 # Tags: Appliance
-# Image: https://cdn.jsdelivr.net/gh/ha-china/html-card-pro@main/images/7.png
 # Link: https://github.com/ha-china/html-card-pro/discussions/7
 # ID: 7
 
@@ -196,12 +194,12 @@ content: |-
   }
   initRemote();
   </script>
-```
+# ```
 
-</details>
+# </details>
 
----
+# ---
 
 ### Screenshot
 
-<img width="970" height="1266" alt="Mac_2026-05-26 01 14 01" src="https://github.com/user-attachments/assets/a442e9ee-0076-48bc-8a15-1a9c86c54900" />
+# <img width="970" height="1266" alt="Mac_2026-05-26 01 14 01" src="https://github.com/user-attachments/assets/a442e9ee-0076-48bc-8a15-1a9c86c54900" />

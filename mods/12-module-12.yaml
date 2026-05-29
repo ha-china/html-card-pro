@@ -2,30 +2,28 @@
 # 空调卡片
 # Author: klhd2023
 # Version: 1.0
-# Description: 
 # Tags: 
-# Image: https://cdn.jsdelivr.net/gh/ha-china/html-card-pro@main/images/12.png
 # Link: https://github.com/ha-china/html-card-pro/discussions/12
 # ID: 12
 
-climate.study_room_ac: 空调主体
-switch.study_room_ac_sleep_mode: 睡眠模式开关
-switch.study_room_ac_anti_direct_wind: 防直吹 / 风向相关开关
-switch.study_room_ac_eco_mode: ECO 节能模式开关
-sensor.study_room_temperature: 室内温度传感器
-sensor.study_room_humidity: 室内湿度传感器
-```
+# climate.study_room_ac: 空调主体
+# switch.study_room_ac_sleep_mode: 睡眠模式开关
+# switch.study_room_ac_anti_direct_wind: 防直吹 / 风向相关开关
+# switch.study_room_ac_eco_mode: ECO 节能模式开关
+# sensor.study_room_temperature: 室内温度传感器
+# sensor.study_room_humidity: 室内湿度传感器
+# ```
 
-如果你没有某些功能实体，例如睡眠模式、ECO 或防直吹，可以删除对应实体和底部按钮相关代码，或者改成你自己设备支持的开关。
+# 如果你没有某些功能实体，例如睡眠模式、ECO 或防直吹，可以删除对应实体和底部按钮相关代码，或者改成你自己设备支持的开关。
 
----
+# ---
 
 ## 代码分享
 
-<details>
-<summary>展开查看：完整代码</summary>
+# <details>
+# <summary>展开查看：完整代码</summary>
 
-```yaml
+# ```yaml
 type: custom:html-pro-card
 do_not_parse: true
 ignore_line_breaks: true
@@ -1430,6 +1428,6 @@ content: >
       renderMini();
     })();
   </script>
-```
+# ```
 
-</details>
+# </details>

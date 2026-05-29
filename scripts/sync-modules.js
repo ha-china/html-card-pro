@@ -3,25 +3,6 @@ const path = require("path");
 const http = require("http");
 const https = require("https");
 
-const ALLOWED_DOMAINS = [
-  "cdn.jsdelivr.net",
-  "cdnjs.cloudflare.com",
-  "unpkg.com",
-  "fonts.googleapis.com",
-  "fonts.gstatic.com",
-  "raw.githubusercontent.com",
-  "github.com",
-  "githubusercontent.com",
-  "user-images.githubusercontent.com",
-  "private-user-images.githubusercontent.com",
-  "objects.githubusercontent.com",
-  "repository-images.githubusercontent.com",
-  "opengraph.githubassets.com",
-  "via.placeholder.com",
-  "i.postimg.cc",
-  "postimg.cc",
-];
-
 const GENERATED_HEADER = "# Generated from GitHub Discussions by sync-modules.";
 
 const GRAPHQL_QUERY = `
@@ -58,18 +39,6 @@ const GRAPHQL_QUERY = `
 const ensureDir = (dir) => {
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
-  }
-};
-
-const isUrlSafe = (url) => {
-  if (!url) return true;
-  try {
-    const hostname = new URL(url).hostname.toLowerCase();
-    return ALLOWED_DOMAINS.some(
-      (domain) => hostname === domain || hostname.endsWith(`.${domain}`),
-    );
-  } catch {
-    return false;
   }
 };
 
@@ -187,6 +156,51 @@ const combineBlocks = (blocks) =>
     .filter((content, index, all) => all.indexOf(content) === index)
     .join("\n\n");
 
+const VALID_TOP_KEYS = new Set([
+  "type",
+  "do_not_parse",
+  "ignore_line_breaks",
+  "update_interval",
+  "entities",
+  "content",
+  "scripts",
+]);
+
+const sanitizeYamlBody = (yaml) => {
+  const lines = (yaml || "").split("\n");
+  const out = [];
+  let inBody = false;
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+
+    if (!inBody) {
+      if (trimmed.startsWith("type:")) {
+        inBody = true;
+        out.push(line);
+      } else if (trimmed && !line.startsWith("#")) {
+        out.push(`# ${line}`);
+      } else {
+        out.push(line);
+      }
+      continue;
+    }
+
+    const topLevel = line.length > 0 && !/^\s/.test(line);
+    if (topLevel) {
+      const key = trimmed.split(":", 1)[0].trim();
+      if (!VALID_TOP_KEYS.has(key)) {
+        inBody = false;
+        out.push(trimmed && !line.startsWith("#") ? `# ${line}` : line);
+        continue;
+      }
+    }
+    out.push(line);
+  }
+
+  return out.join("\n");
+};
+
 const extractRawHtmlRegion = (body) => {
   const normalized = (body || "").replace(/\r\n/g, "\n");
   const starts = [
@@ -210,7 +224,9 @@ const extractRawHtmlRegion = (body) => {
   return looksLikeHtml(region) ? region : "";
 };
 
-const extractYamlContent = (body) => {
+const extractYamlContent = (body) => sanitizeYamlBody(extractYamlContentRaw(body));
+
+const extractYamlContentRaw = (body) => {
   const normalizedBody = body || "";
   const fencedBlocks = extractCodeBlocks(normalizedBody);
   const blocks = [...fencedBlocks, ...extractIndentedCodeBlocks(normalizedBody)];
@@ -457,12 +473,6 @@ const discussionToModule = async (source, options = {}) => {
     options.log?.(`Warning ${source.id}: content matched safety patterns`);
   }
 
-  const urls = extractUrls(yamlContent);
-  const unsafeUrls = urls.filter((url) => !isUrlSafe(url));
-  if (unsafeUrls.length > 0) {
-    options.log?.(`Warning ${source.id}: external URLs: ${unsafeUrls.join(", ")}`);
-  }
-
   const { name, tags } = parseTitle(source.title);
   const author =
     extractField(source.body, ["Author", "作者"]) || source.author?.login || "";
@@ -478,29 +488,25 @@ const discussionToModule = async (source, options = {}) => {
   const imgUrl = extractImageUrl(source.body);
   let image = "";
   if (imgUrl) {
-    if (!isUrlSafe(imgUrl)) {
-      options.log?.(`  Ignored unsafe image URL for #${source.number}: ${imgUrl}`);
-    } else {
-      const ext = extensionFromUrl(imgUrl);
-      const imgFilename =
-        source.kind === "comment"
-          ? `images/${source.number}-comment-${source.commentIndex}.${ext}`
-          : `images/${source.number}.${ext}`;
-      if (options.downloadImages !== false) {
-        ensureDir("images");
-        try {
-          await downloadImage(imgUrl, imgFilename);
-          image = `https://cdn.jsdelivr.net/gh/ha-china/html-card-pro@main/${imgFilename}`;
-          options.log?.(`  Downloaded image: ${imgFilename}`);
-        } catch (error) {
-          image = imgUrl;
-          options.log?.(
-            `  Failed to download image for #${source.number}: ${error.message}`,
-          );
-        }
-      } else {
+    const ext = extensionFromUrl(imgUrl);
+    const imgFilename =
+      source.kind === "comment"
+        ? `images/${source.number}-comment-${source.commentIndex}.${ext}`
+        : `images/${source.number}.${ext}`;
+    if (options.downloadImages !== false) {
+      ensureDir("images");
+      try {
+        await downloadImage(imgUrl, imgFilename);
+        image = `https://cdn.jsdelivr.net/gh/ha-china/html-card-pro@main/${imgFilename}`;
+        options.log?.(`  Downloaded image: ${imgFilename}`);
+      } catch (error) {
         image = imgUrl;
+        options.log?.(
+          `  Failed to download image for #${source.number}: ${error.message}`,
+        );
       }
+    } else {
+      image = imgUrl;
     }
   }
 
@@ -625,26 +631,6 @@ const writeModules = async (discussions, options = {}) => {
     numeric: true,
   }));
   fs.writeFileSync("store.json", `${JSON.stringify(modules, null, 2)}\n`);
-  fs.writeFileSync(
-    "sync-report.json",
-    `${JSON.stringify(
-      {
-        generated: modules.map((module) => ({
-          id: module.id,
-          name: module.name,
-          file: module.file,
-        })),
-        skipped: skipped.map((result) => ({
-          id: result.discussion.id,
-          title: result.discussion.title,
-          reason: result.reason,
-          url: result.discussion.url,
-        })),
-      },
-      null,
-      2,
-    )}\n`,
-  );
   options.log?.(`Generated ${modules.length} modules (${skipped.length} skipped)`);
 
   return { modules, skipped };
@@ -656,14 +642,12 @@ const syncDiscussions = async ({ github, context, log = console.log }) => {
 };
 
 module.exports = {
-  ALLOWED_DOMAINS,
   extractCodeBlocks,
   extractYamlContent,
   discussionSources,
   discussionToModule,
   fetchDiscussions,
   hasUnsafeContent,
-  isUrlSafe,
   syncDiscussions,
   writeModules,
 };
