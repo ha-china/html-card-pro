@@ -222,7 +222,8 @@ For **3D Immersive Dark**, key techniques:
 | MUST prefer `data-*` attributes over JavaScript | Use declarative data binding when possible, JS only for complex logic |
 
 **claw API Categories (most do NOT require entity IDs):**
-- **State access:** `claw.hass()`, `claw.state()`, `claw.states()`
+- **State access:** `claw.hass()`, `claw.state(entityId)`, `claw.states.get()`, `claw.states.subscribe()`
+- **Services:** `claw.services.get()`, `claw.services.call()`
 - **Actions:** `claw.toggle()`, `claw.press()`, `claw.callService()`, `claw.moreInfo()`
 - **WebSocket:** `claw.ws.send()`, `claw.ws.call()`, `claw.ws.subscribe()`
 - **HTTP:** `claw.api.get()`, `claw.api.post()`, `claw.api.put()`, `claw.api.delete()`
@@ -490,27 +491,34 @@ Full-power interface available inside `<script>`:
 
     <script>
       // Get ALL entities — no entity ID needed
-      const hass = claw.hass();
-      const allStates = hass.states; // Full state object
+      const allStates = claw.states.get(); // Returns all states object
       
-      // Filter entities dynamically
-      const lights = claw.states("light."); // All lights
-      const sensors = claw.states("sensor."); // All sensors
-      const climates = claw.states("climate."); // All climate devices
+      // Get single entity state
+      const light = claw.state("light.bedroom"); // Or claw.states.get("light.bedroom")
+      
+      // Filter entities dynamically by domain
+      const lights = Object.entries(claw.states.get())
+        .filter(([id]) => id.startsWith("light."));
+      const sensors = Object.entries(claw.states.get())
+        .filter(([id]) => id.startsWith("sensor."));
       
       // Find specific entity by attribute
-      const bedroomLight = Object.values(hass.states)
+      const bedroomLight = Object.values(claw.states.get())
         .find(e => e.attributes.friendly_name === "Bedroom Light");
       
-      // React to state changes with hooks
+      // Subscribe to state changes (recommended over polling)
+      claw.states.subscribe((states) => {
+        console.log("States updated:", states);
+      });
+      
+      // Or use hook for more control
       claw.hook.hass((newHass, oldHass) => {
-        // Automatically triggered on ANY state change
-        console.log("States updated:", newHass.states);
+        console.log("Hass updated:", newHass.states);
       });
     </script>
 
-**When user provides specific entity IDs:** Respect and use them directly.
-**When user does NOT provide entity IDs:** Use `claw.hass()`, `claw.states()`, and `claw.hook.hass()` to discover entities dynamically.
+**When user provides specific entity IDs:** Respect and use them directly with `claw.state(entityId)`.
+**When user does NOT provide entity IDs:** Use `claw.states.get()` to discover all entities dynamically.
 
 #### Core Methods
 
@@ -518,14 +526,30 @@ Full-power interface available inside `<script>`:
 |---|---|
 | `claw.hass()` | Get full hass object (states, services, user, config, etc.) |
 | `claw.state(entityId)` | Get single entity state object |
-| `claw.states(filter?)` | Get filtered states (prefix string, regex, or function) |
 | `claw.callService(domain, service, data)` | Call any HA service |
-| `claw.toggle(entityId)` | Smart toggle (on→off, off→on) |
-| `claw.press(entityId)` | Smart press (button→press, scene→turn_on, script→run) |
-| `claw.navigate(path)` | Navigate to any HA path |
+| `claw.toggle(entityId)` | Smart toggle (on/off, off/on) |
+| `claw.press(entityId)` | Smart press (button/press, scene/turn_on, script/run) |
+| `claw.navigate(path)` | Navigate to any HA path (use sparingly, see MUST rules) |
 | `claw.moreInfo(entityId)` | Open more-info dialog |
 | `claw.fire(eventType, data)` | Fire HA event |
 | `claw.wait(ms)` | Promise-based delay |
+
+#### States API (claw.states)
+
+| Method | Description |
+|---|---|
+| `claw.states.get()` | Get all entity states object |
+| `claw.states.get(entityId)` | Get single entity state |
+| `claw.states.set(entityId, state, attrs)` | Set entity state (advanced) |
+| `claw.states.subscribe(callback)` | Subscribe to state changes |
+
+#### Services API (claw.services)
+
+| Method | Description |
+|---|---|
+| `claw.services.get()` | Get all available services |
+| `claw.services.get(domain)` | Get services for specific domain |
+| `claw.services.call(domain, service, data, target)` | Call a service |
 
 **Global hass object structure:**
 
