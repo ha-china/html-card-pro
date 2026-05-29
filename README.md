@@ -264,9 +264,11 @@ For **3D Immersive Dark**, key techniques:
 ### Layout Constants
 
 - `border-radius: 10px` — forced, no exceptions
-- `padding: 16px`
+- `padding: 16px` — default inner padding for HA native style cards
 - `gap: 8px / 16px`
 - `font: inherit` only
+
+**Default padding rule:** When generating cards in HA native style, MUST use `padding: 16px` for consistent spacing with other HA cards.
 
 ## 3. Card Configuration
 
