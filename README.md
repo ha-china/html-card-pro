@@ -13,23 +13,41 @@
 
 ## Installation
 
-### HACS Installation (Recommended)
+### HACS (Recommended)
 
-1. Open HACS → Frontend
-2. Click ⋮ in the top right → Custom repositories
-3. Add `https://github.com/knoop7/html-card-pro`
-4. Search for `HTML Pro Card` and install
-5. Refresh your browser cache
+<a href="https://my.home-assistant.io/redirect/hacs_repository/?owner=ha-china&repository=html-card-pro&category=plugin"><img src="https://my.home-assistant.io/badges/hacs_repository.svg" alt="Open in HACS" /></a>
+
+Click the button above to install directly via HACS, then clear your browser cache.
+
+> **Tip:** HACS will automatically manage updates and notify you when new versions are available.
 
 ### Manual Installation
 
-1. Download `html-card-pro.js`
-2. Copy to `config/www/` directory
-3. Configuration → Dashboard → Resources → Add:
+For advanced users:
+
+1. Download the latest `html-card-pro.js` from [Releases](https://github.com/ha-china/html-card-pro/releases)
+2. Copy to your Home Assistant `config/www/` directory
+3. Navigate to **Settings → Dashboards → Resources** (enable Advanced Mode if hidden)
+4. Click **Add Resource** and enter:
 
 ```yaml
 url: /local/html-card-pro.js
 type: module
+```
+
+5. Restart Home Assistant and clear your browser cache
+
+### Verify Installation
+
+After installation, create a test card:
+
+```yaml
+type: custom:html-pro-card
+content: |
+  <div style="padding:20px;text-align:center;">
+    <ha-icon icon="mdi:check-circle" style="color:var(--success-color);--mdc-icon-size:48px;"></ha-icon>
+    <p style="margin-top:12px;color:var(--primary-text-color);">HTML Pro Card is working!</p>
+  </div>
 ```
 
 ---
@@ -65,61 +83,128 @@ If the user explicitly requests a different visual style, politely confirm their
 | **Pixel Art / Retro** | 8-bit aesthetic, pixelated icons, CRT scanlines, neon accents |
 | **Cinematic Liquid Glass** | Full-bleed video backgrounds, backdrop-filter blur(4px), character-level animations, dark theme (#000) with white text, liquid-glass borders with gradient pseudo-elements |
 | **Soft Glassmorphism** | Light background (#f0f0f0), soft white/30 panels with backdrop-blur-xl, organic rounded corners (2rem+), SVG curved cutouts, muted blue-gray text rgba(30,50,90,0.9), video backgrounds without overlay |
+| **Editorial Minimalism** | Pure white background, generous whitespace, video cards with hover zoom/overlay, L-shaped corner brackets, Outfit/Inter font pairing, colored category pills, subtle #f0f0f0 borders |
 | **Neumorphism** | Soft extruded shapes, subtle inner/outer shadows on same-color backgrounds |
 | **Brutalist** | Raw, unpolished, high contrast, monospace fonts, exposed structure |
 | **Glassmorphism** | Frosted glass panels, transparency layers, vibrant gradients behind |
+| **Dashboard Pro** | Data-dense layouts, metric cards, sparkline charts, status indicators, dark/light theme toggle support |
+| **3D Immersive Dark** | Spline/Three.js 3D backgrounds, deep black theme (#141414), neon accent colors, bottom-anchored content, blur+fade animations, pointer-events passthrough for 3D interaction |
 
 **Style Implementation Notes:**
 
 For **Cinematic Liquid Glass**, use this CSS pattern:
-```css
-.liquid-glass {
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(4px);
-  box-shadow: inset 0 1px 1px rgba(255,255,255,0.1);
-  position: relative;
-}
-.liquid-glass::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  padding: 1.4px;
-  background: linear-gradient(180deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 50%, rgba(255,255,255,0.3) 100%);
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  pointer-events: none;
-}
-```
+
+    .liquid-glass {
+      background: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(4px);
+      box-shadow: inset 0 1px 1px rgba(255,255,255,0.1);
+      position: relative;
+    }
+    .liquid-glass::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      padding: 1.4px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 50%, rgba(255,255,255,0.3) 100%);
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+    }
 
 For **Soft Glassmorphism**, use this CSS pattern:
-```css
-.soft-glass {
-  background: rgba(255, 255, 255, 0.3);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 1.5rem;
-}
-/* SVG curved cutout for organic corners */
-.corner-mask svg path { fill: #f0f0f0; }
-```
+
+    .soft-glass {
+      background: rgba(255, 255, 255, 0.3);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 1.5rem;
+    }
+    /* SVG curved cutout for organic corners */
+    .corner-mask svg path { fill: #f0f0f0; }
 
 For **Pixel Art / Retro**, key techniques:
-```css
-.pixel-art {
-  image-rendering: pixelated;
-  font-family: 'Press Start 2P', monospace; /* Google Font */
-  text-shadow: 2px 2px 0 #000;
-  border: 4px solid;
-  border-image: url('data:image/png;base64,...') 4 repeat; /* 8-bit border */
-}
-.crt-overlay {
-  background: repeating-linear-gradient(0deg, rgba(0,0,0,0.1) 0px, transparent 1px, transparent 2px);
-  pointer-events: none;
-}
-```
+
+    .pixel-art {
+      image-rendering: pixelated;
+      font-family: 'Press Start 2P', monospace; /* Google Font */
+      text-shadow: 2px 2px 0 #000;
+      border: 4px solid;
+      border-image: url('data:image/png;base64,...') 4 repeat; /* 8-bit border */
+    }
+    .crt-overlay {
+      background: repeating-linear-gradient(0deg, rgba(0,0,0,0.1) 0px, transparent 1px, transparent 2px);
+      pointer-events: none;
+    }
+
+For **Editorial Minimalism**, key techniques:
+
+    /* Video card with hover effects */
+    .video-card {
+      position: relative;
+      border-radius: 20px;
+      overflow: hidden;
+      border: 1px solid #f0f0f0;
+    }
+    .video-card video {
+      transition: transform 0.5s cubic-bezier(0.33, 1, 0.68, 1);
+    }
+    .video-card:hover video { transform: scale(1.08); }
+    .video-card:hover .overlay { opacity: 1; }
+    .overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.25);
+      opacity: 0;
+      transition: opacity 0.4s;
+    }
+    /* L-shaped corner brackets */
+    .corner { position: absolute; width: 12px; height: 12px; border: 1.5px solid white; }
+    .corner.tl { top: 15px; left: 15px; border-right: 0; border-bottom: 0; }
+    .corner.tr { top: 15px; right: 15px; border-left: 0; border-bottom: 0; }
+    .corner.bl { bottom: 15px; left: 15px; border-right: 0; border-top: 0; }
+    .corner.br { bottom: 15px; right: 15px; border-left: 0; border-top: 0; }
+    /* Category pill */
+    .category-pill {
+      border-radius: 20px;
+      padding: 4px 12px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      color: white;
+    }
+
+For **3D Immersive Dark**, key techniques:
+
+    /* Deep dark theme */
+    :root {
+      --hero-bg: hsl(0 0% 8%);
+      --accent: hsl(119 99% 46%); /* vivid green */
+    }
+    /* Blur + fade animation */
+    @keyframes fade-up {
+      0% { opacity: 0; transform: translateY(20px); filter: blur(4px); }
+      100% { opacity: 1; transform: translateY(0); filter: blur(0); }
+    }
+    .animate-fade-up {
+      animation: fade-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    /* Bottom-anchored content with 3D passthrough */
+    .hero-content {
+      position: relative;
+      z-index: 10;
+      pointer-events: none; /* pass clicks to 3D */
+    }
+    .hero-content button { pointer-events: auto; } /* re-enable buttons */
+    /* Dark overlay for contrast */
+    .scene-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.3);
+      pointer-events: none;
+    }
 
 **When user requests alternative style:**
 1. Confirm: "You've requested [style] — this will override HA theme variables. Proceed?"
@@ -354,23 +439,22 @@ Use `document.body.appendChild()` for overlay popups — bypasses card container
 - Smooth entry: `animation: slideUp 0.3s ease;`
 
 **Pattern:**
-```js
-const wrapper = document.createElement('div');
-wrapper.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;pointer-events:auto;';
-wrapper.innerHTML = `
-  <div class="backdrop" style="position:absolute;inset:0;backdrop-filter:blur(12px);background:rgba(0,0,0,0.4);"></div>
-  <div class="panel" style="position:relative;width:90%;max-width:400px;padding:24px;background:var(--card-background-color);border:1px solid var(--divider-color);border-radius:16px;box-shadow:0 20px 40px rgba(0,0,0,0.3);">
-    <!-- content -->
-    <button id="closeBtn">Close</button>
-  </div>
-  <style>
-    @keyframes slideUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
-  </style>
-`;
-document.body.appendChild(wrapper);
-wrapper.querySelector('.backdrop').onclick = () => wrapper.remove();
-wrapper.querySelector('#closeBtn').onclick = () => wrapper.remove();
 
+    const wrapper = document.createElement('div');
+    wrapper.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;pointer-events:auto;';
+    wrapper.innerHTML = `
+      <div class="backdrop" style="position:absolute;inset:0;backdrop-filter:blur(12px);background:rgba(0,0,0,0.4);"></div>
+      <div class="panel" style="position:relative;width:90%;max-width:400px;padding:24px;background:var(--card-background-color);border:1px solid var(--divider-color);border-radius:16px;box-shadow:0 20px 40px rgba(0,0,0,0.3);">
+        <!-- content -->
+        <button id="closeBtn">Close</button>
+      </div>
+      <style>
+        @keyframes slideUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+      </style>
+    `;
+    document.body.appendChild(wrapper);
+    wrapper.querySelector('.backdrop').onclick = () => wrapper.remove();
+    wrapper.querySelector('#closeBtn').onclick = () => wrapper.remove();
 
 **Rules:**
 - Close: `wrapper.remove()` — only removes your overlay
@@ -436,13 +520,12 @@ Full-power interface available inside `<script>`:
 | `claw.ts.module(code, scope?)` | Transpile as ES module and dynamic import |
 
 **TypeScript in HTML:**
-```html
-<script type="text/typescript">
-  interface Light { state: string; brightness: number; }
-  const light: Light = claw.state("light.bedroom");
-  if (light.state === "on") claw.toggle("light.bedroom");
-</script>
-```
+
+    <script type="text/typescript">
+      interface Light { state: string; brightness: number; }
+      const light: Light = claw.state("light.bedroom");
+      if (light.state === "on") claw.toggle("light.bedroom");
+    </script>
 
 #### Config Entries (claw.config)
 
