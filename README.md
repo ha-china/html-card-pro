@@ -496,22 +496,65 @@ Full-power interface available inside `<script>`:
 | `claw.api.delete(path)` | DELETE request with auth |
 | `claw.api.fetch(path, init)` | Raw fetch with auth headers |
 
-#### TypeScript Runtime (claw.ts) — NEW v3.7
+#### JavaScript vs TypeScript
+
+**Default: JavaScript** — All `<script>` tags run as JavaScript by default.
+
+    <script>
+      // JavaScript (default) — runs immediately
+      const light = claw.state("light.bedroom");
+      if (light.state === "on") claw.toggle("light.bedroom");
+    </script>
+
+**Optional: TypeScript** — Add `type="text/typescript"` for type safety. Requires runtime transpilation.
+
+    <script type="text/typescript">
+      // TypeScript — transpiled at runtime via claw.ts
+      interface Light { state: string; brightness: number; }
+      const light: Light = claw.state("light.bedroom");
+      if (light.state === "on") claw.toggle("light.bedroom");
+    </script>
+
+| Feature | JavaScript (default) | TypeScript |
+|---|---|---|
+| Script tag | `<script>` | `<script type="text/typescript">` |
+| Execution | Immediate | Transpiled first |
+| Type checking | No | Yes (interfaces, types) |
+| Performance | Faster (no compile) | Slight delay on first run |
+| Use case | Simple scripts | Complex logic, type safety |
+
+**When to use TypeScript:**
+- Complex data structures with interfaces
+- Large scripts where type safety prevents bugs
+- Reusable modules with explicit contracts
+
+**When to use JavaScript:**
+- Simple toggles and service calls
+- Performance-critical real-time updates
+- Quick prototyping
+
+#### TypeScript Runtime API (claw.ts) — NEW v3.7
+
+For programmatic TypeScript execution (advanced use):
 
 | Method | Description |
 |---|---|
 | `claw.ts.load()` | Load TypeScript compiler (5.6.3) |
-| `claw.ts.transpile(code, options?)` | Transpile TS to JS |
-| `claw.ts.run(code, scope?)` | Transpile and execute with scope |
+| `claw.ts.transpile(code, options?)` | Transpile TS string to JS string |
+| `claw.ts.run(code, scope?)` | Transpile and execute with custom scope |
 | `claw.ts.card(code, ctx?)` | Execute in card context (root, $, $$, hass, config, overlay) |
 | `claw.ts.module(code, scope?)` | Transpile as ES module and dynamic import |
 
-**TypeScript in HTML:**
+**Programmatic example (inside JavaScript):**
 
-    <script type="text/typescript">
-      interface Light { state: string; brightness: number; }
-      const light: Light = claw.state("light.bedroom");
-      if (light.state === "on") claw.toggle("light.bedroom");
+    <script>
+      // Load and run TypeScript dynamically from JavaScript
+      const tsCode = `
+        interface Sensor { state: string; unit: string; }
+        const temp: Sensor = claw.state("sensor.temperature");
+        console.log(temp.state + temp.unit);
+      `;
+      claw.ts.run(tsCode);
     </script>
 
 #### Config Entries (claw.config)
