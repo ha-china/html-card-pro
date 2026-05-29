@@ -8,7 +8,7 @@
     "tags": [
       "Style"
     ],
-    "image": "",
+    "image": "https://cdn.jsdelivr.net/gh/ha-china/html-card-pro@main/images/16.png",
     "link": "https://github.com/ha-china/html-card-pro/discussions/16",
     "file": "mods/16-adaptive-battery-monitoring-system.yaml"
   },
@@ -19,7 +19,7 @@
     "creator": "klhd2023",
     "description": "",
     "tags": [],
-    "image": "",
+    "image": "https://cdn.jsdelivr.net/gh/ha-china/html-card-pro@main/images/12.png",
     "link": "https://github.com/ha-china/html-card-pro/discussions/12",
     "file": "mods/12-module-12.yaml"
   },
@@ -30,7 +30,7 @@
     "creator": "JochenZhou",
     "description": "",
     "tags": [],
-    "image": "",
+    "image": "https://cdn.jsdelivr.net/gh/ha-china/html-card-pro@main/images/11.png",
     "link": "https://github.com/ha-china/html-card-pro/discussions/11",
     "file": "mods/11-minecraft-home-assistant.yaml"
   },
@@ -43,7 +43,7 @@
     "tags": [
       "Style"
     ],
-    "image": "",
+    "image": "https://cdn.jsdelivr.net/gh/ha-china/html-card-pro@main/images/10.png",
     "link": "https://github.com/ha-china/html-card-pro/discussions/10",
     "file": "mods/10-nas-synology-nas-status-panel.yaml"
   },
@@ -56,7 +56,7 @@
     "tags": [
       "Style"
     ],
-    "image": "",
+    "image": "https://cdn.jsdelivr.net/gh/ha-china/html-card-pro@main/images/9.png",
     "link": "https://github.com/ha-china/html-card-pro/discussions/9",
     "file": "mods/9-nest-minimalist-nest-inspired-climate-control-dashboard.yaml"
   },
@@ -65,11 +65,11 @@
     "name": "Digital Clock",
     "version": "1.0",
     "creator": "knoop7",
-    "description": "",
+    "description": "This module provides a Digital Clock for HTML Pro Card. A beautiful gradient clock with monospace font that updates every second.",
     "tags": [
       "Style"
     ],
-    "image": "",
+    "image": "https://via.placeholder.com/400x200/667eea/fff?text=12:34:56",
     "link": "https://github.com/ha-china/html-card-pro/discussions/8",
     "file": "mods/8-digital-clock.yaml"
   },
@@ -78,11 +78,11 @@
     "name": "Apple TV Remote",
     "version": "1.0",
     "creator": "knoop7",
-    "description": "",
+    "description": "This module provides an Apple TV Remote for HTML Pro Card. With exquisite UI design and GSAP physics animations, it delivers the ultimate remote control experience.",
     "tags": [
       "Appliance"
     ],
-    "image": "",
+    "image": "https://cdn.jsdelivr.net/gh/ha-china/html-card-pro@main/images/7.png",
     "link": "https://github.com/ha-china/html-card-pro/discussions/7",
     "file": "mods/7-apple-tv-remote.yaml"
   }
