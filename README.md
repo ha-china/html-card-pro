@@ -215,7 +215,7 @@ For **3D Immersive Dark**, key techniques:
 | MUST NOT use `claw.navigate()` on card click | Cards display info and control entities. Use `overlay` for detailed views instead of redirecting users away |
 | MUST use `overlay` for expanded content | When user needs more details, create a floating overlay panel, not a page redirect |
 | MUST respect user-provided entity IDs | If user specifies entity IDs, use them exactly as given |
-| MUST leverage full claw API | Most claw methods work without entity IDs: `claw.states()`, `claw.areas.*`, `claw.devices.*`, `claw.config.*`, `claw.lovelace.*`, `claw.system.*`, etc. |
+| MUST leverage full claw API | Most claw methods work without entity IDs: `claw.states.get()`, `claw.areas.*`, `claw.devices.*`, `claw.config.*`, `claw.lovelace.*`, `claw.system.*`, etc. |
 | MUST use `claw.hook.hass()` for live updates | Subscribe to state changes instead of polling with setInterval |
 | MUST NOT call `claw.system.restart()` without confirmation | Destructive operations require explicit user confirmation |
 | MUST NOT call `claw.config.delete()` without confirmation | Deleting config entries is irreversible |
