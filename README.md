@@ -498,15 +498,17 @@ Full-power interface available inside `<script>`:
 
 #### JavaScript vs TypeScript
 
-**Default: JavaScript** — All `<script>` tags run as JavaScript by default.
+**IMPORTANT: Always generate JavaScript by default.** Only use TypeScript when user explicitly requests it.
+
+**Default: JavaScript** — All `<script>` tags run as JavaScript. This is the standard approach.
 
     <script>
-      // JavaScript (default) — runs immediately
+      // JavaScript (default) — runs immediately, no compilation
       const light = claw.state("light.bedroom");
       if (light.state === "on") claw.toggle("light.bedroom");
     </script>
 
-**Optional: TypeScript** — Add `type="text/typescript"` for type safety. Requires runtime transpilation.
+**Optional: TypeScript** — Only when user explicitly asks for TypeScript. Add `type="text/typescript"`.
 
     <script type="text/typescript">
       // TypeScript — transpiled at runtime via claw.ts
@@ -533,13 +535,13 @@ Full-power interface available inside `<script>`:
 - Performance-critical real-time updates
 - Quick prototyping
 
-#### TypeScript Runtime API (claw.ts) — NEW v3.7
+#### TypeScript Runtime API (claw.ts)
 
-For programmatic TypeScript execution (advanced use):
+For programmatic TypeScript execution (advanced use, only when user explicitly requests TypeScript):
 
 | Method | Description |
 |---|---|
-| `claw.ts.load()` | Load TypeScript compiler (5.6.3) |
+| `claw.ts.load()` | Load TypeScript compiler |
 | `claw.ts.transpile(code, options?)` | Transpile TS string to JS string |
 | `claw.ts.run(code, scope?)` | Transpile and execute with custom scope |
 | `claw.ts.card(code, ctx?)` | Execute in card context (root, $, $$, hass, config, overlay) |
