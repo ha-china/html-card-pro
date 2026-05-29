@@ -1,0 +1,169 @@
+# Generated from GitHub Discussions by sync-modules.
+# Claw Assistant Dashboard Config Panel / Claw Assistant 仪表盘配置面板
+# Author: @C3H3-AI
+# Version: 1.1.0
+# Description: 
+# Tags: Integration
+# Image: https://raw.githubusercontent.com/C3H3-AI/ha-claw-plus/main/docs/images/dashboard.png
+# Link: https://github.com/ha-china/html-card-pro/discussions/13
+# ID: 13
+
+type: custom:html-pro-card
+do_not_parse: true
+content: |
+  <style>
+    * { box-sizing: border-box; }
+    :root {
+      --cbg: var(--ha-card-background, var(--card-background-color, #fff));
+      --ctxt: var(--primary-text-color, #1c1c1e);
+      --csec: var(--secondary-text-color, #8e8e93);
+      --cacc: var(--accent-color, #007aff);
+      --cbd: var(--divider-color, rgba(60,60,67,0.12));
+      --cr: 12px;
+    }
+    .app { padding: 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: var(--ctxt); }
+    .app h1 { font-size: 22px; font-weight: 700; margin: 0 0 20px; display: flex; align-items: center; gap: 10px; letter-spacing: -0.3px; }
+    .app h1 span.status { font-size: 12px; font-weight: 400; color: var(--csec); }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+    @media (max-width: 700px) { .grid2 { grid-template-columns: 1fr; } }
+    .card { background: var(--cbg); border: 1px solid var(--cbd); border-radius: var(--cr); padding: 16px; }
+    .card + .card { margin-top: 14px; }
+    .card-title { font-size: 11px; font-weight: 600; color: var(--csec); text-transform: uppercase; letter-spacing: 0.7px; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+    .row { display: flex; align-items: center; justify-content: space-between; padding: 9px 0; gap: 12px; }
+    .row + .row { border-top: 1px solid var(--cbd); }
+    .rl { min-width: 0; flex: 1; }
+    .rn { font-size: 14px; font-weight: 500; }
+    .rd { font-size: 11px; color: var(--csec); margin-top: 1px; }
+    .rc { flex-shrink: 0; display: flex; align-items: center; gap: 8px; }
+
+    select.rc { font-size: 13px; border-radius: 8px; border: 1px solid var(--cbd); background: var(--cbg); color: var(--ctxt); padding: 6px 28px 6px 10px; cursor: pointer; max-width: 190px; -webkit-appearance: none; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238e8e93'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 8px center; }
+
+    .tog { position: relative; width: 42px; height: 24px; cursor: pointer; display: inline-block; flex-shrink: 0; }
+    .tog input { opacity: 0; width: 0; height: 0; position: absolute; }
+    .tog-track { position: absolute; inset: 0; background: #e9e9ea; border-radius: 12px; transition: .25s; }
+    .tog input:checked + .tog-track { background: var(--cacc); opacity: .85; }
+    .tog-knob { position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; background: #fff; border-radius: 50%; transition: .25s cubic-bezier(.4,0,.2,1); box-shadow: 0 1px 3px rgba(0,0,0,.15); }
+    .tog input:checked + .tog-track .tog-knob { transform: translateX(18px); }
+
+    .btn-group { display: flex; gap: 4px; }
+    .btn-group button { padding: 5px 14px; border: 1px solid var(--cbd); border-radius: 8px; background: transparent; color: var(--ctxt); font-size: 12px; cursor: pointer; transition: .15s; }
+    .btn-group button.active { background: var(--cacc); color: #fff; border-color: var(--cacc); }
+    .btn-group button:hover:not(.active) { border-color: var(--cacc); }
+
+    .tog-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    @media (max-width: 700px) { .tog-grid { grid-template-columns: 1fr; } }
+    .tog-cell { display: flex; align-items: center; justify-content: space-between; background: var(--cbg); border: 1px solid var(--cbd); border-radius: 10px; padding: 10px 12px; }
+    .tog-cell .rn { font-size: 13px; }
+    .tog-cell .rd { font-size: 10px; }
+
+    .info-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+    @media (max-width: 700px) { .info-grid { grid-template-columns: 1fr; } }
+    .info-card { background: var(--cbg); border: 1px solid var(--cbd); border-radius: var(--cr); padding: 14px; }
+    .info-card .count { font-size: 28px; font-weight: 700; color: var(--cacc); line-height: 1; margin-bottom: 4px; }
+    .info-card .label { font-size: 13px; font-weight: 500; margin-bottom: 6px; }
+    .info-card .items { font-size: 11px; color: var(--csec); line-height: 1.6; }
+    .info-card .items span { display: inline-block; background: var(--cbd); border-radius: 4px; padding: 1px 6px; margin: 1px 2px; font-size: 10px; }
+
+    .ftr { text-align: center; font-size: 11px; color: var(--csec); padding-top: 14px; margin-top: 14px; border-top: 1px solid var(--cbd); }
+  </style>
+
+  <div class="app" id="root">
+    <h1>&#x1F916; Claw Assistant <span class="status" id="status"></span></h1>
+    <div id="body">加载中...</div>
+  </div>
+
+  <script>
+    var R = document.querySelector('html-pro-card') || document.querySelector('ha-card') || document.body;
+    R.SENSOR = 'sensor.claw_dashboard_config_claw_config';
+    R._watchedEntities = [R.SENSOR, 'sensor.'];
+
+    function b(v) { return v === true || v === 'true' || v === 1 || v === '1'; }
+
+    function setOpt(k, v) {
+      if (typeof v === 'boolean') v = v ? 'true' : 'false';
+      R.callService('claw_plus', 'set_option', { key: k, value: v });
+    }
+
+    R._onHassUpdate = function(hass) {
+      var st = hass.states[R.SENSOR];
+      if (!st || !st.attributes) { return; }
+      var o = st.attributes;
+      document.getElementById('status').textContent = '\u2022 ' + new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+
+      var agents = Object.keys(hass.states).filter(function(e) { return e.startsWith('conversation.') && e !== 'conversation.claw_assistant'; });
+
+      function agentOpts(sel) {
+        return agents.map(function(a) { return '<option value="' + a + '"' + (sel === a ? ' selected' : '') + '>' + a.replace('conversation.', '') + '</option>'; }).join('');
+      }
+
+      var convModes = [
+        ['no_name', '\u7B80\u5355'],
+        ['add_name', '\u5E26\u540D\u5B57'],
+        ['detailed', '\u8BE6\u7EC6']
+      ];
+
+      var toggles = [
+        ['enable_web_search', '\u8054\u7F51\u641C\u7D22', '\u5BF9\u8BDD\u4E2D\u81EA\u52A8\u641C\u7D22\u7F51\u7EDC'],
+        ['enable_streaming_effect', '\u6D41\u5F0F\u6548\u679C', '\u5B9E\u65F6\u6D41\u5F0F\u8F93\u51FA'],
+        ['enable_file_upload', '\u6587\u4EF6\u4E0A\u4F20', '\u5141\u8BB8\u4E0A\u4F20\u6587\u4EF6\u7ED9 AI'],
+        ['enable_rich_markdown', '\u5BCC\u6587\u672C Markdown', '\u7F8E\u5316 Markdown \u6E32\u67D3'],
+        ['enable_tool_details', '\u5DE5\u5177\u8BE6\u60C5', '\u663E\u793A\u5DE5\u5177\u8C03\u7528\u7EC6\u8282'],
+        ['enable_tool_progress', '\u5DE5\u5177\u8FDB\u5EA6', '\u663E\u793A\u5DE5\u5177\u6267\u884C\u8FDB\u5EA6'],
+        ['enable_sidebar_dock', '\u4FA7\u8FB9\u680F', '\u663E\u793A Claw \u4FA7\u8FB9\u680F'],
+        ['enable_context_status_bar', '\u72B6\u6001\u680F', '\u663E\u793A\u4E0A\u4E0B\u6587\u72B6\u6001\u680F'],
+        ['enable_activity_tracking', '\u6D3B\u52A8\u8FFD\u8E2A', '\u8FFD\u8E2A\u7528\u6237\u6D3B\u52A8'],
+        ['enable_sound_notifications', '\u58F0\u97F3\u901A\u77E5', '\u64CD\u4F5C\u63D0\u793A\u97F3']
+      ];
+
+      var wsDocs = ['AGENTS', 'BOOTSTRAP', 'HEARTBEAT', 'IDENTITY', 'MEMORY', 'SOUL', 'TOOLS', 'USER'];
+      var skills = ['automation-patterns', 'homeassistant_runtime_guide'];
+      var plugins = [];
+
+      var h = '';
+
+      // Row 1: Two columns
+      h += '<div class="grid2">';
+
+      // AI Agents
+      h += '<div class="card"><div class="card-title">\uD83E\uDD16 AI \u667A\u80FD\u4F53</div>';
+      h += '<div class="row"><div class="rl"><div class="rn">\u4E3B\u529B\u667A\u80FD\u4F53</div><div class="rd">\u4E3B\u8981\u5BF9\u8BDD AI</div></div><select class="rc" onchange="setOpt(\'primary_agent\',this.value)">' + agentOpts(o.primary_agent || '') + '</select></div>';
+      h += '<div class="row"><div class="rl"><div class="rn">\u5907\u7528\u667A\u80FD\u4F53</div><div class="rd">\u4E3B\u529B\u4E0D\u53EF\u7528\u65F6\u81EA\u52A8\u5207\u6362</div></div><select class="rc" onchange="setOpt(\'fallback_agent\',this.value)">' + agentOpts(o.fallback_agent || '') + '</select></div>';
+      h += '<div class="row"><div class="rl"><div class="rn">\u7B2C\u4E09\u667A\u80FD\u4F53</div><div class="rd">\u53EF\u9009\uFF0C\u6C47\u603B\u6A21\u5F0F\u4F7F\u7528</div></div><select class="rc" onchange="setOpt(\'secondary_fallback_agent\',this.value)"><option value="">(\u7981\u7528)</option>' + agentOpts(o.secondary_fallback_agent || '') + '</select></div>';
+      h += '</div>';
+
+      // Conversation Settings
+      h += '<div class="card"><div class="card-title">\uD83D\uDCAC \u5BF9\u8BDD\u8BBE\u7F6E</div>';
+      h += '<div class="row"><div class="rl"><div class="rn">\u5BF9\u8BDD\u6A21\u5F0F</div></div><div class="btn-group">';
+      convModes.forEach(function(m) {
+        h += '<button class="' + (o.conversation_mode === m[0] ? 'active' : '') + '" onclick="setOpt(\'conversation_mode\',\'' + m[0] + '\'); this.parentElement.querySelectorAll(\'button\').forEach(function(b){b.classList.remove(\'active\')}); this.classList.add(\'active\')">' + m[1] + '</button>';
+      });
+      h += '</div></div>';
+      h += '<div class="row"><div class="rl"><div class="rn">\u8054\u7F51\u641C\u7D22</div></div><label class="tog"><input type="checkbox" ' + (b(o.enable_web_search) ? 'checked' : '') + ' onchange="setOpt(\'enable_web_search\',this.checked)"><span class="tog-track"><span class="tog-knob"></span></span></label></div>';
+      h += '<div class="row"><div class="rl"><div class="rn">\u6301\u7EED\u5BF9\u8BDD</div><div class="rd">\u4FDD\u6301\u4E0A\u4E0B\u6587\u4E0D\u4E2D\u65AD</div></div><label class="tog"><input type="checkbox" ' + (b(o.continuous_conversation) ? 'checked' : '') + ' onchange="setOpt(\'continuous_conversation\',this.checked)"><span class="tog-track"><span class="tog-knob"></span></span></label></div>';
+      h += '<div class="row"><div class="rl"><div class="rn">\u6D41\u5F0F\u6548\u679C</div></div><label class="tog"><input type="checkbox" ' + (b(o.enable_streaming_effect) ? 'checked' : '') + ' onchange="setOpt(\'enable_streaming_effect\',this.checked)"><span class="tog-track"><span class="tog-knob"></span></span></label></div>';
+      h += '</div>';
+
+      h += '</div>';
+
+      // Feature Toggles
+      h += '<div class="card"><div class="card-title">\u2699\uFE0F \u529F\u80FD\u5F00\u5173</div><div class="tog-grid">';
+      toggles.forEach(function(t) {
+        h += '<div class="tog-cell"><div class="rl"><div class="rn">' + t[1] + '</div><div class="rd">' + t[2] + '</div></div><label class="tog"><input type="checkbox" ' + (b(o[t[0]]) ? 'checked' : '') + ' onchange="setOpt(\'' + t[0] + '\',this.checked)"><span class="tog-track"><span class="tog-knob"></span></span></label></div>';
+      });
+      h += '</div></div>';
+
+      // Info cards: Workspace, Skills, Plugins
+      h += '<div class="info-grid">';
+      // Workspace Docs
+      h += '<div class="info-card"><div class="count">' + wsDocs.length + '</div><div class="label">\uD83D\uDCC4 \u5DE5\u4F5C\u533A\u6587\u6863</div><div class="items">' + wsDocs.map(function(d) { return '<span>' + d + '</span>'; }).join(' ') + '</div></div>';
+      // Skills
+      h += '<div class="info-card"><div class="count">' + skills.length + '</div><div class="label">\uD83C\uDF1F \u5DF2\u5B89\u88C5\u6280\u80FD</div><div class="items">' + skills.map(function(s) { return '<span>' + s + '</span>'; }).join(' ') + '</div></div>';
+      // Plugins
+      h += '<div class="info-card"><div class="count">' + plugins.length + '</div><div class="label">\uD83D\uDD17 \u5DF2\u5B89\u88C5\u63D2\u4EF6</div><div class="items">' + (plugins.length ? plugins.map(function(p) { return '<span>' + p + '</span>'; }).join(' ') : '\u6682\u65E0\u63D2\u4EF6') + '</div></div>';
+      h += '</div>';
+
+      h += '<div class="ftr">\u26A1 \u66F4\u6539\u5373\u65F6\u751F\u6548 \u00B7 \u5728 Claw Assistant \u914D\u7F6E\u6D41\u4E2D\u7F16\u8F91\u5DE5\u4F5C\u533A/\u6280\u80FD/\u63D2\u4EF6 \u00B7 v1.0.0</div>';
+
+      document.getElementById('body').innerHTML = h;
+    };
+  </script>
