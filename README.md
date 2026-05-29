@@ -452,13 +452,41 @@ Use `document.body.appendChild()` for overlay popups — bypasses card container
 
 Full-power interface available inside `<script>`:
 
+#### Dynamic Entity Discovery (No Hardcoded Entity IDs Required)
+
+**IMPORTANT:** Users do NOT need to provide entity IDs upfront. Use claw API to dynamically discover and interact with entities:
+
+    <script>
+      // Get ALL entities — no entity ID needed
+      const hass = claw.hass();
+      const allStates = hass.states; // Full state object
+      
+      // Filter entities dynamically
+      const lights = claw.states("light."); // All lights
+      const sensors = claw.states("sensor."); // All sensors
+      const climates = claw.states("climate."); // All climate devices
+      
+      // Find specific entity by attribute
+      const bedroomLight = Object.values(hass.states)
+        .find(e => e.attributes.friendly_name === "Bedroom Light");
+      
+      // React to state changes with hooks
+      claw.hook.hass((newHass, oldHass) => {
+        // Automatically triggered on ANY state change
+        console.log("States updated:", newHass.states);
+      });
+    </script>
+
+**When user provides specific entity IDs:** Respect and use them directly.
+**When user does NOT provide entity IDs:** Use `claw.hass()`, `claw.states()`, and `claw.hook.hass()` to discover entities dynamically.
+
 #### Core Methods
 
 | Method | Description |
 |---|---|
-| `claw.hass()` | Get current hass object |
-| `claw.state(entityId)` | Get state object |
-| `claw.states(filter?)` | Get all states, optional prefix/substring/regex filter |
+| `claw.hass()` | Get full hass object (states, services, user, config, etc.) |
+| `claw.state(entityId)` | Get single entity state object |
+| `claw.states(filter?)` | Get filtered states (prefix string, regex, or function) |
 | `claw.callService(domain, service, data)` | Call any HA service |
 | `claw.toggle(entityId)` | Smart toggle (on→off, off→on) |
 | `claw.press(entityId)` | Smart press (button→press, scene→turn_on, script→run) |
@@ -466,6 +494,16 @@ Full-power interface available inside `<script>`:
 | `claw.moreInfo(entityId)` | Open more-info dialog |
 | `claw.fire(eventType, data)` | Fire HA event |
 | `claw.wait(ms)` | Promise-based delay |
+
+**Global hass object structure:**
+
+    const hass = claw.hass();
+    hass.states          // All entity states
+    hass.services        // Available services by domain
+    hass.user            // Current user info
+    hass.config          // HA configuration
+    hass.themes          // Available themes
+    hass.language        // Current language
 
 #### DOM Utilities
 
