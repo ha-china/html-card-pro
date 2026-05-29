@@ -207,8 +207,38 @@ For **3D Immersive Dark**, key techniques:
 - `position: fixed` (breaks in HA card containers)
 - Inline styles — all CSS must be in `<style>` blocks
 - Emoji characters anywhere (use `<ha-icon>` or inline SVG instead)
-- **FORBIDDEN: `claw.navigate()` on card click** — NEVER use card clicks to navigate to other pages/integrations. Use floating overlays (`overlay` global) instead for detailed views
-- **FORBIDDEN: Direct page navigation from cards** — Cards should display info and control entities, NOT redirect users away
+
+**MUST Rules for claw API Usage**
+
+| Rule | Description |
+|---|---|
+| MUST NOT use `claw.navigate()` on card click | Cards display info and control entities. Use `overlay` for detailed views instead of redirecting users away |
+| MUST use `overlay` for expanded content | When user needs more details, create a floating overlay panel, not a page redirect |
+| MUST respect user-provided entity IDs | If user specifies entity IDs, use them exactly as given |
+| MUST leverage full claw API | Most claw methods work without entity IDs: `claw.states()`, `claw.areas.*`, `claw.devices.*`, `claw.config.*`, `claw.lovelace.*`, `claw.system.*`, etc. |
+| MUST use `claw.hook.hass()` for live updates | Subscribe to state changes instead of polling with setInterval |
+| MUST NOT call `claw.system.restart()` without confirmation | Destructive operations require explicit user confirmation |
+| MUST NOT call `claw.config.delete()` without confirmation | Deleting config entries is irreversible |
+| MUST prefer `data-*` attributes over JavaScript | Use declarative data binding when possible, JS only for complex logic |
+
+**claw API Categories (most do NOT require entity IDs):**
+- **State access:** `claw.hass()`, `claw.state()`, `claw.states()`
+- **Actions:** `claw.toggle()`, `claw.press()`, `claw.callService()`, `claw.moreInfo()`
+- **WebSocket:** `claw.ws.send()`, `claw.ws.call()`, `claw.ws.subscribe()`
+- **HTTP:** `claw.api.get()`, `claw.api.post()`, `claw.api.put()`, `claw.api.delete()`
+- **Registries:** `claw.areas.*`, `claw.devices.*`, `claw.entities.*`
+- **Automation:** `claw.automations.*`, `claw.scripts.*`, `claw.scenes.*`
+- **Config:** `claw.config.*`, `claw.config.flow.*`, `claw.config.options.*`
+- **Dashboard:** `claw.lovelace.*`
+- **System:** `claw.system.*`, `claw.users.*`
+- **UI:** `claw.ui.*`, `claw.sidebar.*`, `claw.deepQuery()`, `claw.deepQueryAll()`
+- **Hooks:** `claw.hook.hass()`, `claw.hook.element()`
+- **TypeScript:** `claw.ts.load()`, `claw.ts.run()`, `claw.ts.card()`, `claw.ts.module()`
+
+**When to use `claw.navigate()`:**
+- ONLY when user explicitly requests navigation functionality
+- ONLY for dedicated navigation buttons/links, NOT on card body clicks
+- Example valid use: A "Settings" button that user intentionally clicks to go to config page
 
 
 ## 2. Color Rules — MANDATORY
