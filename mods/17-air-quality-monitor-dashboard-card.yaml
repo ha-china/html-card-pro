@@ -1,0 +1,2535 @@
+# Generated from GitHub Discussions by sync-modules.
+# 空气质量监测仪 仪表盘卡片 / Air Quality Monitor Dashboard Card
+# Author: fenglibo51
+# Version: 1.0
+# Description: 
+# Tags: Style
+# Image: https://cdn.jsdelivr.net/gh/ha-china/html-card-pro@main/images/17.png
+# Link: https://github.com/ha-china/html-card-pro/discussions/17
+# ID: 17
+
+type: custom:html-pro-card
+do_not_parse: true
+content: |
+  <style>
+    :host {
+      --daikin-radius: 14px;
+      --daikin-gap: 10px;
+      --daikin-panel-pad: 14px;
+      --daikin-border-normal: rgba(120, 150, 170, 0.22);
+      --daikin-cyan: #36cfff;
+      --daikin-teal: #2ee6c8;
+      --daikin-amber: #ffc857;
+      --daikin-orange: #ff9a3d;
+      --daikin-red: #ff5b5b;
+      --ha-card-background: transparent;
+      --ha-card-box-shadow: none;
+      --ha-card-border-width: 0px;
+    }
+  
+    ha-card {
+      background: transparent !important;
+      box-shadow: none !important;
+      border: none !important;
+      overflow: visible !important;
+    }
+  
+    .card-content {
+      padding: 0 !important;
+    }
+  
+    .daikin-air-panel {
+      position: relative;
+      width: 100%;
+      box-sizing: border-box;
+      padding: var(--daikin-panel-pad);
+      font: inherit;
+      color: var(--primary-text-color);
+      background: transparent;
+      border: none;
+      box-shadow: none;
+      overflow: visible;
+    }
+  
+    .daikin-air-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+      padding: 0 2px;
+    }
+  
+    .daikin-air-title-wrap {
+      min-width: 0;
+    }
+  
+    .daikin-air-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 20px;
+      font-weight: 700;
+      line-height: 1.15;
+      letter-spacing: -0.03em;
+      color: var(--primary-text-color);
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  
+    .daikin-air-title ha-icon {
+      width: 22px;
+      height: 22px;
+      color: var(--daikin-orange);
+      flex: 0 0 auto;
+    }
+  
+    .daikin-air-subtitle {
+      margin-top: 5px;
+      font-size: 12px;
+      line-height: 1.25;
+      color: var(--secondary-text-color);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  
+    .daikin-air-update {
+      flex: 0 0 auto;
+      font-size: 11px;
+      line-height: 1;
+      color: var(--secondary-text-color);
+      border: 1px solid rgba(120, 150, 170, 0.18);
+      border-radius: 10px;
+      padding: 7px 8px;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+      background: rgba(255, 255, 255, 0.22);
+    }
+  
+    .daikin-air-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: var(--daikin-gap);
+    }
+  
+    .air-module {
+      --module-accent: var(--daikin-cyan);
+      --module-motion: 1;
+      --module-strength: 0.55;
+      --icon-y: 0px;
+      position: relative;
+      min-height: 118px;
+      box-sizing: border-box;
+      border: 1px solid color-mix(in srgb, var(--module-accent) 38%, var(--daikin-border-normal));
+      border-radius: var(--daikin-radius);
+      padding: 13px;
+      overflow: hidden;
+      color: var(--primary-text-color);
+      background: color-mix(in srgb, var(--card-background-color) 52%, transparent);
+      transition:
+        border-color 1.2s ease,
+        opacity 0.4s ease,
+        transform 0.2s ease;
+      contain: layout paint style;
+      isolation: isolate;
+    }
+  
+    .air-module.wide {
+      grid-column: 1 / -1;
+      min-height: 136px;
+    }
+  
+    .air-module.level-0 {
+      --module-accent: var(--daikin-cyan);
+      --module-motion: 0.92;
+      --module-strength: 0.56;
+    }
+  
+    .air-module.level-1 {
+      --module-accent: var(--daikin-teal);
+      --module-motion: 1;
+      --module-strength: 0.62;
+    }
+  
+    .air-module.level-2 {
+      --module-accent: var(--daikin-amber);
+      --module-motion: 1.2;
+      --module-strength: 0.76;
+    }
+  
+    .air-module.level-3 {
+      --module-accent: var(--daikin-orange);
+      --module-motion: 1.45;
+      --module-strength: 0.9;
+    }
+  
+    .air-module.level-4 {
+      --module-accent: var(--daikin-red);
+      --module-motion: 1.8;
+      --module-strength: 1;
+    }
+  
+    .air-module.offline {
+      --module-accent: var(--disabled-text-color);
+      --module-motion: 0.65;
+      --module-strength: 0.18;
+      opacity: 0.58;
+    }
+  
+    .air-module[data-metric="co2"] { --icon-y: 0px; }
+    .air-module[data-metric="temp"] { --icon-y: 0px; }
+    .air-module[data-metric="hum"] { --icon-y: 0px; }
+    .air-module[data-metric="pm25"] { --icon-y: 0px; }
+    .air-module[data-metric="tvoc"] { --icon-y: 0px; }
+    .air-module[data-metric="ch2o"] { --icon-y: 0px; }
+  
+    .air-fx {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      color: var(--module-accent);
+      opacity: var(--module-strength);
+      z-index: 0;
+      transition: opacity 1.2s ease, color 1.2s ease;
+    }
+  
+    .air-module-inner {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      min-height: 100%;
+    }
+  
+    .air-module-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+  
+    .air-module-label {
+      display: grid;
+      grid-template-columns: 18px minmax(0, auto);
+      align-items: center;
+      column-gap: 7px;
+      min-width: 0;
+      height: 20px;
+      line-height: 20px;
+    }
+  
+    .air-module-label ha-icon {
+      width: 18px;
+      height: 18px;
+      display: block;
+      color: var(--module-accent);
+      transform: translateY(var(--icon-y));
+      transition: color 1.2s ease;
+    }
+  
+    .air-module-label span.label-text {
+      display: block;
+      min-width: 0;
+      height: 20px;
+      line-height: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      color: color-mix(in srgb, var(--secondary-text-color) 92%, transparent);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  
+    .air-module-tag {
+      color: var(--module-accent);
+      font-size: 10px;
+      line-height: 1;
+      font-weight: 700;
+      padding: 5px 7px;
+      border: 1px solid color-mix(in srgb, var(--module-accent) 50%, transparent);
+      border-radius: 10px;
+      white-space: nowrap;
+      background: color-mix(in srgb, var(--module-accent) 10%, transparent);
+      transition:
+        color 1.2s ease,
+        border-color 1.2s ease,
+        background 1.2s ease;
+    }
+  
+    .air-value-row {
+      display: flex;
+      align-items: baseline;
+      gap: 7px;
+      margin-top: auto;
+      min-width: 0;
+    }
+  
+    .air-value {
+      font-size: 34px;
+      font-weight: 760;
+      line-height: 0.95;
+      letter-spacing: -0.055em;
+      color: var(--primary-text-color);
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+  
+    .air-module.wide .air-value {
+      font-size: 42px;
+    }
+  
+    .air-unit {
+      color: var(--secondary-text-color);
+      font-size: 12px;
+      font-weight: 650;
+      line-height: 1;
+      white-space: nowrap;
+    }
+  
+    .air-hint {
+      margin-top: 9px;
+      color: var(--secondary-text-color);
+      font-size: 12px;
+      line-height: 1.2;
+      min-height: 15px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  
+    .air-secondary {
+      margin-top: 7px;
+      color: var(--disabled-text-color);
+      font-size: 11px;
+      line-height: 1.2;
+      min-height: 13px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  
+    .fx-air-band {
+      position: absolute;
+      right: -12%;
+      top: 34%;
+      width: 58%;
+      height: 42%;
+      border-radius: 10px;
+      background: radial-gradient(ellipse at center, currentColor 0%, rgba(255,255,255,0) 68%);
+      filter: blur(18px);
+      opacity: 0.12;
+      animation: daikinBandShift calc(14s / var(--module-motion)) ease-in-out infinite;
+    }
+  
+    .fx-air-stream {
+      position: absolute;
+      left: -26%;
+      width: 78%;
+      height: 2px;
+      border-radius: 10px;
+      background: linear-gradient(90deg, transparent 0%, currentColor 30%, currentColor 72%, transparent 100%);
+      opacity: 0;
+      animation-name: daikinAirStream;
+      animation-timing-function: linear;
+      animation-iteration-count: infinite;
+      animation-duration: calc(var(--dur, 11s) / var(--module-motion));
+      animation-delay: var(--delay, 0s);
+      will-change: transform, clip-path, opacity;
+    }
+  
+    .fx-air-stream::after {
+      content: "";
+      position: absolute;
+      inset: -5px 16%;
+      border-radius: 10px;
+      background: currentColor;
+      filter: blur(10px);
+      opacity: 0.18;
+    }
+  
+    .fx-air-stream.s1 { top: 20%; width: 64%; --dur: 11.5s; --delay: -1s; opacity: 0.54; }
+    .fx-air-stream.s2 { top: 35%; width: 74%; --dur: 10.5s; --delay: -4.2s; opacity: 0.72; }
+    .fx-air-stream.s3 { top: 50%; width: 82%; --dur: 12s; --delay: -7.4s; opacity: 0.84; }
+    .fx-air-stream.s4 { top: 66%; width: 68%; --dur: 13s; --delay: -10s; opacity: 0.62; }
+    .fx-air-stream.s5 { top: 80%; width: 56%; --dur: 14s; --delay: -12.5s; opacity: 0.46; }
+  
+    @keyframes daikinAirStream {
+      0% { transform: translateX(0); clip-path: inset(0 100% 0 0); opacity: 0; }
+      15% { transform: translateX(34%); clip-path: inset(0 58% 0 0); opacity: 0.92; }
+      38% { transform: translateX(92%); clip-path: inset(0 18% 0 10%); opacity: 0.94; }
+      68% { transform: translateX(155%); clip-path: inset(0 0 0 45%); opacity: 0.72; }
+      100% { transform: translateX(215%); clip-path: inset(0 0 0 100%); opacity: 0; }
+    }
+  
+    @keyframes daikinBandShift {
+      0% { transform: translateX(0) scale(1); opacity: 0.06; }
+      50% { transform: translateX(-5%) scale(1.03); opacity: 0.14; }
+      100% { transform: translateX(0) scale(1); opacity: 0.06; }
+    }
+  
+    .fx-heat-glow {
+      position: absolute;
+      left: 10%;
+      right: 10%;
+      bottom: 3%;
+      height: 58%;
+      border-radius: 10px;
+      background: linear-gradient(180deg, rgba(255,255,255,0) 0%, currentColor 100%);
+      filter: blur(18px);
+      opacity: 0.12;
+      animation: daikinHeatGlow calc(12s / var(--module-motion)) ease-in-out infinite;
+    }
+  
+    .fx-heat-line {
+      position: absolute;
+      bottom: -20%;
+      width: 2px;
+      height: 58%;
+      border-radius: 10px;
+      background: linear-gradient(0deg, transparent, currentColor, transparent);
+      animation: daikinHeatRise calc(10s / var(--module-motion)) ease-in-out infinite;
+    }
+  
+    .fx-heat-line.h1 { left: 18%; animation-delay: -1s; opacity: 0.68; }
+    .fx-heat-line.h2 { left: 40%; animation-delay: -3.5s; opacity: 0.58; }
+    .fx-heat-line.h3 { left: 62%; animation-delay: -6s; opacity: 0.72; }
+    .fx-heat-line.h4 { left: 80%; animation-delay: -8.5s; opacity: 0.48; }
+  
+    .fx-heat-line::after {
+      content: "";
+      position: absolute;
+      inset: 20% -7px;
+      background: currentColor;
+      filter: blur(10px);
+      opacity: 0.18;
+    }
+  
+    @keyframes daikinHeatRise {
+      0% { transform: translateY(22%) scaleY(0.8); opacity: 0; }
+      20% { opacity: 0.72; }
+      70% { opacity: 0.36; }
+      100% { transform: translateY(-120%) scaleY(1.22); opacity: 0; }
+    }
+  
+    @keyframes daikinHeatGlow {
+      0% { opacity: 0.08; transform: scaleX(0.98); }
+      50% { opacity: 0.15; transform: scaleX(1.03); }
+      100% { opacity: 0.08; transform: scaleX(0.98); }
+    }
+  
+    .fx-drop {
+      position: absolute;
+      width: 14px;
+      height: 18px;
+      color: currentColor;
+      animation: daikinDropFloat calc(11.5s / var(--module-motion)) ease-in-out infinite;
+      filter: drop-shadow(0 0 6px color-mix(in srgb, currentColor 28%, transparent));
+      will-change: transform, opacity;
+    }
+  
+    .fx-drop svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+      fill: currentColor;
+      opacity: 0.82;
+    }
+  
+    .fx-drop.d1 { left: 16%; bottom: 10%; animation-delay: -1s; opacity: 0.72; }
+    .fx-drop.d2 { left: 38%; bottom: 6%; animation-delay: -3.5s; opacity: 0.58; }
+    .fx-drop.d3 { left: 62%; bottom: 10%; animation-delay: -6.5s; opacity: 0.48; }
+    .fx-drop.d4 { left: 80%; bottom: 4%; animation-delay: -9s; opacity: 0.38; }
+  
+    @keyframes daikinDropFloat {
+      0% { transform: translateY(16%) scale(0.9); opacity: 0; }
+      22% { opacity: 0.75; }
+      68% { opacity: 0.38; }
+      100% { transform: translateY(-95%) scale(1.04); opacity: 0; }
+    }
+  
+    .fx-particle {
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      border-radius: 10px;
+      background: currentColor;
+      opacity: 0.78;
+      animation: daikinParticleDrift calc(12.5s / var(--module-motion)) ease-in-out infinite;
+    }
+  
+    .fx-particle:nth-child(1) { left: 16%; top: 32%; animation-delay: -1s; }
+    .fx-particle:nth-child(2) { left: 31%; top: 61%; animation-delay: -3s; }
+    .fx-particle:nth-child(3) { left: 48%; top: 42%; animation-delay: -5s; }
+    .fx-particle:nth-child(4) { left: 67%; top: 70%; animation-delay: -7s; }
+    .fx-particle:nth-child(5) { left: 78%; top: 36%; animation-delay: -9s; }
+    .fx-particle:nth-child(6) { left: 22%; top: 77%; animation-delay: -11s; }
+    .fx-particle:nth-child(7) { left: 54%; top: 24%; animation-delay: -2s; }
+    .fx-particle:nth-child(8) { left: 86%; top: 59%; animation-delay: -6s; }
+    .fx-particle:nth-child(9) { left: 38%; top: 20%; animation-delay: -8s; }
+    .fx-particle:nth-child(10) { left: 72%; top: 82%; animation-delay: -10s; }
+    .fx-particle:nth-child(11) { left: 11%; top: 54%; animation-delay: -12s; }
+    .fx-particle:nth-child(12) { left: 58%; top: 64%; animation-delay: -4s; }
+  
+    .fx-particle::after {
+      content: "";
+      position: absolute;
+      inset: -8px;
+      border-radius: inherit;
+      background: currentColor;
+      filter: blur(8px);
+      opacity: 0.38;
+    }
+  
+    .air-module.level-0 .fx-particle:nth-child(n+8) { opacity: 0; }
+    .air-module.level-1 .fx-particle:nth-child(n+10) { opacity: 0; }
+    .air-module.level-2 .fx-particle:nth-child(n+12) { opacity: 0; }
+  
+    @keyframes daikinParticleDrift {
+      0% { transform: translate3d(0, 0, 0) scale(0.85); }
+      35% { transform: translate3d(8px, -7px, 0) scale(1); }
+      70% { transform: translate3d(-5px, 6px, 0) scale(0.92); }
+      100% { transform: translate3d(0, 0, 0) scale(0.85); }
+    }
+  
+    .fx-voc-ring {
+      position: absolute;
+      right: -24px;
+      bottom: -28px;
+      width: 62px;
+      height: 62px;
+      border: 2px solid currentColor;
+      border-radius: 10px;
+      opacity: 0;
+      animation: daikinVocPulse calc(10.5s / var(--module-motion)) ease-out infinite;
+    }
+  
+    .fx-voc-ring:nth-child(1) { animation-delay: -1s; }
+    .fx-voc-ring:nth-child(2) { animation-delay: -4s; }
+    .fx-voc-ring:nth-child(3) { animation-delay: -7s; }
+  
+    @keyframes daikinVocPulse {
+      0% { transform: scale(0.45); opacity: 0; }
+      18% { opacity: 0.56; }
+      100% { transform: scale(2.75); opacity: 0; }
+    }
+  
+    /* CH2O：C静止，H/O+化学键整体旋转 */
+    .fx-ch2o-wrap {
+      position: absolute;
+      right: 24px;
+      top: 50%;
+      width: 136px;
+      height: 94px;
+      transform: translateY(-42%);
+      opacity: 0.98;
+    }
+  
+    .fx-ch2o-skeleton {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 104px;
+      height: 80px;
+      margin-left: -52px;
+      margin-top: -40px;
+      transform-origin: 50% 50%;
+      animation: daikinCh2oSkeletonRotate calc(34s / var(--module-motion)) linear infinite;
+    }
+  
+    .fx-ch2o-label {
+      position: absolute;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      line-height: 1;
+      z-index: 4;
+      color: color-mix(in srgb, currentColor 92%, white 14%);
+      text-shadow:
+        0 0 8px color-mix(in srgb, currentColor 44%, transparent),
+        0 0 16px color-mix(in srgb, currentColor 18%, transparent);
+      opacity: 0.96;
+    }
+  
+    .fx-ch2o-label.atom-c {
+      left: 50%;
+      top: 50%;
+      width: 20px;
+      height: 18px;
+      margin-left: -10px;
+      margin-top: -9px;
+      font-size: 11px;
+      color: color-mix(in srgb, currentColor 100%, white 18%);
+      text-shadow:
+        0 0 10px color-mix(in srgb, currentColor 52%, transparent),
+        0 0 18px color-mix(in srgb, currentColor 24%, transparent);
+    }
+  
+    .fx-ch2o-label.atom-h1 {
+      left: 14px;
+      top: 11px;
+      width: 16px;
+      height: 14px;
+      font-size: 9px;
+    }
+  
+    .fx-ch2o-label.atom-h2 {
+      left: 14px;
+      bottom: 11px;
+      width: 16px;
+      height: 14px;
+      font-size: 9px;
+    }
+  
+    .fx-ch2o-label.atom-o {
+      right: 2px;
+      top: 50%;
+      width: 18px;
+      height: 16px;
+      margin-top: -8px;
+      font-size: 11px;
+      color: color-mix(in srgb, currentColor 100%, white 24%);
+      text-shadow:
+        0 0 10px color-mix(in srgb, currentColor 54%, transparent),
+        0 0 20px color-mix(in srgb, currentColor 26%, transparent);
+    }
+  
+    .fx-ch2o-bond {
+      position: absolute;
+      height: 2px;
+      border-radius: 10px;
+      background: color-mix(in srgb, currentColor 78%, white 8%);
+      box-shadow: 0 0 6px color-mix(in srgb, currentColor 24%, transparent);
+      transform-origin: left center;
+      z-index: 2;
+      opacity: 0.92;
+    }
+  
+    .fx-ch2o-bond.bond-h1 {
+      left: 31px;
+      top: 24px;
+      width: 17px;
+      transform: rotate(33deg);
+    }
+  
+    .fx-ch2o-bond.bond-h2 {
+      left: 31px;
+      top: 54px;
+      width: 17px;
+      transform: rotate(-33deg);
+    }
+  
+    .fx-ch2o-bond.bond-o1 {
+      left: 58px;
+      top: 34px;
+      width: 21px;
+      height: 2px;
+      opacity: 0.96;
+    }
+  
+    .fx-ch2o-bond.bond-o2 {
+      left: 58px;
+      top: 41px;
+      width: 21px;
+      height: 2px;
+      opacity: 0.82;
+    }
+  
+    .fx-ch2o-bond.bond-o1::after,
+    .fx-ch2o-bond.bond-o2::after {
+      content: "";
+      position: absolute;
+      inset: -2px 18% -2px 18%;
+      border-radius: inherit;
+      background: currentColor;
+      filter: blur(5px);
+      opacity: 0.2;
+    }
+  
+    .fx-ch2o-field-dot {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 4px;
+      height: 4px;
+      margin-left: -2px;
+      margin-top: -2px;
+      border-radius: 10px;
+      background: currentColor;
+      box-shadow: 0 0 10px color-mix(in srgb, currentColor 42%, transparent);
+      animation-timing-function: linear;
+      animation-iteration-count: infinite;
+      transform-origin: center;
+    }
+  
+    .fx-ch2o-field-dot.p1 {
+      opacity: 0.62;
+      animation-name: daikinCh2oField1;
+      animation-duration: calc(17s / var(--module-motion));
+      animation-delay: -4s;
+    }
+  
+    .fx-ch2o-field-dot.p2 {
+      opacity: 0.48;
+      animation-name: daikinCh2oField2;
+      animation-duration: calc(29s / var(--module-motion));
+      animation-delay: -11s;
+    }
+  
+    .fx-ch2o-field-dot.p3 {
+      opacity: 0.38;
+      animation-name: daikinCh2oField3;
+      animation-duration: calc(43s / var(--module-motion));
+      animation-delay: -18s;
+    }
+  
+    .fx-ch2o-field-dot.p4 {
+      opacity: 0.34;
+      animation-name: daikinCh2oField4;
+      animation-duration: calc(61s / var(--module-motion));
+      animation-delay: -27s;
+    }
+  
+    .fx-ch2o-field-dot.p5 {
+      opacity: 0.52;
+      animation-name: daikinCh2oField5;
+      animation-duration: calc(24s / var(--module-motion));
+      animation-delay: -8s;
+    }
+  
+    .fx-ch2o-field-dot.p6 {
+      opacity: 0.30;
+      animation-name: daikinCh2oField6;
+      animation-duration: calc(52s / var(--module-motion));
+      animation-delay: -31s;
+    }
+  
+    @keyframes daikinCh2oSkeletonRotate {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  
+    @keyframes daikinCh2oField1 {
+      0%   { transform: rotate(0deg)   translateX(60px) scaleY(0.72) rotate(0deg); }
+      100% { transform: rotate(360deg) translateX(60px) scaleY(0.72) rotate(-360deg); }
+    }
+  
+    @keyframes daikinCh2oField2 {
+      0%   { transform: rotate(95deg)  translateX(46px) scaleY(1.12) rotate(-95deg); }
+      100% { transform: rotate(-265deg) translateX(46px) scaleY(1.12) rotate(265deg); }
+    }
+  
+    @keyframes daikinCh2oField3 {
+      0%   { transform: rotate(190deg) translateX(72px) scaleY(0.62) rotate(-190deg); }
+      100% { transform: rotate(550deg) translateX(72px) scaleY(0.62) rotate(-550deg); }
+    }
+  
+    @keyframes daikinCh2oField4 {
+      0%   { transform: rotate(285deg) translateX(41px) scaleY(1.20) rotate(-285deg); }
+      100% { transform: rotate(-75deg) translateX(41px) scaleY(1.20) rotate(75deg); }
+    }
+  
+    @keyframes daikinCh2oField5 {
+      0%   { transform: rotate(40deg)  translateX(54px) scaleY(0.88) rotate(-40deg); }
+      100% { transform: rotate(400deg) translateX(54px) scaleY(0.88) rotate(-400deg); }
+    }
+  
+    @keyframes daikinCh2oField6 {
+      0%   { transform: rotate(150deg) translateX(77px) scaleY(0.52) rotate(-150deg); }
+      100% { transform: rotate(-210deg) translateX(77px) scaleY(0.52) rotate(210deg); }
+    }
+  
+    @media (max-width: 480px) {
+      :host {
+        --daikin-panel-pad: 12px;
+        --daikin-gap: 9px;
+      }
+  
+      .air-module {
+        min-height: 108px;
+        padding: 12px;
+      }
+  
+      .air-module.wide {
+        min-height: 128px;
+      }
+  
+      .air-value {
+        font-size: 30px;
+      }
+  
+      .air-module.wide .air-value {
+        font-size: 38px;
+      }
+  
+      .daikin-air-title {
+        font-size: 18px;
+      }
+  
+      .air-module-tag {
+        font-size: 9px;
+        padding: 5px 6px;
+      }
+  
+      .air-unit {
+        font-size: 11px;
+      }
+  
+      .fx-ch2o-wrap {
+        right: 8px;
+        transform: translateY(-42%) scale(0.86);
+        transform-origin: right center;
+      }
+    }
+  
+    @media (prefers-reduced-motion: reduce) {
+      .fx-air-band,
+      .fx-air-stream,
+      .fx-heat-glow,
+      .fx-heat-line,
+      .fx-drop,
+      .fx-particle,
+      .fx-voc-ring,
+      .fx-ch2o-skeleton,
+      .fx-ch2o-field-dot {
+        animation-duration: 60s !important;
+      }
+    }
+  </style>
+  
+  <div class="daikin-air-panel">
+    <div class="daikin-air-header">
+      <div class="daikin-air-title-wrap">
+        <div class="daikin-air-title">
+          <ha-icon icon="mdi:home-thermometer-outline"></ha-icon>
+          <span data-role="room-title">室内环境 · --</span>
+        </div>
+        <div class="daikin-air-subtitle" data-role="room-subtitle">大金空气监测仪</div>
+      </div>
+      <div class="daikin-air-update" data-role="updated">--</div>
+    </div>
+  
+    <div class="daikin-air-grid">
+      <section class="air-module wide level-0" data-metric="co2">
+        <div class="air-fx">
+          <i class="fx-air-band"></i>
+          <i class="fx-air-stream s1"></i>
+          <i class="fx-air-stream s2"></i>
+          <i class="fx-air-stream s3"></i>
+          <i class="fx-air-stream s4"></i>
+          <i class="fx-air-stream s5"></i>
+        </div>
+        <div class="air-module-inner">
+          <div class="air-module-top">
+            <div class="air-module-label">
+              <ha-icon icon="mdi:molecule-co2"></ha-icon>
+              <span class="label-text">二氧化碳</span>
+            </div>
+            <div class="air-module-tag" data-role="co2-tag">--</div>
+          </div>
+          <div class="air-value-row">
+            <div class="air-value" data-value="co2">--</div>
+            <div class="air-unit">ppm</div>
+          </div>
+          <div class="air-hint" data-hint="co2">--</div>
+          <div class="air-secondary" data-secondary="co2">空气循环指标</div>
+        </div>
+      </section>
+  
+      <section class="air-module level-0" data-metric="temp">
+        <div class="air-fx">
+          <i class="fx-heat-glow"></i>
+          <i class="fx-heat-line h1"></i>
+          <i class="fx-heat-line h2"></i>
+          <i class="fx-heat-line h3"></i>
+          <i class="fx-heat-line h4"></i>
+        </div>
+        <div class="air-module-inner">
+          <div class="air-module-top">
+            <div class="air-module-label">
+              <ha-icon icon="mdi:thermometer"></ha-icon>
+              <span class="label-text">温度</span>
+            </div>
+            <div class="air-module-tag" data-role="temp-tag">--</div>
+          </div>
+          <div class="air-value-row">
+            <div class="air-value" data-value="temp">--</div>
+            <div class="air-unit">℃</div>
+          </div>
+          <div class="air-hint" data-hint="temp">--</div>
+          <div class="air-secondary" data-secondary="temp">热舒适</div>
+        </div>
+      </section>
+  
+      <section class="air-module level-0" data-metric="hum">
+        <div class="air-fx">
+          <span class="fx-drop d1"><svg viewBox="0 0 24 32" aria-hidden="true"><path d="M12 1.6C7.9 7.1 4.1 12.6 4.1 18.3C4.1 25 7.7 30.4 12 30.4C16.3 30.4 19.9 25 19.9 18.3C19.9 12.6 16.1 7.1 12 1.6Z"></path><path d="M9.2 9.6C7.5 12.4 6.4 15.3 6.4 18.2C6.4 22.2 8.2 25.7 10.4 27" fill="none" stroke="rgba(255,255,255,.58)" stroke-width="1.8" stroke-linecap="round"></path></svg></span>
+          <span class="fx-drop d2"><svg viewBox="0 0 24 32" aria-hidden="true"><path d="M12 1.6C7.9 7.1 4.1 12.6 4.1 18.3C4.1 25 7.7 30.4 12 30.4C16.3 30.4 19.9 25 19.9 18.3C19.9 12.6 16.1 7.1 12 1.6Z"></path><path d="M9.2 9.6C7.5 12.4 6.4 15.3 6.4 18.2C6.4 22.2 8.2 25.7 10.4 27" fill="none" stroke="rgba(255,255,255,.58)" stroke-width="1.8" stroke-linecap="round"></path></svg></span>
+          <span class="fx-drop d3"><svg viewBox="0 0 24 32" aria-hidden="true"><path d="M12 1.6C7.9 7.1 4.1 12.6 4.1 18.3C4.1 25 7.7 30.4 12 30.4C16.3 30.4 19.9 25 19.9 18.3C19.9 12.6 16.1 7.1 12 1.6Z"></path><path d="M9.2 9.6C7.5 12.4 6.4 15.3 6.4 18.2C6.4 22.2 8.2 25.7 10.4 27" fill="none" stroke="rgba(255,255,255,.58)" stroke-width="1.8" stroke-linecap="round"></path></svg></span>
+          <span class="fx-drop d4"><svg viewBox="0 0 24 32" aria-hidden="true"><path d="M12 1.6C7.9 7.1 4.1 12.6 4.1 18.3C4.1 25 7.7 30.4 12 30.4C16.3 30.4 19.9 25 19.9 18.3C19.9 12.6 16.1 7.1 12 1.6Z"></path><path d="M9.2 9.6C7.5 12.4 6.4 15.3 6.4 18.2C6.4 22.2 8.2 25.7 10.4 27" fill="none" stroke="rgba(255,255,255,.58)" stroke-width="1.8" stroke-linecap="round"></path></svg></span>
+        </div>
+        <div class="air-module-inner">
+          <div class="air-module-top">
+            <div class="air-module-label">
+              <ha-icon icon="mdi:water-percent"></ha-icon>
+              <span class="label-text">湿度</span>
+            </div>
+            <div class="air-module-tag" data-role="hum-tag">--</div>
+          </div>
+          <div class="air-value-row">
+            <div class="air-value" data-value="hum">--</div>
+            <div class="air-unit">%</div>
+          </div>
+          <div class="air-hint" data-hint="hum">--</div>
+          <div class="air-secondary" data-secondary="hum">湿舒适</div>
+        </div>
+      </section>
+  
+      <section class="air-module level-0" data-metric="pm25">
+        <div class="air-fx">
+          <i class="fx-particle"></i><i class="fx-particle"></i><i class="fx-particle"></i><i class="fx-particle"></i>
+          <i class="fx-particle"></i><i class="fx-particle"></i><i class="fx-particle"></i><i class="fx-particle"></i>
+          <i class="fx-particle"></i><i class="fx-particle"></i><i class="fx-particle"></i><i class="fx-particle"></i>
+        </div>
+        <div class="air-module-inner">
+          <div class="air-module-top">
+            <div class="air-module-label">
+              <ha-icon icon="mdi:dots-grid"></ha-icon>
+              <span class="label-text">PM2.5</span>
+            </div>
+            <div class="air-module-tag" data-role="pm25-tag">--</div>
+          </div>
+          <div class="air-value-row">
+            <div class="air-value" data-value="pm25">--</div>
+            <div class="air-unit">μg/m³</div>
+          </div>
+          <div class="air-hint" data-hint="pm25">--</div>
+          <div class="air-secondary" data-secondary="pm25">空气颗粒物</div>
+        </div>
+      </section>
+  
+      <section class="air-module level-0" data-metric="tvoc">
+        <div class="air-fx">
+          <i class="fx-voc-ring"></i>
+          <i class="fx-voc-ring"></i>
+          <i class="fx-voc-ring"></i>
+        </div>
+        <div class="air-module-inner">
+          <div class="air-module-top">
+            <div class="air-module-label">
+              <ha-icon icon="mdi:molecule"></ha-icon>
+              <span class="label-text">TVOC</span>
+            </div>
+            <div class="air-module-tag" data-role="tvoc-tag">--</div>
+          </div>
+          <div class="air-value-row">
+            <div class="air-value" data-value="tvoc">--</div>
+            <div class="air-unit">mg/m³</div>
+          </div>
+          <div class="air-hint" data-hint="tvoc">--</div>
+          <div class="air-secondary" data-secondary="tvoc">挥发性有机物</div>
+        </div>
+      </section>
+  
+      <section class="air-module wide level-0" data-metric="ch2o">
+        <div class="air-fx">
+          <div class="fx-ch2o-wrap">
+            <span class="fx-ch2o-label atom-c">C</span>
+            <div class="fx-ch2o-skeleton">
+              <i class="fx-ch2o-bond bond-h1"></i>
+              <i class="fx-ch2o-bond bond-h2"></i>
+              <i class="fx-ch2o-bond bond-o1"></i>
+              <i class="fx-ch2o-bond bond-o2"></i>
+              <span class="fx-ch2o-label atom-h1">H</span>
+              <span class="fx-ch2o-label atom-h2">H</span>
+              <span class="fx-ch2o-label atom-o">O</span>
+            </div>
+            <i class="fx-ch2o-field-dot p1"></i>
+            <i class="fx-ch2o-field-dot p2"></i>
+            <i class="fx-ch2o-field-dot p3"></i>
+            <i class="fx-ch2o-field-dot p4"></i>
+            <i class="fx-ch2o-field-dot p5"></i>
+            <i class="fx-ch2o-field-dot p6"></i>
+          </div>
+        </div>
+        <div class="air-module-inner">
+          <div class="air-module-top">
+            <div class="air-module-label">
+              <ha-icon icon="mdi:flask-outline"></ha-icon>
+              <span class="label-text">CH₂O</span>
+            </div>
+            <div class="air-module-tag" data-role="ch2o-tag">国标 &lt; 0.08</div>
+          </div>
+          <div class="air-value-row">
+            <div class="air-value" data-value="ch2o">--</div>
+            <div class="air-unit">mg/m³</div>
+          </div>
+          <div class="air-hint" data-hint="ch2o">--</div>
+          <div class="air-secondary" data-secondary="ch2o">长期污染物</div>
+        </div>
+      </section>
+    </div>
+  </div>
+  
+  <script>
+    (() => {
+      const DEMO_MODE = false;
+  
+      const DEMO_VALUES = {
+        co2: 2000,
+        temp: 32,
+        hum: 75,
+        pm25: 120,
+        tvoc: 1.5,
+        ch2o: 0.12
+      };
+  
+      const ENTITIES = {
+        co2: "sensor.air_monitor_co2",
+        pm25: "sensor.air_monitor_pm25",
+        temp: "sensor.air_monitor_temperature",
+        hum: "sensor.air_monitor_humidity",
+        tvoc: "sensor.air_monitor_tvoc",
+        ch2o: "sensor.air_monitor_ch2o"
+  };
+  
+      const ENTITY_IDS = Object.values(ENTITIES);
+  
+      if (!root._daikinAirRuntime) {
+        root._daikinAirRuntime = {
+          levels: {},
+          ch2oPendingLevel: null,
+          ch2oPendingCount: 0,
+          raf: null
+        };
+  
+        root._watchedEntities = ENTITY_IDS;
+  
+        root._onHassUpdate = () => {
+          if (root._daikinAirRuntime.raf) cancelAnimationFrame(root._daikinAirRuntime.raf);
+          root._daikinAirRuntime.raf = requestAnimationFrame(() => updateCard());
+        };
+      }
+  
+      function getState(entityId) {
+        return hass && hass.states ? hass.states[entityId] : null;
+      }
+  
+      function isBadState(state) {
+        return state === undefined ||
+          state === null ||
+          state === "" ||
+          state === "unknown" ||
+          state === "unavailable" ||
+          state === "none" ||
+          Number.isNaN(Number(state));
+      }
+  
+      function normalizeUnit(unit) {
+        return String(unit || "")
+          .trim()
+          .toLowerCase()
+          .replace(/\s+/g, "")
+          .replace(/μ/g, "µ")
+          .replace(/³/g, "3");
+      }
+  
+      function getUnit(entityId) {
+        const obj = getState(entityId);
+        return obj && obj.attributes ? obj.attributes.unit_of_measurement || "" : "";
+      }
+  
+      function getRawNumber(entityId) {
+        const obj = getState(entityId);
+        if (!obj || isBadState(obj.state)) return null;
+        const n = Number(String(obj.state).replace(/,/g, ""));
+        return Number.isFinite(n) ? n : null;
+      }
+  
+      function getNumber(key) {
+        if (DEMO_MODE) {
+          const demo = Number(DEMO_VALUES[key]);
+          return Number.isFinite(demo) ? demo : null;
+        }
+  
+        const entityId = ENTITIES[key];
+        const raw = getRawNumber(entityId);
+        if (raw === null) return null;
+  
+        const unit = normalizeUnit(getUnit(entityId));
+  
+        if (key === "tvoc" || key === "ch2o") {
+          if (
+            unit.includes("µg/m3") ||
+            unit.includes("ug/m3") ||
+            unit.includes("mcg/m3") ||
+            unit.includes("µg/m³") ||
+            unit.includes("ug/m³")
+          ) {
+            return raw / 1000;
+          }
+          return raw;
+        }
+  
+        return raw;
+      }
+  
+      function formatValue(key, value) {
+        if (value === null) return "--";
+        if (key === "co2") return String(Math.round(value));
+        if (key === "pm25") return String(Math.round(value));
+        if (key === "temp") return value.toFixed(1);
+        if (key === "hum") return value.toFixed(1);
+  
+        if ((key === "tvoc" || key === "ch2o") && value > 0 && value < 0.01) {
+          return "<0.01";
+        }
+  
+        if (key === "tvoc" || key === "ch2o") return value.toFixed(2);
+        return String(value);
+      }
+  
+      function rawLevel(value, thresholds) {
+        if (value === null) return null;
+        for (let i = 0; i < thresholds.length; i++) {
+          if (value <= thresholds[i]) return i;
+        }
+        return thresholds.length;
+      }
+  
+      function stableLevel(key, value, thresholds, margin) {
+        if (DEMO_MODE) return rawLevel(value, thresholds);
+        if (value === null) return null;
+  
+        const runtime = root._daikinAirRuntime;
+        const next = rawLevel(value, thresholds);
+        const prev = runtime.levels[key];
+  
+        if (prev === undefined || prev === null) {
+          runtime.levels[key] = next;
+          return next;
+        }
+  
+        if (next > prev) {
+          runtime.levels[key] = next;
+          return next;
+        }
+  
+        if (next < prev) {
+          const exitIndex = Math.max(prev - 1, 0);
+          const exitValue = thresholds[exitIndex] - margin;
+          if (value <= exitValue || next < prev - 1) runtime.levels[key] = next;
+          return runtime.levels[key];
+        }
+  
+        return prev;
+      }
+  
+      function stableCh2oLevel(value) {
+        if (DEMO_MODE) return rawLevel(value, [0.03, 0.07, 0.10, 0.15]);
+        if (value === null) return null;
+  
+        const runtime = root._daikinAirRuntime;
+        const next = rawLevel(value, [0.03, 0.07, 0.10, 0.15]);
+        const prev = runtime.levels.ch2o;
+  
+        if (prev === undefined || prev === null) {
+          runtime.levels.ch2o = next;
+          return next;
+        }
+  
+        if (next > prev) {
+          if (runtime.ch2oPendingLevel !== next) {
+            runtime.ch2oPendingLevel = next;
+            runtime.ch2oPendingCount = 1;
+          } else {
+            runtime.ch2oPendingCount += 1;
+          }
+  
+          if (runtime.ch2oPendingCount >= 3) {
+            runtime.levels.ch2o = next;
+            runtime.ch2oPendingLevel = null;
+            runtime.ch2oPendingCount = 0;
+          }
+  
+          return runtime.levels.ch2o;
+        }
+  
+        runtime.ch2oPendingLevel = null;
+        runtime.ch2oPendingCount = 0;
+  
+        if (next < prev) {
+          const exitValue =
+            prev === 1 ? 0.025 :
+            prev === 2 ? 0.06 :
+            prev === 3 ? 0.085 :
+            0.13;
+  
+          if (value <= exitValue || next < prev - 1) runtime.levels.ch2o = next;
+          return runtime.levels.ch2o;
+        }
+  
+        return prev;
+      }
+  
+      function co2Meta(value) {
+        if (value === null) return { level: null, tag: "离线", hint: "传感器离线", secondary: "空气循环指标" };
+        const level = stableLevel("co2", value, [800, 1000, 1500, 2000], 80);
+        const list = [
+          ["清新", "空气清新", "空气循环良好"],
+          ["舒适", "状态舒适", "适合长时间停留"],
+          ["略闷", "建议留意", "空气交换开始变弱"],
+          ["需通风", "建议通风", "打开窗户或开启新风"],
+          ["关注", "尽快通风", "CO₂ 浓度较高"]
+        ];
+        return { level, tag: list[level][0], hint: list[level][1], secondary: list[level][2] };
+      }
+  
+      function tempMeta(value) {
+        if (value === null) return { level: null, tag: "离线", hint: "传感器离线", secondary: "热舒适" };
+  
+        if (value < 18) {
+          return { level: 2, tag: "偏冷", hint: "室温偏低", secondary: "注意保暖" };
+        }
+  
+        if (value <= 26) {
+          return { level: 0, tag: "舒适", hint: "体感舒适", secondary: "处于舒适区" };
+        }
+  
+        if (value <= 28) {
+          return { level: 2, tag: "微热", hint: "体感微热", secondary: "可适当降温" };
+        }
+  
+        if (value <= 30) {
+          return { level: 3, tag: "稍热", hint: "体感稍热", secondary: "建议降温" };
+        }
+  
+        return { level: 4, tag: "偏热", hint: "室温偏高", secondary: "建议开启降温" };
+      }
+  
+      function humMeta(value) {
+        if (value === null) return { level: null, tag: "离线", hint: "传感器离线", secondary: "湿舒适" };
+        if (value < 30) return { level: 3, tag: "偏干", hint: "空气偏干", secondary: "可适当加湿" };
+        if (value < 40) return { level: 2, tag: "略干", hint: "湿度略低", secondary: "留意干燥感" };
+        if (value <= 60) return { level: 0, tag: "适宜", hint: "湿度适宜", secondary: "处于舒适区" };
+        if (value <= 70) return { level: 2, tag: "略湿", hint: "湿度略高", secondary: "注意通风" };
+        return { level: 3, tag: "偏湿", hint: "空气偏湿", secondary: "建议除湿" };
+      }
+  
+      function pm25Meta(value) {
+        if (value === null) return { level: null, tag: "离线", hint: "传感器离线", secondary: "空气颗粒物" };
+        const level = stableLevel("pm25", value, [15, 35, 75, 150], 5);
+        const list = [
+          ["优秀", "颗粒物较低", "空气洁净度良好"],
+          ["良好", "颗粒物正常", "空气状态稳定"],
+          ["关注", "颗粒物偏高", "建议留意空气净化"],
+          ["净化", "建议净化", "可开启空气净化器"],
+          ["优先", "净化优先", "颗粒物浓度较高"]
+        ];
+        return { level, tag: list[level][0], hint: list[level][1], secondary: list[level][2] };
+      }
+  
+      function tvocMeta(value) {
+        if (value === null) return { level: null, tag: "离线", hint: "传感器离线", secondary: "挥发性有机物" };
+        const level = stableLevel("tvoc", value, [0.30, 0.60, 1.00, 2.00], 0.05);
+        const list = [
+          ["正常", "挥发物正常", "空气活性物较低"],
+          ["波动", "略有波动", "留意异味来源"],
+          ["通风", "建议通风", "挥发性有机物偏高"],
+          ["持续", "持续通风", "建议加强空气交换"],
+          ["关注", "需关注", "挥发物浓度较高"]
+        ];
+        return { level, tag: list[level][0], hint: list[level][1], secondary: list[level][2] };
+      }
+  
+      function ch2oMeta(value) {
+        if (value === null) return { level: null, tag: "离线", hint: "传感器离线", secondary: "长期污染物" };
+        const level = stableCh2oLevel(value);
+        let margin = "";
+        if (value < 0.08) {
+          const pct = Math.max(0, Math.round((1 - value / 0.08) * 100));
+          margin = "安全余量 " + pct + "%";
+        } else {
+          margin = "国家标准 < 0.08";
+        }
+  
+        const list = [
+          ["良好", "状态良好", margin],
+          ["接近", "接近限值", "建议保持通风"],
+          ["通风", "建议通风", "已接近或达到限值"],
+          ["持续", "持续通风", "甲醛浓度需关注"],
+          ["关注", "需关注", "建议持续通风"]
+        ];
+        return { level, tag: list[level][0], hint: list[level][1], secondary: list[level][2] };
+      }
+  
+      function setModule(key, value, meta) {
+        const module = root.querySelector('[data-metric="' + key + '"]');
+        if (!module) return;
+  
+        module.classList.remove("level-0", "level-1", "level-2", "level-3", "level-4", "offline");
+  
+        if (meta.level === null) {
+          module.classList.add("offline");
+        } else {
+          module.classList.add("level-" + Math.max(0, Math.min(4, meta.level)));
+        }
+  
+        setText('[data-value="' + key + '"]', formatValue(key, value));
+        setText('[data-role="' + key + '-tag"]', meta.tag);
+        setText('[data-hint="' + key + '"]', meta.hint);
+        setText('[data-secondary="' + key + '"]', meta.secondary);
+      }
+  
+      function setText(selector, text) {
+        const el = root.querySelector(selector);
+        if (el && el.textContent !== String(text)) el.textContent = String(text);
+      }
+  
+      function getRegistryItem(registry, id) {
+        if (!registry || !id) return null;
+        if (registry instanceof Map) return registry.get(id) || null;
+        return registry[id] || null;
+      }
+  
+      function getAreaName(entityId) {
+        if (DEMO_MODE) return "测试房间";
+  
+        const fallback = config && config.room_name ? config.room_name : "室内环境";
+  
+        try {
+          const entityReg = getRegistryItem(hass.entities, entityId);
+          let areaId = entityReg && entityReg.area_id ? entityReg.area_id : null;
+  
+          if (!areaId && entityReg && entityReg.device_id) {
+            const deviceReg = getRegistryItem(hass.devices, entityReg.device_id);
+            areaId = deviceReg && deviceReg.area_id ? deviceReg.area_id : null;
+          }
+  
+          const areaReg = getRegistryItem(hass.areas, areaId);
+          if (areaReg && areaReg.name) return areaReg.name;
+        } catch (e) {}
+  
+        return fallback;
+      }
+  
+      function getUpdatedText() {
+        if (DEMO_MODE) return "测试模式";
+  
+        let latest = 0;
+  
+        ENTITY_IDS.forEach((id) => {
+          const obj = getState(id);
+          if (!obj || !obj.last_updated) return;
+          const t = new Date(obj.last_updated).getTime();
+          if (Number.isFinite(t) && t > latest) latest = t;
+        });
+  
+        if (!latest) return "--";
+  
+        const diff = Math.max(0, Date.now() - latest);
+        const sec = Math.floor(diff / 1000);
+  
+        if (sec < 15) return "刚刚更新";
+        if (sec < 60) return sec + "秒前";
+  
+        const min = Math.floor(sec / 60);
+        if (min < 60) return min + "分钟前";
+  
+        const hour = Math.floor(min / 60);
+        if (hour < 24) return hour + "小时前";
+  
+        return "数据较旧";
+      }
+  
+      function getTopStatus(metas) {
+        const airKeys = ["co2", "pm25", "tvoc", "ch2o"];
+        let worstKey = null;
+        let worstLevel = -1;
+  
+        airKeys.forEach((key) => {
+          const m = metas[key];
+  
+          if (!m || m.level === null) {
+            if (worstLevel < 3) {
+              worstLevel = 3;
+              worstKey = key;
+            }
+            return;
+          }
+  
+          if (m.level > worstLevel) {
+            worstLevel = m.level;
+            worstKey = key;
+          }
+        });
+  
+        if (worstLevel <= 0) return "清新";
+        if (worstLevel === 1) return "舒适";
+        if (worstLevel === 2) return worstKey === "co2" ? "略闷" : "良好";
+        if (worstLevel === 3) return worstKey === "co2" ? "需通风" : "需关注";
+        return worstKey === "co2" ? "需通风" : "需关注";
+      }
+  
+      function getSubtitle(metas) {
+        if (DEMO_MODE) return "当前为动效等级测试";
+  
+        const airKeys = ["co2", "pm25", "tvoc", "ch2o"];
+        let worstKey = null;
+        let worstLevel = -1;
+  
+        airKeys.forEach((key) => {
+          const m = metas[key];
+          const level = m && m.level !== null ? m.level : 3;
+  
+          if (level > worstLevel) {
+            worstLevel = level;
+            worstKey = key;
+          }
+        });
+  
+        const map = {
+          co2: "当前关注：空气循环",
+          pm25: "当前关注：空气颗粒物",
+          tvoc: "当前关注：挥发性有机物",
+          ch2o: "当前关注：甲醛"
+        };
+  
+        if (worstLevel <= 1) return "空气状态稳定";
+        return map[worstKey] || "空气状态监测中";
+      }
+  
+      function updateCard() {
+        if (!hass || !hass.states) return;
+  
+        const values = {
+          co2: getNumber("co2"),
+          temp: getNumber("temp"),
+          hum: getNumber("hum"),
+          pm25: getNumber("pm25"),
+          tvoc: getNumber("tvoc"),
+          ch2o: getNumber("ch2o")
+        };
+  
+        const metas = {
+          co2: co2Meta(values.co2),
+          temp: tempMeta(values.temp),
+          hum: humMeta(values.hum),
+          pm25: pm25Meta(values.pm25),
+          tvoc: tvocMeta(values.tvoc),
+          ch2o: ch2oMeta(values.ch2o)
+        };
+  
+        setModule("co2", values.co2, metas.co2);
+        setModule("temp", values.temp, metas.temp);
+        setModule("hum", values.hum, metas.hum);
+        setModule("pm25", values.pm25, metas.pm25);
+        setModule("tvoc", values.tvoc, metas.tvoc);
+        setModule("ch2o", values.ch2o, metas.ch2o);
+  
+        const room = getAreaName(ENTITIES.co2);
+        const status = getTopStatus(metas);
+  
+        setText('[data-role="room-title"]', room + " · " + status);
+        setText('[data-role="room-subtitle"]', getSubtitle(metas));
+        setText('[data-role="updated"]', getUpdatedText());
+      }
+  
+      updateCard();
+    })();
+  </script>
+  ```
+  
+  </details>
+  
+  ---
+  
+  <details>
+  <summary><b>📄 Full Code (Without CH₂O)</b></summary>
+  
+  ```yaml
+  <style>
+    :host {
+      --daikin-radius: 14px;
+      --daikin-gap: 10px;
+      --daikin-panel-pad: 14px;
+      --daikin-border-normal: rgba(120, 150, 170, 0.22);
+      --daikin-cyan: #36cfff;
+      --daikin-teal: #2ee6c8;
+      --daikin-amber: #ffc857;
+      --daikin-orange: #ff9a3d;
+      --daikin-red: #ff5b5b;
+      --ha-card-background: transparent;
+      --ha-card-box-shadow: none;
+      --ha-card-border-width: 0px;
+    }
+  
+    ha-card {
+      background: transparent !important;
+      box-shadow: none !important;
+      border: none !important;
+      overflow: visible !important;
+    }
+  
+    .card-content {
+      padding: 0 !important;
+    }
+  
+    .daikin-air-panel {
+      position: relative;
+      width: 100%;
+      box-sizing: border-box;
+      padding: var(--daikin-panel-pad);
+      font: inherit;
+      color: var(--primary-text-color);
+      background: transparent;
+      border: none;
+      box-shadow: none;
+      overflow: visible;
+    }
+  
+    .daikin-air-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+      padding: 0 2px;
+    }
+  
+    .daikin-air-title-wrap {
+      min-width: 0;
+    }
+  
+    .daikin-air-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 20px;
+      font-weight: 700;
+      line-height: 1.15;
+      letter-spacing: -0.03em;
+      color: var(--primary-text-color);
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  
+    .daikin-air-title ha-icon {
+      width: 22px;
+      height: 22px;
+      color: var(--daikin-orange);
+      flex: 0 0 auto;
+    }
+  
+    .daikin-air-subtitle {
+      margin-top: 5px;
+      font-size: 12px;
+      line-height: 1.25;
+      color: var(--secondary-text-color);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  
+    .daikin-air-update {
+      flex: 0 0 auto;
+      font-size: 11px;
+      line-height: 1;
+      color: var(--secondary-text-color);
+      border: 1px solid rgba(120, 150, 170, 0.18);
+      border-radius: 10px;
+      padding: 7px 8px;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+      background: rgba(255, 255, 255, 0.22);
+    }
+  
+    .daikin-air-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: var(--daikin-gap);
+    }
+  
+    .air-module {
+      --module-accent: var(--daikin-cyan);
+      --module-motion: 1;
+      --module-strength: 0.55;
+      --icon-y: 0px;
+      position: relative;
+      min-height: 118px;
+      box-sizing: border-box;
+      border: 1px solid color-mix(in srgb, var(--module-accent) 38%, var(--daikin-border-normal));
+      border-radius: var(--daikin-radius);
+      padding: 13px;
+      overflow: hidden;
+      color: var(--primary-text-color);
+      background: color-mix(in srgb, var(--card-background-color) 52%, transparent);
+      transition:
+        border-color 1.2s ease,
+        opacity 0.4s ease,
+        transform 0.2s ease;
+      contain: layout paint style;
+      isolation: isolate;
+    }
+  
+    .air-module.wide {
+      grid-column: 1 / -1;
+      min-height: 136px;
+    }
+  
+    .air-module.level-0 {
+      --module-accent: var(--daikin-cyan);
+      --module-motion: 0.92;
+      --module-strength: 0.56;
+    }
+  
+    .air-module.level-1 {
+      --module-accent: var(--daikin-teal);
+      --module-motion: 1;
+      --module-strength: 0.62;
+    }
+  
+    .air-module.level-2 {
+      --module-accent: var(--daikin-amber);
+      --module-motion: 1.2;
+      --module-strength: 0.76;
+    }
+  
+    .air-module.level-3 {
+      --module-accent: var(--daikin-orange);
+      --module-motion: 1.45;
+      --module-strength: 0.9;
+    }
+  
+    .air-module.level-4 {
+      --module-accent: var(--daikin-red);
+      --module-motion: 1.8;
+      --module-strength: 1;
+    }
+  
+    .air-module.offline {
+      --module-accent: var(--disabled-text-color);
+      --module-motion: 0.65;
+      --module-strength: 0.18;
+      opacity: 0.58;
+    }
+  
+    .air-fx {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      color: var(--module-accent);
+      opacity: var(--module-strength);
+      z-index: 0;
+      transition: opacity 1.2s ease, color 1.2s ease;
+    }
+  
+    .air-module-inner {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      min-height: 100%;
+    }
+  
+    .air-module-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+  
+    .air-module-label {
+      display: grid;
+      grid-template-columns: 18px minmax(0, auto);
+      align-items: center;
+      column-gap: 7px;
+      min-width: 0;
+      height: 20px;
+      line-height: 20px;
+    }
+  
+    .air-module-label ha-icon {
+      width: 18px;
+      height: 18px;
+      display: block;
+      color: var(--module-accent);
+      transform: translateY(var(--icon-y));
+      transition: color 1.2s ease;
+    }
+  
+    .air-module-label span.label-text {
+      display: block;
+      min-width: 0;
+      height: 20px;
+      line-height: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      color: color-mix(in srgb, var(--secondary-text-color) 92%, transparent);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  
+    .air-module-tag {
+      color: var(--module-accent);
+      font-size: 10px;
+      line-height: 1;
+      font-weight: 700;
+      padding: 5px 7px;
+      border: 1px solid color-mix(in srgb, var(--module-accent) 50%, transparent);
+      border-radius: 10px;
+      white-space: nowrap;
+      background: color-mix(in srgb, var(--module-accent) 10%, transparent);
+      transition:
+        color 1.2s ease,
+        border-color 1.2s ease,
+        background 1.2s ease;
+    }
+  
+    .air-value-row {
+      display: flex;
+      align-items: baseline;
+      gap: 7px;
+      margin-top: auto;
+      min-width: 0;
+    }
+  
+    .air-value {
+      font-size: 34px;
+      font-weight: 760;
+      line-height: 0.95;
+      letter-spacing: -0.055em;
+      color: var(--primary-text-color);
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+  
+    .air-module.wide .air-value {
+      font-size: 42px;
+    }
+  
+    .air-unit {
+      color: var(--secondary-text-color);
+      font-size: 12px;
+      font-weight: 650;
+      line-height: 1;
+      white-space: nowrap;
+    }
+  
+    .air-hint {
+      margin-top: 9px;
+      color: var(--secondary-text-color);
+      font-size: 12px;
+      line-height: 1.2;
+      min-height: 15px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  
+    .air-secondary {
+      margin-top: 7px;
+      color: var(--disabled-text-color);
+      font-size: 11px;
+      line-height: 1.2;
+      min-height: 13px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  
+    .fx-air-band {
+      position: absolute;
+      right: -12%;
+      top: 34%;
+      width: 58%;
+      height: 42%;
+      border-radius: 10px;
+      background: radial-gradient(ellipse at center, currentColor 0%, rgba(255,255,255,0) 68%);
+      filter: blur(18px);
+      opacity: 0.12;
+      animation: daikinBandShift calc(14s / var(--module-motion)) ease-in-out infinite;
+    }
+  
+    .fx-air-stream {
+      position: absolute;
+      left: -26%;
+      width: 78%;
+      height: 2px;
+      border-radius: 10px;
+      background: linear-gradient(90deg, transparent 0%, currentColor 30%, currentColor 72%, transparent 100%);
+      opacity: 0;
+      animation-name: daikinAirStream;
+      animation-timing-function: linear;
+      animation-iteration-count: infinite;
+      animation-duration: calc(var(--dur, 11s) / var(--module-motion));
+      animation-delay: var(--delay, 0s);
+      will-change: transform, clip-path, opacity;
+    }
+  
+    .fx-air-stream::after {
+      content: "";
+      position: absolute;
+      inset: -5px 16%;
+      border-radius: 10px;
+      background: currentColor;
+      filter: blur(10px);
+      opacity: 0.18;
+    }
+  
+    .fx-air-stream.s1 { top: 20%; width: 64%; --dur: 11.5s; --delay: -1s; opacity: 0.54; }
+    .fx-air-stream.s2 { top: 35%; width: 74%; --dur: 10.5s; --delay: -4.2s; opacity: 0.72; }
+    .fx-air-stream.s3 { top: 50%; width: 82%; --dur: 12s; --delay: -7.4s; opacity: 0.84; }
+    .fx-air-stream.s4 { top: 66%; width: 68%; --dur: 13s; --delay: -10s; opacity: 0.62; }
+    .fx-air-stream.s5 { top: 80%; width: 56%; --dur: 14s; --delay: -12.5s; opacity: 0.46; }
+  
+    @keyframes daikinAirStream {
+      0% { transform: translateX(0); clip-path: inset(0 100% 0 0); opacity: 0; }
+      15% { transform: translateX(34%); clip-path: inset(0 58% 0 0); opacity: 0.92; }
+      38% { transform: translateX(92%); clip-path: inset(0 18% 0 10%); opacity: 0.94; }
+      68% { transform: translateX(155%); clip-path: inset(0 0 0 45%); opacity: 0.72; }
+      100% { transform: translateX(215%); clip-path: inset(0 0 0 100%); opacity: 0; }
+    }
+  
+    @keyframes daikinBandShift {
+      0% { transform: translateX(0) scale(1); opacity: 0.06; }
+      50% { transform: translateX(-5%) scale(1.03); opacity: 0.14; }
+      100% { transform: translateX(0) scale(1); opacity: 0.06; }
+    }
+  
+    .fx-heat-glow {
+      position: absolute;
+      left: 10%;
+      right: 10%;
+      bottom: 3%;
+      height: 58%;
+      border-radius: 10px;
+      background: linear-gradient(180deg, rgba(255,255,255,0) 0%, currentColor 100%);
+      filter: blur(18px);
+      opacity: 0.12;
+      animation: daikinHeatGlow calc(12s / var(--module-motion)) ease-in-out infinite;
+    }
+  
+    .fx-heat-line {
+      position: absolute;
+      bottom: -20%;
+      width: 2px;
+      height: 58%;
+      border-radius: 10px;
+      background: linear-gradient(0deg, transparent, currentColor, transparent);
+      animation: daikinHeatRise calc(10s / var(--module-motion)) ease-in-out infinite;
+    }
+  
+    .fx-heat-line.h1 { left: 18%; animation-delay: -1s; opacity: 0.68; }
+    .fx-heat-line.h2 { left: 40%; animation-delay: -3.5s; opacity: 0.58; }
+    .fx-heat-line.h3 { left: 62%; animation-delay: -6s; opacity: 0.72; }
+    .fx-heat-line.h4 { left: 80%; animation-delay: -8.5s; opacity: 0.48; }
+  
+    .fx-heat-line::after {
+      content: "";
+      position: absolute;
+      inset: 20% -7px;
+      background: currentColor;
+      filter: blur(10px);
+      opacity: 0.18;
+    }
+  
+    @keyframes daikinHeatRise {
+      0% { transform: translateY(22%) scaleY(0.8); opacity: 0; }
+      20% { opacity: 0.72; }
+      70% { opacity: 0.36; }
+      100% { transform: translateY(-120%) scaleY(1.22); opacity: 0; }
+    }
+  
+    @keyframes daikinHeatGlow {
+      0% { opacity: 0.08; transform: scaleX(0.98); }
+      50% { opacity: 0.15; transform: scaleX(1.03); }
+      100% { opacity: 0.08; transform: scaleX(0.98); }
+    }
+  
+    .fx-drop {
+      position: absolute;
+      width: 14px;
+      height: 18px;
+      color: currentColor;
+      animation: daikinDropFloat calc(11.5s / var(--module-motion)) ease-in-out infinite;
+      filter: drop-shadow(0 0 6px color-mix(in srgb, currentColor 28%, transparent));
+      will-change: transform, opacity;
+    }
+  
+    .fx-drop svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+      fill: currentColor;
+      opacity: 0.82;
+    }
+  
+    .fx-drop.d1 { left: 16%; bottom: 10%; animation-delay: -1s; opacity: 0.72; }
+    .fx-drop.d2 { left: 38%; bottom: 6%; animation-delay: -3.5s; opacity: 0.58; }
+    .fx-drop.d3 { left: 62%; bottom: 10%; animation-delay: -6.5s; opacity: 0.48; }
+    .fx-drop.d4 { left: 80%; bottom: 4%; animation-delay: -9s; opacity: 0.38; }
+  
+    @keyframes daikinDropFloat {
+      0% { transform: translateY(16%) scale(0.9); opacity: 0; }
+      22% { opacity: 0.75; }
+      68% { opacity: 0.38; }
+      100% { transform: translateY(-95%) scale(1.04); opacity: 0; }
+    }
+  
+    .fx-particle {
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      border-radius: 10px;
+      background: currentColor;
+      opacity: 0.78;
+      animation: daikinParticleDrift calc(12.5s / var(--module-motion)) ease-in-out infinite;
+    }
+  
+    .fx-particle:nth-child(1) { left: 16%; top: 32%; animation-delay: -1s; }
+    .fx-particle:nth-child(2) { left: 31%; top: 61%; animation-delay: -3s; }
+    .fx-particle:nth-child(3) { left: 48%; top: 42%; animation-delay: -5s; }
+    .fx-particle:nth-child(4) { left: 67%; top: 70%; animation-delay: -7s; }
+    .fx-particle:nth-child(5) { left: 78%; top: 36%; animation-delay: -9s; }
+    .fx-particle:nth-child(6) { left: 22%; top: 77%; animation-delay: -11s; }
+    .fx-particle:nth-child(7) { left: 54%; top: 24%; animation-delay: -2s; }
+    .fx-particle:nth-child(8) { left: 86%; top: 59%; animation-delay: -6s; }
+    .fx-particle:nth-child(9) { left: 38%; top: 20%; animation-delay: -8s; }
+    .fx-particle:nth-child(10) { left: 72%; top: 82%; animation-delay: -10s; }
+    .fx-particle:nth-child(11) { left: 11%; top: 54%; animation-delay: -12s; }
+    .fx-particle:nth-child(12) { left: 58%; top: 64%; animation-delay: -4s; }
+  
+    .fx-particle::after {
+      content: "";
+      position: absolute;
+      inset: -8px;
+      border-radius: inherit;
+      background: currentColor;
+      filter: blur(8px);
+      opacity: 0.38;
+    }
+  
+    .air-module.level-0 .fx-particle:nth-child(n+8) { opacity: 0; }
+    .air-module.level-1 .fx-particle:nth-child(n+10) { opacity: 0; }
+    .air-module.level-2 .fx-particle:nth-child(n+12) { opacity: 0; }
+  
+    @keyframes daikinParticleDrift {
+      0% { transform: translate3d(0, 0, 0) scale(0.85); }
+      35% { transform: translate3d(8px, -7px, 0) scale(1); }
+      70% { transform: translate3d(-5px, 6px, 0) scale(0.92); }
+      100% { transform: translate3d(0, 0, 0) scale(0.85); }
+    }
+  
+    .fx-voc-ring {
+      position: absolute;
+      right: -24px;
+      bottom: -28px;
+      width: 62px;
+      height: 62px;
+      border: 2px solid currentColor;
+      border-radius: 10px;
+      opacity: 0;
+      animation: daikinVocPulse calc(10.5s / var(--module-motion)) ease-out infinite;
+    }
+  
+    .fx-voc-ring:nth-child(1) { animation-delay: -1s; }
+    .fx-voc-ring:nth-child(2) { animation-delay: -4s; }
+    .fx-voc-ring:nth-child(3) { animation-delay: -7s; }
+  
+    @keyframes daikinVocPulse {
+      0% { transform: scale(0.45); opacity: 0; }
+      18% { opacity: 0.56; }
+      100% { transform: scale(2.75); opacity: 0; }
+    }
+  
+    @media (max-width: 480px) {
+      :host {
+        --daikin-panel-pad: 12px;
+        --daikin-gap: 9px;
+      }
+  
+      .air-module {
+        min-height: 108px;
+        padding: 12px;
+      }
+  
+      .air-module.wide {
+        min-height: 128px;
+      }
+  
+      .air-value {
+        font-size: 30px;
+      }
+  
+      .air-module.wide .air-value {
+        font-size: 38px;
+      }
+  
+      .daikin-air-title {
+        font-size: 18px;
+      }
+  
+      .air-module-tag {
+        font-size: 9px;
+        padding: 5px 6px;
+      }
+  
+      .air-unit {
+        font-size: 11px;
+      }
+    }
+  
+    @media (prefers-reduced-motion: reduce) {
+      .fx-air-band,
+      .fx-air-stream,
+      .fx-heat-glow,
+      .fx-heat-line,
+      .fx-drop,
+      .fx-particle,
+      .fx-voc-ring {
+        animation-duration: 60s !important;
+      }
+    }
+  </style>
+  
+  <div class="daikin-air-panel">
+    <div class="daikin-air-header">
+      <div class="daikin-air-title-wrap">
+        <div class="daikin-air-title">
+          <ha-icon icon="mdi:home-thermometer-outline"></ha-icon>
+          <span data-role="room-title">室内环境 · --</span>
+        </div>
+        <div class="daikin-air-subtitle" data-role="room-subtitle">空气质量监测</div>
+      </div>
+      <div class="daikin-air-update" data-role="updated">--</div>
+    </div>
+  
+    <div class="daikin-air-grid">
+      <section class="air-module wide level-0" data-metric="co2">
+        <div class="air-fx">
+          <i class="fx-air-band"></i>
+          <i class="fx-air-stream s1"></i>
+          <i class="fx-air-stream s2"></i>
+          <i class="fx-air-stream s3"></i>
+          <i class="fx-air-stream s4"></i>
+          <i class="fx-air-stream s5"></i>
+        </div>
+        <div class="air-module-inner">
+          <div class="air-module-top">
+            <div class="air-module-label">
+              <ha-icon icon="mdi:molecule-co2"></ha-icon>
+              <span class="label-text">二氧化碳</span>
+            </div>
+            <div class="air-module-tag" data-role="co2-tag">--</div>
+          </div>
+          <div class="air-value-row">
+            <div class="air-value" data-value="co2">--</div>
+            <div class="air-unit">ppm</div>
+          </div>
+          <div class="air-hint" data-hint="co2">--</div>
+          <div class="air-secondary" data-secondary="co2">空气循环指标</div>
+        </div>
+      </section>
+  
+      <section class="air-module level-0" data-metric="temp">
+        <div class="air-fx">
+          <i class="fx-heat-glow"></i>
+          <i class="fx-heat-line h1"></i>
+          <i class="fx-heat-line h2"></i>
+          <i class="fx-heat-line h3"></i>
+          <i class="fx-heat-line h4"></i>
+        </div>
+        <div class="air-module-inner">
+          <div class="air-module-top">
+            <div class="air-module-label">
+              <ha-icon icon="mdi:thermometer"></ha-icon>
+              <span class="label-text">温度</span>
+            </div>
+            <div class="air-module-tag" data-role="temp-tag">--</div>
+          </div>
+          <div class="air-value-row">
+            <div class="air-value" data-value="temp">--</div>
+            <div class="air-unit">℃</div>
+          </div>
+          <div class="air-hint" data-hint="temp">--</div>
+          <div class="air-secondary" data-secondary="temp">热舒适</div>
+        </div>
+      </section>
+  
+      <section class="air-module level-0" data-metric="hum">
+        <div class="air-fx">
+          <span class="fx-drop d1"><svg viewBox="0 0 24 32" aria-hidden="true"><path d="M12 1.6C7.9 7.1 4.1 12.6 4.1 18.3C4.1 25 7.7 30.4 12 30.4C16.3 30.4 19.9 25 19.9 18.3C19.9 12.6 16.1 7.1 12 1.6Z"></path><path d="M9.2 9.6C7.5 12.4 6.4 15.3 6.4 18.2C6.4 22.2 8.2 25.7 10.4 27" fill="none" stroke="rgba(255,255,255,.58)" stroke-width="1.8" stroke-linecap="round"></path></svg></span>
+          <span class="fx-drop d2"><svg viewBox="0 0 24 32" aria-hidden="true"><path d="M12 1.6C7.9 7.1 4.1 12.6 4.1 18.3C4.1 25 7.7 30.4 12 30.4C16.3 30.4 19.9 25 19.9 18.3C19.9 12.6 16.1 7.1 12 1.6Z"></path><path d="M9.2 9.6C7.5 12.4 6.4 15.3 6.4 18.2C6.4 22.2 8.2 25.7 10.4 27" fill="none" stroke="rgba(255,255,255,.58)" stroke-width="1.8" stroke-linecap="round"></path></svg></span>
+          <span class="fx-drop d3"><svg viewBox="0 0 24 32" aria-hidden="true"><path d="M12 1.6C7.9 7.1 4.1 12.6 4.1 18.3C4.1 25 7.7 30.4 12 30.4C16.3 30.4 19.9 25 19.9 18.3C19.9 12.6 16.1 7.1 12 1.6Z"></path><path d="M9.2 9.6C7.5 12.4 6.4 15.3 6.4 18.2C6.4 22.2 8.2 25.7 10.4 27" fill="none" stroke="rgba(255,255,255,.58)" stroke-width="1.8" stroke-linecap="round"></path></svg></span>
+          <span class="fx-drop d4"><svg viewBox="0 0 24 32" aria-hidden="true"><path d="M12 1.6C7.9 7.1 4.1 12.6 4.1 18.3C4.1 25 7.7 30.4 12 30.4C16.3 30.4 19.9 25 19.9 18.3C19.9 12.6 16.1 7.1 12 1.6Z"></path><path d="M9.2 9.6C7.5 12.4 6.4 15.3 6.4 18.2C6.4 22.2 8.2 25.7 10.4 27" fill="none" stroke="rgba(255,255,255,.58)" stroke-width="1.8" stroke-linecap="round"></path></svg></span>
+        </div>
+        <div class="air-module-inner">
+          <div class="air-module-top">
+            <div class="air-module-label">
+              <ha-icon icon="mdi:water-percent"></ha-icon>
+              <span class="label-text">湿度</span>
+            </div>
+            <div class="air-module-tag" data-role="hum-tag">--</div>
+          </div>
+          <div class="air-value-row">
+            <div class="air-value" data-value="hum">--</div>
+            <div class="air-unit">%</div>
+          </div>
+          <div class="air-hint" data-hint="hum">--</div>
+          <div class="air-secondary" data-secondary="hum">湿舒适</div>
+        </div>
+      </section>
+  
+      <section class="air-module level-0" data-metric="pm25">
+        <div class="air-fx">
+          <i class="fx-particle"></i><i class="fx-particle"></i><i class="fx-particle"></i><i class="fx-particle"></i>
+          <i class="fx-particle"></i><i class="fx-particle"></i><i class="fx-particle"></i><i class="fx-particle"></i>
+          <i class="fx-particle"></i><i class="fx-particle"></i><i class="fx-particle"></i><i class="fx-particle"></i>
+        </div>
+        <div class="air-module-inner">
+          <div class="air-module-top">
+            <div class="air-module-label">
+              <ha-icon icon="mdi:dots-grid"></ha-icon>
+              <span class="label-text">PM2.5</span>
+            </div>
+            <div class="air-module-tag" data-role="pm25-tag">--</div>
+          </div>
+          <div class="air-value-row">
+            <div class="air-value" data-value="pm25">--</div>
+            <div class="air-unit">μg/m³</div>
+          </div>
+          <div class="air-hint" data-hint="pm25">--</div>
+          <div class="air-secondary" data-secondary="pm25">空气颗粒物</div>
+        </div>
+      </section>
+  
+      <section class="air-module level-0" data-metric="tvoc">
+        <div class="air-fx">
+          <i class="fx-voc-ring"></i>
+          <i class="fx-voc-ring"></i>
+          <i class="fx-voc-ring"></i>
+        </div>
+        <div class="air-module-inner">
+          <div class="air-module-top">
+            <div class="air-module-label">
+              <ha-icon icon="mdi:molecule"></ha-icon>
+              <span class="label-text">TVOC</span>
+            </div>
+            <div class="air-module-tag" data-role="tvoc-tag">--</div>
+          </div>
+          <div class="air-value-row">
+            <div class="air-value" data-value="tvoc">--</div>
+            <div class="air-unit">mg/m³</div>
+          </div>
+          <div class="air-hint" data-hint="tvoc">--</div>
+          <div class="air-secondary" data-secondary="tvoc">挥发性有机物</div>
+        </div>
+      </section>
+    </div>
+  </div>
+  
+  <script>
+    (() => {
+      const DEMO_MODE = false;
+  
+      const DEMO_VALUES = {
+        co2: 2000,
+        temp: 32,
+        hum: 75,
+        pm25: 120,
+        tvoc: 1.5
+      };
+  
+      const ENTITIES = {
+        co2: "sensor.air_monitor_co2",
+        pm25: "sensor.air_monitor_pm25",
+        temp: "sensor.air_monitor_temperature",
+        hum: "sensor.air_monitor_humidity",
+        tvoc: "sensor.air_monitor_tvoc"
+      };
+  
+      const ENTITY_IDS = Object.values(ENTITIES);
+  
+      if (!root._daikinAirRuntimeNoCh2o) {
+        root._daikinAirRuntimeNoCh2o = {
+          levels: {},
+          raf: null
+        };
+  
+        root._watchedEntities = ENTITY_IDS;
+  
+        root._onHassUpdate = () => {
+          if (root._daikinAirRuntimeNoCh2o.raf) cancelAnimationFrame(root._daikinAirRuntimeNoCh2o.raf);
+          root._daikinAirRuntimeNoCh2o.raf = requestAnimationFrame(() => updateCard());
+        };
+      }
+  
+      function getState(entityId) {
+        return hass && hass.states ? hass.states[entityId] : null;
+      }
+  
+      function isBadState(state) {
+        return state === undefined ||
+          state === null ||
+          state === "" ||
+          state === "unknown" ||
+          state === "unavailable" ||
+          state === "none" ||
+          Number.isNaN(Number(state));
+      }
+  
+      function normalizeUnit(unit) {
+        return String(unit || "")
+          .trim()
+          .toLowerCase()
+          .replace(/\s+/g, "")
+          .replace(/μ/g, "µ")
+          .replace(/³/g, "3");
+      }
+  
+      function getUnit(entityId) {
+        const obj = getState(entityId);
+        return obj && obj.attributes ? obj.attributes.unit_of_measurement || "" : "";
+      }
+  
+      function getRawNumber(entityId) {
+        const obj = getState(entityId);
+        if (!obj || isBadState(obj.state)) return null;
+        const n = Number(String(obj.state).replace(/,/g, ""));
+        return Number.isFinite(n) ? n : null;
+      }
+  
+      function getNumber(key) {
+        if (DEMO_MODE) {
+          const demo = Number(DEMO_VALUES[key]);
+          return Number.isFinite(demo) ? demo : null;
+        }
+  
+        const entityId = ENTITIES[key];
+        const raw = getRawNumber(entityId);
+        if (raw === null) return null;
+  
+        const unit = normalizeUnit(getUnit(entityId));
+  
+        if (key === "tvoc") {
+          if (
+            unit.includes("µg/m3") ||
+            unit.includes("ug/m3") ||
+            unit.includes("mcg/m3") ||
+            unit.includes("µg/m³") ||
+            unit.includes("ug/m³")
+          ) {
+            return raw / 1000;
+          }
+          return raw;
+        }
+  
+        return raw;
+      }
+  
+      function formatValue(key, value) {
+        if (value === null) return "--";
+        if (key === "co2") return String(Math.round(value));
+        if (key === "pm25") return String(Math.round(value));
+        if (key === "temp") return value.toFixed(1);
+        if (key === "hum") return value.toFixed(1);
+  
+        if (key === "tvoc" && value > 0 && value < 0.01) {
+          return "<0.01";
+        }
+  
+        if (key === "tvoc") return value.toFixed(2);
+        return String(value);
+      }
+  
+      function rawLevel(value, thresholds) {
+        if (value === null) return null;
+        for (let i = 0; i < thresholds.length; i++) {
+          if (value <= thresholds[i]) return i;
+        }
+        return thresholds.length;
+      }
+  
+      function stableLevel(key, value, thresholds, margin) {
+        if (DEMO_MODE) return rawLevel(value, thresholds);
+        if (value === null) return null;
+  
+        const runtime = root._daikinAirRuntimeNoCh2o;
+        const next = rawLevel(value, thresholds);
+        const prev = runtime.levels[key];
+  
+        if (prev === undefined || prev === null) {
+          runtime.levels[key] = next;
+          return next;
+        }
+  
+        if (next > prev) {
+          runtime.levels[key] = next;
+          return next;
+        }
+  
+        if (next < prev) {
+          const exitIndex = Math.max(prev - 1, 0);
+          const exitValue = thresholds[exitIndex] - margin;
+          if (value <= exitValue || next < prev - 1) runtime.levels[key] = next;
+          return runtime.levels[key];
+        }
+  
+        return prev;
+      }
+  
+      function co2Meta(value) {
+        if (value === null) return { level: null, tag: "离线", hint: "传感器离线", secondary: "空气循环指标" };
+        const level = stableLevel("co2", value, [800, 1000, 1500, 2000], 80);
+        const list = [
+          ["清新", "空气清新", "空气循环良好"],
+          ["舒适", "状态舒适", "适合长时间停留"],
+          ["略闷", "建议留意", "空气交换开始变弱"],
+          ["需通风", "建议通风", "打开窗户或开启新风"],
+          ["关注", "尽快通风", "CO₂ 浓度较高"]
+        ];
+        return { level, tag: list[level][0], hint: list[level][1], secondary: list[level][2] };
+      }
+  
+      function tempMeta(value) {
+        if (value === null) return { level: null, tag: "离线", hint: "传感器离线", secondary: "热舒适" };
+  
+        if (value < 18) {
+          return { level: 2, tag: "偏冷", hint: "室温偏低", secondary: "注意保暖" };
+        }
+  
+        if (value <= 26) {
+          return { level: 0, tag: "舒适", hint: "体感舒适", secondary: "处于舒适区" };
+        }
+  
+        if (value <= 28) {
+          return { level: 2, tag: "微热", hint: "体感微热", secondary: "可适当降温" };
+        }
+  
+        if (value <= 30) {
+          return { level: 3, tag: "稍热", hint: "体感稍热", secondary: "建议降温" };
+        }
+  
+        return { level: 4, tag: "偏热", hint: "室温偏高", secondary: "建议开启降温" };
+      }
+  
+      function humMeta(value) {
+        if (value === null) return { level: null, tag: "离线", hint: "传感器离线", secondary: "湿舒适" };
+        if (value < 30) return { level: 3, tag: "偏干", hint: "空气偏干", secondary: "可适当加湿" };
+        if (value < 40) return { level: 2, tag: "略干", hint: "湿度略低", secondary: "留意干燥感" };
+        if (value <= 60) return { level: 0, tag: "适宜", hint: "湿度适宜", secondary: "处于舒适区" };
+        if (value <= 70) return { level: 2, tag: "略湿", hint: "湿度略高", secondary: "注意通风" };
+        return { level: 3, tag: "偏湿", hint: "空气偏湿", secondary: "建议除湿" };
+      }
+  
+      function pm25Meta(value) {
+        if (value === null) return { level: null, tag: "离线", hint: "传感器离线", secondary: "空气颗粒物" };
+        const level = stableLevel("pm25", value, [15, 35, 75, 150], 5);
+        const list = [
+          ["优秀", "颗粒物较低", "空气洁净度良好"],
+          ["良好", "颗粒物正常", "空气状态稳定"],
+          ["关注", "颗粒物偏高", "建议留意空气净化"],
+          ["净化", "建议净化", "可开启空气净化器"],
+          ["优先", "净化优先", "颗粒物浓度较高"]
+        ];
+        return { level, tag: list[level][0], hint: list[level][1], secondary: list[level][2] };
+      }
+  
+      function tvocMeta(value) {
+        if (value === null) return { level: null, tag: "离线", hint: "传感器离线", secondary: "挥发性有机物" };
+        const level = stableLevel("tvoc", value, [0.30, 0.60, 1.00, 2.00], 0.05);
+        const list = [
+          ["正常", "挥发物正常", "空气活性物较低"],
+          ["波动", "略有波动", "留意异味来源"],
+          ["通风", "建议通风", "挥发性有机物偏高"],
+          ["持续", "持续通风", "建议加强空气交换"],
+          ["关注", "需关注", "挥发物浓度较高"]
+        ];
+        return { level, tag: list[level][0], hint: list[level][1], secondary: list[level][2] };
+      }
+  
+      function setModule(key, value, meta) {
+        const module = root.querySelector('[data-metric="' + key + '"]');
+        if (!module) return;
+  
+        module.classList.remove("level-0", "level-1", "level-2", "level-3", "level-4", "offline");
+  
+        if (meta.level === null) {
+          module.classList.add("offline");
+        } else {
+          module.classList.add("level-" + Math.max(0, Math.min(4, meta.level)));
+        }
+  
+        setText('[data-value="' + key + '"]', formatValue(key, value));
+        setText('[data-role="' + key + '-tag"]', meta.tag);
+        setText('[data-hint="' + key + '"]', meta.hint);
+        setText('[data-secondary="' + key + '"]', meta.secondary);
+      }
+  
+      function setText(selector, text) {
+        const el = root.querySelector(selector);
+        if (el && el.textContent !== String(text)) el.textContent = String(text);
+      }
+  
+      function getRegistryItem(registry, id) {
+        if (!registry || !id) return null;
+        if (registry instanceof Map) return registry.get(id) || null;
+        return registry[id] || null;
+      }
+  
+      function getAreaName(entityId) {
+        if (DEMO_MODE) return "测试房间";
+  
+        const fallback = config && config.room_name ? config.room_name : "室内环境";
+  
+        try {
+          const entityReg = getRegistryItem(hass.entities, entityId);
+          let areaId = entityReg && entityReg.area_id ? entityReg.area_id : null;
+  
+          if (!areaId && entityReg && entityReg.device_id) {
+            const deviceReg = getRegistryItem(hass.devices, entityReg.device_id);
+            areaId = deviceReg && deviceReg.area_id ? deviceReg.area_id : null;
+          }
+  
+          const areaReg = getRegistryItem(hass.areas, areaId);
+          if (areaReg && areaReg.name) return areaReg.name;
+        } catch (e) {}
+  
+        return fallback;
+      }
+  
+      function getUpdatedText() {
+        if (DEMO_MODE) return "测试模式";
+  
+        let latest = 0;
+  
+        ENTITY_IDS.forEach((id) => {
+          const obj = getState(id);
+          if (!obj || !obj.last_updated) return;
+          const t = new Date(obj.last_updated).getTime();
+          if (Number.isFinite(t) && t > latest) latest = t;
+        });
+  
+        if (!latest) return "--";
+  
+        const diff = Math.max(0, Date.now() - latest);
+        const sec = Math.floor(diff / 1000);
+  
+        if (sec < 15) return "刚刚更新";
+        if (sec < 60) return sec + "秒前";
+  
+        const min = Math.floor(sec / 60);
+        if (min < 60) return min + "分钟前";
+  
+        const hour = Math.floor(min / 60);
+        if (hour < 24) return hour + "小时前";
+  
+        return "数据较旧";
+      }
+  
+      function getTopStatus(metas) {
+        const airKeys = ["co2", "pm25", "tvoc"];
+        let worstKey = null;
+        let worstLevel = -1;
+  
+        airKeys.forEach((key) => {
+          const m = metas[key];
+  
+          if (!m || m.level === null) {
+            if (worstLevel < 3) {
+              worstLevel = 3;
+              worstKey = key;
+            }
+            return;
+          }
+  
+          if (m.level > worstLevel) {
+            worstLevel = m.level;
+            worstKey = key;
+          }
+        });
+  
+        if (worstLevel <= 0) return "清新";
+        if (worstLevel === 1) return "舒适";
+        if (worstLevel === 2) return worstKey === "co2" ? "略闷" : "良好";
+        if (worstLevel === 3) return worstKey === "co2" ? "需通风" : "需关注";
+        return worstKey === "co2" ? "需通风" : "需关注";
+      }
+  
+      function getSubtitle(metas) {
+        if (DEMO_MODE) return "当前为动效等级测试";
+  
+        const airKeys = ["co2", "pm25", "tvoc"];
+        let worstKey = null;
+        let worstLevel = -1;
+  
+        airKeys.forEach((key) => {
+          const m = metas[key];
+          const level = m && m.level !== null ? m.level : 3;
+  
+          if (level > worstLevel) {
+            worstLevel = level;
+            worstKey = key;
+          }
+        });
+  
+        const map = {
+          co2: "当前关注：空气循环",
+          pm25: "当前关注：空气颗粒物",
+          tvoc: "当前关注：挥发性有机物"
+        };
+  
+        if (worstLevel <= 1) return "空气状态稳定";
+        return map[worstKey] || "空气状态监测中";
+      }
+  
+      function updateCard() {
+        if (!hass || !hass.states) return;
+  
+        const values = {
+          co2: getNumber("co2"),
+          temp: getNumber("temp"),
+          hum: getNumber("hum"),
+          pm25: getNumber("pm25"),
+          tvoc: getNumber("tvoc")
+        };
+  
+        const metas = {
+          co2: co2Meta(values.co2),
+          temp: tempMeta(values.temp),
+          hum: humMeta(values.hum),
+          pm25: pm25Meta(values.pm25),
+          tvoc: tvocMeta(values.tvoc)
+        };
+  
+        setModule("co2", values.co2, metas.co2);
+        setModule("temp", values.temp, metas.temp);
+        setModule("hum", values.hum, metas.hum);
+        setModule("pm25", values.pm25, metas.pm25);
+        setModule("tvoc", values.tvoc, metas.tvoc);
+  
+        const room = getAreaName(ENTITIES.co2);
+        const status = getTopStatus(metas);
+  
+        setText('[data-role="room-title"]', room + " · " + status);
+        setText('[data-role="room-subtitle"]', getSubtitle(metas));
+        setText('[data-role="updated"]', getUpdatedText());
+      }
+  
+      updateCard();
+    })();
+  </script>
+  ```
+  
+  </details>
