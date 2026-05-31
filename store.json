@@ -1,5 +1,18 @@
 [
   {
+    "id": 18,
+    "name": "洗衣机带动画效果 仪表盘卡片",
+    "version": "1.0",
+    "creator": "stsy713",
+    "description": "",
+    "tags": [
+      "Style"
+    ],
+    "image": "https://cdn.jsdelivr.net/gh/ha-china/html-card-pro@main/images/18.png",
+    "link": "https://github.com/ha-china/html-card-pro/discussions/18",
+    "file": "mods/18-module-18.yaml"
+  },
+  {
     "id": 17,
     "name": "空气质量监测仪 仪表盘卡片 / Air Quality Monitor Dashboard Card",
     "version": "1.0",

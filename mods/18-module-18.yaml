@@ -1,0 +1,322 @@
+# Generated from GitHub Discussions by sync-modules.
+# 洗衣机带动画效果 仪表盘卡片
+# Author: stsy713
+# Version: 1.0
+# Description: 
+# Tags: Style
+# Image: https://cdn.jsdelivr.net/gh/ha-china/html-card-pro@main/images/18.png
+# Link: https://github.com/ha-china/html-card-pro/discussions/18
+# ID: 18
+
+type: custom:html-pro-card
+do_not_parse: true
+scripts:
+  - https://cdn.jsdelivr.net/npm/animejs@3.2.2/lib/anime.min.js
+content: |
+  <style>
+  :host { display: block; width: 100%; }
+  .washer-wrap {
+    position: relative; width: 100%; aspect-ratio: 3 / 4; max-height: 520px;
+    display: flex; align-items: center; justify-content: center; padding: 12px;
+  }
+  svg.washer-svg { width: 100%; height: 100%; overflow: visible; }
+  @keyframes drumSpin { from{transform:rotate(0)}to{transform:rotate(360deg)} }
+  .drum-spin-group { transform-origin: 150px 260px; }
+  .washer-active .drum-spin-group { animation: drumSpin 3s linear infinite; }
+  @keyframes waterRise { 0%{transform:translateY(30px);opacity:0}40%{opacity:.35}100%{transform:translateY(0);opacity:.25} }
+  .water-fill { opacity:0; }
+  .washer-active .water-fill { animation: waterRise 2s ease-out forwards; }
+  @keyframes ledBlink { 0%,100%{opacity:1}50%{opacity:.6} }
+  .led-dot { animation: ledBlink 1.5s ease-in-out infinite; }
+  @keyframes panelSweep { 0%{opacity:.06;transform:translateX(-100%)}50%{opacity:.14}100%{opacity:.06;transform:translateX(100%)} }
+  .panel-highlight { animation: panelSweep 4s ease-in-out infinite; }
+  @keyframes shimmer { 0%,100%{opacity:.15}50%{opacity:.35} }
+  .glass-shimmer { animation: shimmer 3s ease-in-out infinite; }
+  .door-glow { opacity:0; transition: opacity .8s; }
+  .washer-active .door-glow { opacity:1; }
+  .btn-rect { cursor:pointer; transition: all .12s; }
+  .btn-rect:hover rect.btn-bg { fill: rgba(255,255,255,.13); }
+  .btn-rect:active rect.btn-bg { fill: rgba(255,255,255,.25); }
+  .btn-rect.active-btn rect.btn-bg { fill: rgba(100,180,255,.25); }
+  .btn-rect.active-btn text.btn-label { fill: #88ccff; }
+  @keyframes statusFlash { 0%{opacity:1}50%{opacity:.3}100%{opacity:1} }
+  .status-flash { animation: statusFlash .4s ease; }
+  </style>
+
+  <div class="washer-wrap">
+    <svg class="washer-svg" viewBox="0 0 300 400" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <pattern id="ribs" width="4" height="4" patternUnits="userSpaceOnUse">
+          <rect width="1.2" height="4" fill="rgba(255,255,255,.06)"/><rect x="2" width=".8" height="4" fill="rgba(0,0,0,.12)"/>
+        </pattern>
+        <pattern id="drumHoles" width="10" height="10" patternUnits="userSpaceOnUse">
+          <circle cx="5" cy="5" r="1.2" fill="rgba(0,0,0,.3)"/>
+        </pattern>
+        <linearGradient id="bodyGrad" x1="0" x2="1">
+          <stop offset="0%" stop-color="#1a1a1a"/><stop offset="35%" stop-color="#2a2a2a"/>
+          <stop offset="50%" stop-color="#333"/><stop offset="65%" stop-color="#2a2a2a"/>
+          <stop offset="100%" stop-color="#1a1a1a"/>
+        </linearGradient>
+        <radialGradient id="doorFrameGrad" cx="50%" cy="45%" r="50%">
+          <stop offset="0%" stop-color="#555"/><stop offset="60%" stop-color="#3a3a3a"/><stop offset="100%" stop-color="#222"/>
+        </radialGradient>
+        <radialGradient id="glassGrad" cx="40%" cy="35%" r="60%">
+          <stop offset="0%" stop-color="#2a3a4a"/><stop offset="40%" stop-color="#1a2a3a"/><stop offset="100%" stop-color="#0a1520"/>
+        </radialGradient>
+        <radialGradient id="drumGrad" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#b0b0b0"/><stop offset="50%" stop-color="#888"/><stop offset="100%" stop-color="#555"/>
+        </radialGradient>
+        <linearGradient id="topPanelGrad" y1="0" y2="1">
+          <stop offset="0%" stop-color="#2e2e2e"/><stop offset="100%" stop-color="#222"/>
+        </linearGradient>
+        <linearGradient id="waterGrad" y1="0" y2="1">
+          <stop offset="0%" stop-color="rgba(100,180,255,.3)"/><stop offset="100%" stop-color="rgba(60,140,220,.15)"/>
+        </linearGradient>
+        <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <clipPath id="drumClip"><circle cx="150" cy="260" r="76"/></clipPath>
+      </defs>
+
+      <!-- BODY -->
+      <rect x="15" y="70" width="270" height="310" rx="8" fill="url(#bodyGrad)"/>
+      <rect x="15" y="70" width="270" height="310" rx="8" fill="url(#ribs)"/>
+      <rect x="15" y="70" width="270" height="310" rx="8" fill="none" stroke="rgba(255,255,255,.08)" stroke-width=".5"/>
+
+      <!-- TOP PANEL -->
+      <rect x="15" y="70" width="270" height="72" rx="8" fill="url(#topPanelGrad)"/>
+      <line x1="15" y1="142" x2="285" y2="142" stroke="rgba(0,0,0,.4)" stroke-width="1"/>
+
+      <!-- Detergent Drawer -->
+      <rect x="20" y="80" width="42" height="52" rx="3" fill="#2a2a2a" stroke="rgba(255,255,255,.06)" stroke-width=".5"/>
+      <rect x="27" y="88" width="28" height="4" rx="2" fill="#1a1a1a"/>
+      <rect x="27" y="90" width="28" height="1" rx=".5" fill="rgba(255,255,255,.1)"/>
+      <text x="41" y="118" text-anchor="middle" fill="rgba(200,200,200,.4)" font-size="5.5">洗涤剂</text>
+
+      <!-- DIAL (cx=100, r=18) -->
+      <circle cx="100" cy="108" r="18" fill="#1a1a1a" stroke="#444" stroke-width="1.2"/>
+      <circle cx="100" cy="108" r="14" fill="#222" stroke="#333" stroke-width=".5"/>
+      <circle cx="100" cy="108" r="16" fill="none" stroke="rgba(255,255,255,.08)" stroke-width=".5" stroke-dasharray="2 2"/>
+      <circle class="led-dot" cx="100" cy="92" r="2" fill="#ff6600" filter="url(#glow)"/>
+      <circle cx="100" cy="108" r="2.5" fill="#333"/>
+
+      <!-- Cycle labels -->
+      <g fill="rgba(200,200,200,.4)" font-size="4.5" text-anchor="middle">
+        <text x="81" y="96">混合</text>
+        <text x="76" y="105">快洗15'</text>
+        <text x="78" y="114">羊毛</text>
+        <text x="84" y="122">内衣</text>
+        <text x="119" y="96">棉麻</text>
+        <text x="124" y="105">大件</text>
+        <text x="122" y="114">婴童</text>
+        <text x="116" y="122">除菌</text>
+      </g>
+
+      <!-- DISPLAY -->
+      <rect x="148" y="84" width="119" height="44" rx="4" fill="#080808" stroke="rgba(255,255,255,.08)" stroke-width=".5"/>
+      <line x1="212" y1="88" x2="212" y2="124" stroke="rgba(255,255,255,.08)" stroke-width=".5"/>
+
+      <g id="pIco" transform="translate(165,94)" filter="url(#glow)">
+        <circle r="4" fill="none" stroke="#ff8800" stroke-width="1.2"/>
+        <line y1="-6" y2="-2.5" stroke="#ff8800" stroke-width="1.2" stroke-linecap="round"/>
+      </g>
+      <text id="sTxt" x="178" y="112" fill="#ff8800" font-size="8" font-weight="bold" text-anchor="middle">断电</text>
+      <text x="178" y="120" fill="rgba(200,200,200,.3)" font-size="4" text-anchor="middle">状态</text>
+
+      <g id="bcIco" transform="translate(198,94)">
+        <polygon points="-2.5,-2.5 -2.5,2.5 0,2.5 3,5.5 3,-5.5 0,-2.5" fill="#4fc3f7" opacity=".7"/>
+        <path d="M5,-2.5 Q7.5,0 5,2.5" fill="none" stroke="#4fc3f7" stroke-width=".7" stroke-linecap="round"/>
+      </g>
+      <text id="bcTxt" x="208" y="112" fill="#4fc3f7" font-size="8" font-weight="bold" text-anchor="middle">开</text>
+      <text x="208" y="120" fill="rgba(200,200,200,.3)" font-size="4" text-anchor="middle">播报</text>
+
+      <text id="ctTxt" x="247" y="104" fill="#00ccff" font-size="15" font-family="'Courier New',monospace" font-weight="bold" text-anchor="middle" filter="url(#glow)">1</text>
+      <text x="247" y="114" fill="rgba(200,200,200,.3)" font-size="4" text-anchor="middle">待机</text>
+      <text x="247" y="122" fill="rgba(200,200,200,.25)" font-size="3.5" text-anchor="middle">计数</text>
+
+      <rect class="panel-highlight" x="15" y="70" width="270" height="72" rx="8" fill="rgba(255,255,255,.06)"/>
+
+      <!-- 5 BUTTONS -->
+      <g class="btn-rect" data-entity="switch.cuco_cn_945184375_v3_on_p_2_1" data-action="toggle" transform="translate(25,146)">
+        <rect class="btn-bg" width="46" height="20" rx="4" fill="rgba(255,255,255,.06)" stroke="rgba(255,255,255,.1)" stroke-width=".5"/>
+        <circle cx="11" cy="10" r="3" fill="none" stroke="var(--primary-color,#4fc3f7)" stroke-width="1"/>
+        <line x1="11" y1="6" x2="11" y2="8" stroke="var(--primary-color,#4fc3f7)" stroke-width="1" stroke-linecap="round"/>
+        <text class="btn-label" x="29" y="13" fill="rgba(200,200,200,.7)" font-size="6.5" text-anchor="middle">电源</text>
+      </g>
+      <g class="btn-rect" data-entity="input_boolean.xi_yi_ji_bo_bao_kai_guan" data-action="toggle" transform="translate(76,146)">
+        <rect class="btn-bg" width="46" height="20" rx="4" fill="rgba(255,255,255,.06)" stroke="rgba(255,255,255,.1)" stroke-width=".5"/>
+        <polygon points="7,7 7,12 9.5,12 13,15.5 13,4.5 9.5,8" fill="var(--primary-color,#4fc3f7)" opacity=".8"/>
+        <path d="M15,7 Q17.5,10 15,13" fill="none" stroke="var(--primary-color,#4fc3f7)" stroke-width=".8" stroke-linecap="round"/>
+        <text class="btn-label" x="30" y="13" fill="rgba(200,200,200,.7)" font-size="6.5" text-anchor="middle">播报</text>
+      </g>
+      <g class="btn-rect" data-counter-action="decrement" transform="translate(127,146)">
+        <rect class="btn-bg" width="46" height="20" rx="4" fill="rgba(255,255,255,.06)" stroke="rgba(255,255,255,.1)" stroke-width=".5"/>
+        <text x="11" y="14" fill="var(--primary-color,#4fc3f7)" font-size="12" font-weight="bold" text-anchor="middle">−</text>
+        <text class="btn-label" x="30" y="13" fill="rgba(200,200,200,.7)" font-size="6.5" text-anchor="middle">减少</text>
+      </g>
+      <g class="btn-rect" data-counter-action="reset" transform="translate(178,146)">
+        <rect class="btn-bg" width="46" height="20" rx="4" fill="rgba(255,255,255,.06)" stroke="rgba(255,255,255,.1)" stroke-width=".5"/>
+        <path d="M7,10 A3.5,3.5 0 1,1 10.5,6.5" fill="none" stroke="var(--primary-color,#4fc3f7)" stroke-width="1" stroke-linecap="round"/>
+        <polygon points="10.5,4.5 12,6.8 9,6.8" fill="var(--primary-color,#4fc3f7)"/>
+        <text class="btn-label" x="30" y="13" fill="rgba(200,200,200,.7)" font-size="6.5" text-anchor="middle">重置</text>
+      </g>
+      <g class="btn-rect" data-counter-action="increment" transform="translate(229,146)">
+        <rect class="btn-bg" width="46" height="20" rx="4" fill="rgba(255,255,255,.06)" stroke="rgba(255,255,255,.1)" stroke-width=".5"/>
+        <text x="11" y="14" fill="var(--primary-color,#4fc3f7)" font-size="12" font-weight="bold" text-anchor="middle">+</text>
+        <text class="btn-label" x="30" y="13" fill="rgba(200,200,200,.7)" font-size="6.5" text-anchor="middle">增加</text>
+      </g>
+
+      <!-- DOOR -->
+      <circle cx="150" cy="260" r="95" fill="url(#doorFrameGrad)" stroke="rgba(255,255,255,.1)" stroke-width=".5"/>
+      <circle cx="150" cy="260" r="93" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="1"/>
+      <circle cx="150" cy="260" r="82" fill="#111" stroke="rgba(0,0,0,.5)" stroke-width="2"/>
+      <circle cx="150" cy="260" r="78" fill="url(#glassGrad)"/>
+      <g clip-path="url(#drumClip)">
+        <circle cx="150" cy="260" r="76" fill="url(#drumGrad)"/>
+        <circle cx="150" cy="260" r="76" fill="url(#drumHoles)"/>
+        <g stroke="rgba(255,255,255,.04)" stroke-width=".5">
+          <line x1="150" y1="184" x2="150" y2="336"/><line x1="74" y1="260" x2="226" y2="260"/>
+          <line x1="96" y1="206" x2="204" y2="314"/><line x1="204" y1="206" x2="96" y2="314"/>
+          <line x1="150" y1="184" x2="96" y2="314" transform="rotate(15 150 260)"/>
+          <line x1="150" y1="184" x2="204" y2="314" transform="rotate(-15 150 260)"/>
+        </g>
+        <g class="drum-spin-group">
+          <path d="M150 200 Q165 230 150 260 Q135 230 150 200" fill="rgba(180,180,180,.6)" stroke="rgba(200,200,200,.3)" stroke-width=".5"/>
+          <path d="M201 290 Q180 275 150 260 Q180 290 201 290" fill="rgba(170,170,170,.5)" stroke="rgba(200,200,200,.3)" stroke-width=".5"/>
+          <path d="M99 290 Q120 275 150 260 Q120 290 99 290" fill="rgba(175,175,175,.55)" stroke="rgba(200,200,200,.3)" stroke-width=".5"/>
+        </g>
+        <ellipse class="water-fill" cx="150" cy="290" rx="70" ry="25" fill="url(#waterGrad)"/>
+      </g>
+      <g opacity=".2">
+        <ellipse cx="130" cy="235" rx="40" ry="12" fill="rgba(255,255,255,.3)" transform="rotate(-30 130 235)"/>
+        <ellipse cx="165" cy="275" rx="35" ry="8" fill="rgba(255,255,255,.2)" transform="rotate(20 165 275)"/>
+      </g>
+      <g class="glass-shimmer" opacity=".15">
+        <path d="M110 220 Q130 210 150 225" stroke="rgba(255,255,255,.4)" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        <path d="M155 290 Q175 280 190 295" stroke="rgba(255,255,255,.25)" stroke-width="1" fill="none" stroke-linecap="round"/>
+      </g>
+      <path d="M115 210 A78 78 0 0 1 180 200" stroke="rgba(255,255,255,.12)" stroke-width="2" fill="none"/>
+      <circle class="door-glow" cx="150" cy="260" r="84" fill="none" stroke="rgba(100,180,255,.25)" stroke-width="3"/>
+      <rect x="230" y="345" width="45" height="25" rx="2" fill="#1e1e1e"/>
+      <rect x="230" y="345" width="45" height="25" rx="2" fill="url(#ribs)"/>
+      <rect x="245" y="345" width="15" height="3" rx="1" fill="#151515"/>
+      <g fill="#888" stroke="#999" stroke-width=".3"><ellipse cx="40" cy="382" rx="8" ry="4"/><ellipse cx="260" cy="382" rx="8" ry="4"/></g>
+      <g fill="#777" stroke="#888" stroke-width=".3" opacity=".7"><ellipse cx="55" cy="384" rx="6" ry="3"/><ellipse cx="245" cy="384" rx="6" ry="3"/></g>
+      <ellipse cx="150" cy="388" rx="120" ry="8" fill="rgba(0,0,0,.3)"/>
+      <line x1="23" y1="378" x2="277" y2="378" stroke="rgba(255,255,255,.05)" stroke-width=".5"/>
+    </svg>
+  </div>
+
+  <script>
+  if (root._washerInitV8) return;
+  root._washerInitV8 = true;
+
+  var COUNTER_ENTITY = 'counter.xi_yi_dai_ji_ji_shu_qi';
+
+  root._watchedEntities = [
+    'switch.cuco_cn_945184375_v3_on_p_2_1',
+    'input_boolean.xi_yi_ji_bo_bao_kai_guan',
+    COUNTER_ENTITY,
+    'sensor.hai_er_xi_yi_ji_zhuang_tai'
+  ];
+
+  var _lastVals = {};
+
+  function _flash(el, val, key) {
+    if (!el) return;
+    if (_lastVals[key] !== undefined && _lastVals[key] !== val) {
+      el.classList.remove('status-flash');
+      void el.offsetWidth;
+      el.classList.add('status-flash');
+    }
+    _lastVals[key] = val;
+  }
+
+  function _upd() {
+    var sw = hass.states['switch.cuco_cn_945184375_v3_on_p_2_1'];
+    var bc = hass.states['input_boolean.xi_yi_ji_bo_bao_kai_guan'];
+    var ct = hass.states[COUNTER_ENTITY];
+    var sr = hass.states['sensor.hai_er_xi_yi_ji_zhuang_tai'];
+
+    var stEl = root.querySelector('#sTxt');
+    var stVal = sr ? sr.state : '--';
+    if (stEl) {
+      _flash(stEl, stVal, 's');
+      stEl.textContent = stVal;
+      stEl.setAttribute('fill', (sw && sw.state === 'on') ? '#00ff88' : '#ff8800');
+    }
+    var pIco = root.querySelector('#pIco');
+    if (pIco) {
+      var isOn = sw && sw.state === 'on';
+      pIco.querySelectorAll('circle,line').forEach(function(e) {
+        e.setAttribute('stroke', isOn ? '#00ff88' : '#ff8800');
+      });
+    }
+
+    var bcT = root.querySelector('#bcTxt');
+    var bcI = root.querySelector('#bcIco');
+    var bcOn = bc && bc.state === 'on';
+    if (bcT) {
+      _flash(bcT, bcOn ? '1' : '0', 'bc');
+      bcT.textContent = bcOn ? '开' : '关';
+      bcT.setAttribute('fill', bcOn ? '#4fc3f7' : 'rgba(200,200,200,.4)');
+    }
+    if (bcI) {
+      bcI.querySelectorAll('polygon,path').forEach(function(e) {
+        e.setAttribute('fill', bcOn ? '#4fc3f7' : 'rgba(200,200,200,.3)');
+        e.setAttribute('stroke', bcOn ? '#4fc3f7' : 'rgba(200,200,200,.3)');
+      });
+    }
+
+    var ctEl = root.querySelector('#ctTxt');
+    var ctVal = ct ? ct.state : '0';
+    if (ctEl) {
+      _flash(ctEl, ctVal, 'ct');
+      ctEl.textContent = ctVal;
+    }
+
+    var wrap = root.querySelector('.washer-wrap');
+    if (wrap) wrap.classList.toggle('washer-active', sw && sw.state === 'on');
+
+    root.querySelectorAll('.btn-rect[data-entity]').forEach(function(btn) {
+      var eid = btn.getAttribute('data-entity');
+      var st = hass.states[eid];
+      if (st) btn.classList.toggle('active-btn', st.state === 'on');
+    });
+  }
+
+  root._onHassUpdate = _upd;
+
+  root.querySelectorAll('.btn-rect').forEach(function(btn) {
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      var ca = btn.getAttribute('data-counter-action');
+      if (ca) {
+        hass.callService('counter', ca, { entity_id: COUNTER_ENTITY });
+        _animBtn(btn);
+        return;
+      }
+      var eid = btn.getAttribute('data-entity');
+      if (eid) {
+        hass.callService('homeassistant', 'toggle', { entity_id: eid });
+        _animBtn(btn);
+      }
+    });
+  });
+
+  function _animBtn(btn) {
+    if (window.anime) {
+      var bg = btn.querySelector('.btn-bg');
+      if (bg) anime({ targets: bg, scale: [0.88, 1], duration: 200, easing: 'easeOutCubic' });
+    }
+  }
+
+  if (window.anime) {
+    anime({ targets: root.querySelector('.washer-svg'), opacity: [0,1], scale: [0.95,1], duration: 800, easing: 'easeOutCubic' });
+  }
+
+  _upd();
+  </script>
+# ```
+
+# </details>
