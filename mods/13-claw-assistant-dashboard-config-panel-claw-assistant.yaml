@@ -1,6 +1,6 @@
 # Generated from GitHub Discussions by sync-modules.
 # Claw Assistant Dashboard Config Panel / Claw Assistant 仪表盘配置面板
-# Author: @C3H3-AI
+# Author: C3H3-AI
 # Version: 1.2.0
 # Description: 
 # Tags: Integration
@@ -347,3 +347,13 @@ content: |
    };
    root._onHassUpdate();
   </script>
+
+# ```
+
+# </details>
+
+## Checklist
+
+# - [x] My YAML starts with `type: custom:html-pro-card`
+# - [x] I have included at least one screenshot
+# - [x] My code does not contain dangerous patterns
