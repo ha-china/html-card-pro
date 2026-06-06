@@ -1,4623 +1,1028 @@
-import {
-html,
-LitElement,
-} from "https://unpkg.com/lit-element@2.4.0/lit-element.js?module";
-const HTML_PRO_CARD_VERSION = "3.8";
-console.info(
-`%cHTML Pro %c ${HTML_PRO_CARD_VERSION}`,
-"color:#03a9f4;font-weight:600",
-"color:#999",
-);
-const _globalLoadedScripts =
-window._htmlProCardScripts || (window._htmlProCardScripts = new Set());
-const _globalGetters = {
-root: (card) => card._rootElement,
-card: (card) => card._rootElement,
-hass: (card) => card._hass,
-config: (card) => card._config,
-$: (card) => (s) => card._rootElement?.querySelector(s),
-$$: (card) => (s) => card._rootElement?.querySelectorAll(s),
-};
-Object.entries(_globalGetters).forEach(([key, getVal]) => {
-if (!Object.getOwnPropertyDescriptor(window, key)) {
-Object.defineProperty(window, key, {
-get() {
-const ev = window.event;
-let target = ev?.target || document.activeElement;
-while (target) {
-if (target.localName === "html-pro-card") {
-return getVal(target);
-}
-target = target.parentElement || target.getRootNode()?.host;
-}
-// Fallback: resolve to first available html-pro-card on the page
-const firstCard = document.querySelector("html-pro-card");
-if (firstCard) {
-return getVal(firstCard);
-}
-return undefined;
-},
-configurable: true,
-});
-}
-});
-if (!document.getElementById("html-pro-card-overlay")) {
-const overlay = document.createElement("div");
-overlay.id = "html-pro-card-overlay";
-overlay.style.cssText =
-"position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:2147483647;";
-document.body.appendChild(overlay);
-}
-window._htmlProCardOverlay = document.getElementById("html-pro-card-overlay");
-if (!document.getElementById("html-pro-card-loading-styles")) {
-const style = document.createElement("style");
-style.id = "html-pro-card-loading-styles";
-style.textContent = `
-.html-pro-prerender-style-root {
-transition: min-height 0.3s ease;
-}
-.html-pro-prerender-style-root.html-pro-loading {
-position: relative !important;
-pointer-events: none !important;
-user-select: none !important;
-}
-.html-pro-prerender-style-root.html-pro-rendering {
-position: relative !important;
-}
-.html-pro-prerender-style-root .html-pro-loading-skeleton {
-display: none;
-}
-.html-pro-prerender-style-root.html-pro-loading {
-min-height: 136px !important;
-}
-.html-pro-prerender-style-root.html-pro-loading > :not(style):not(.html-pro-loading-skeleton) {
-opacity: 0 !important;
-}
-.html-pro-prerender-style-root.html-pro-loading .html-pro-loading-skeleton {
-position: absolute !important;
-inset: 0 !important;
-display: flex !important;
-flex-direction: column !important;
-gap: 12px !important;
-min-height: 136px !important;
-padding: 18px !important;
-border-radius: 10px !important;
-background: var(--card-background-color, var(--ha-card-background, #fff)) !important;
-box-sizing: border-box !important;
-z-index: 3 !important;
-overflow: hidden !important;
-}
-.html-pro-prerender-style-root.html-pro-rendering .html-pro-loading-skeleton {
-position: absolute !important;
-inset: 0 !important;
-display: flex !important;
-flex-direction: column !important;
-gap: 12px !important;
-padding: 18px !important;
-border-radius: 10px !important;
-background: rgba(245, 247, 250, 0.42) !important;
-box-sizing: border-box !important;
-z-index: 3 !important;
-overflow: hidden !important;
-opacity: 0.42 !important;
-pointer-events: none !important;
-transition: opacity 0.18s ease !important;
-}
-.html-pro-prerender-style-root.html-pro-rendering .html-pro-loading-skeleton-line.hero {
-height: 38px !important;
-}
-.html-pro-prerender-style-root.html-pro-loading.editor-preview {
-min-height: 180px !important;
-}
-.html-pro-prerender-style-root.html-pro-loading.editor-preview .html-pro-preview-wrapper {
-min-height: 180px !important;
-}
-.html-pro-prerender-style-root.html-pro-loading.editor-preview .html-pro-loading-skeleton {
-min-height: 180px !important;
-}
-.html-pro-loading-skeleton-line {
-height: 12px !important;
-border-radius: 7px !important;
-background: linear-gradient(90deg,
-rgba(142, 151, 164, 0.10) 0%,
-rgba(142, 151, 164, 0.18) 45%,
-rgba(255, 255, 255, 0.26) 55%,
-rgba(142, 151, 164, 0.10) 100%
-) !important;
-background-size: 200% 100% !important;
-animation: html-pro-shimmer 2.2s infinite ease-in-out !important;
-}
-.html-pro-loading-skeleton-line.hero {
-height: 52px !important;
-width: 100% !important;
-margin-bottom: 6px !important;
-}
-.html-pro-loading-skeleton-line.title {
-width: 48% !important;
-height: 16px !important;
-}
-.html-pro-loading-skeleton-line.body-1 {
-width: 86% !important;
-}
-.html-pro-loading-skeleton-line.body-2 {
-width: 72% !important;
-}
-.html-pro-loading-skeleton-line.body-3 {
-width: 58% !important;
-}
-/* Soft targeted skeleton loader for images, icons, text, and buttons */
-.html-pro-prerender-style-root.html-pro-loading img,
-.html-pro-prerender-style-root.html-pro-loading svg,
-.html-pro-prerender-style-root.html-pro-loading ha-icon,
-.html-pro-prerender-style-root.html-pro-loading button,
-.html-pro-prerender-style-root.html-pro-loading h1,
-.html-pro-prerender-style-root.html-pro-loading h2,
-.html-pro-prerender-style-root.html-pro-loading h3,
-.html-pro-prerender-style-root.html-pro-loading h4,
-.html-pro-prerender-style-root.html-pro-loading h5,
-.html-pro-prerender-style-root.html-pro-loading h6,
-.html-pro-prerender-style-root.html-pro-loading p,
-.html-pro-prerender-style-root.html-pro-loading span,
-.html-pro-prerender-style-root.html-pro-loading [data-skeleton] {
-color: transparent !important;
-background: linear-gradient(90deg,
-rgba(142, 151, 164, 0.10) 0%,
-rgba(142, 151, 164, 0.18) 45%,
-rgba(255, 255, 255, 0.26) 55%,
-rgba(142, 151, 164, 0.10) 100%
-) !important;
-background-size: 200% 100% !important;
-animation: html-pro-shimmer 2.2s infinite ease-in-out !important;
-border-color: transparent !important;
-border-radius: 8px !important;
-box-shadow: inset 0 0 0 1px rgba(142, 151, 164, 0.06) !important;
-text-shadow: none !important;
-pointer-events: none !important;
-opacity: 0.9 !important;
-}
-.html-pro-prerender-style-root.html-pro-loading img,
-.html-pro-prerender-style-root.html-pro-loading svg {
-filter: saturate(0.65) contrast(0.92) opacity(0.45) !important;
-}
-@keyframes html-pro-shimmer {
-0% { background-position: 200% 0; }
-100% { background-position: -200% 0; }
-}
-.html-pro-image-fallback {
-display: inline-flex !important;
-align-items: center !important;
-justify-content: center !important;
-width: var(--html-pro-fallback-width, 100%) !important;
-height: var(--html-pro-fallback-height, 140px) !important;
-min-height: 44px !important;
-border-radius: inherit;
-background:
-radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.7), transparent 32%),
-linear-gradient(135deg, rgba(238, 240, 243, 0.95), rgba(222, 226, 231, 0.9)) !important;
-color: rgba(111, 119, 130, 0.45) !important;
-box-shadow: inset 0 0 0 1px rgba(128, 138, 150, 0.12) !important;
-overflow: hidden !important;
-box-sizing: border-box !important;
-}
-.html-pro-image-fallback::before {
-content: "";
-width: min(34px, 36%);
-height: min(34px, 36%);
-opacity: 0.45;
-background: currentColor;
--webkit-mask: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill='black' d='M21 19V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2ZM8.5 8A1.5 1.5 0 1 1 7 9.5 1.5 1.5 0 0 1 8.5 8Zm10 10h-13l4.1-5.2 2.9 3.5 3.7-4.8 2.3 2.9Z'/%3E%3C/svg%3E") center / contain no-repeat;
-mask: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill='black' d='M21 19V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2ZM8.5 8A1.5 1.5 0 1 1 7 9.5 1.5 1.5 0 0 1 8.5 8Zm10 10h-13l4.1-5.2 2.9 3.5 3.7-4.8 2.3 2.9Z'/%3E%3C/svg%3E") center / contain no-repeat;
-}
-`;
-document.head.appendChild(style);
-}
-(function () {
-const _ov = window._htmlProCardOverlay;
-if (!_ov) return;
-const _clearAll = () => {
-_ov.innerHTML = "";
-};
-window.addEventListener("location-changed", _clearAll);
-_ov.addEventListener("click", (e) => {
-const btn =
-e.target.closest("[data-action][data-entity]") ||
-e.target.closest("[data-action]");
-if (!btn) return;
-const entity =
-btn.dataset.entity || btn.closest("[data-entity]")?.dataset.entity;
-const action = btn.dataset.action;
-if (!entity || !action) return;
-const hass = document.querySelector("home-assistant")?.hass;
-if (!hass) return;
-const [domain] = entity.split(".");
-if (action === "more-info") {
-const ev = new Event("hass-more-info", { bubbles: true, composed: true });
-ev.detail = { entityId: entity };
-_ov.dispatchEvent(ev);
-return;
-}
-let service = action;
-if (action === "toggle") {
-const st = hass.states[entity];
-if (domain === "lock")
-service = st?.state === "locked" ? "unlock" : "lock";
-else if (domain === "cover")
-service =
-st?.state === "open" || st?.state === "opening"
-? "close_cover"
-: "open_cover";
-else if (domain === "button" || domain === "input_button")
-service = "press";
-else if (domain === "scene") service = "turn_on";
-else if (domain === "script") {
-hass.callService("script", entity.split(".")[1], {});
-return;
-} else if (st) service = st.state === "on" ? "turn_off" : "turn_on";
-}
-hass.callService(domain, service, { entity_id: entity });
-});
-})();
-if (!window._htmlProCardRoots) {
-window._htmlProCardRoots = new Set();
-const origGetById = document.getElementById.bind(document);
-const origQS = document.querySelector.bind(document);
-const origQSA = document.querySelectorAll.bind(document);
-document.getElementById = function (id) {
-for (const root of window._htmlProCardRoots) {
-const el = root.querySelector("#" + id);
-if (el) return el;
-}
-return origGetById(id);
-};
-document.querySelector = function (sel) {
-for (const root of window._htmlProCardRoots) {
-const el = root.querySelector(sel);
-if (el) return el;
-}
-return origQS(sel);
-};
-document.querySelectorAll = function (sel) {
-const results = [];
-for (const root of window._htmlProCardRoots) {
-results.push(...root.querySelectorAll(sel));
-}
-if (results.length > 0) return results;
-return origQSA(sel);
-};
-}
-const _pceLoaded = { promise: null };
-function _loadPrismEditor() {
-if (_pceLoaded.promise) return _pceLoaded.promise;
-_pceLoaded.promise = new Promise((resolve) => {
-if (window.prismCodeEditor) {
-resolve(window.prismCodeEditor);
-return;
-}
-const script = document.createElement("script");
-script.type = "module";
-script.textContent = `
-import { fullEditor, updateTheme } from 'https://cdn.jsdelivr.net/npm/prism-code-editor@3/dist/setups/index.js';
-import 'https://cdn.jsdelivr.net/npm/prism-code-editor@3/dist/prism/languages/markup.js';
-import 'https://cdn.jsdelivr.net/npm/prism-code-editor@3/dist/prism/languages/css.js';
-import 'https://cdn.jsdelivr.net/npm/prism-code-editor@3/dist/prism/languages/javascript.js';
-import 'https://cdn.jsdelivr.net/npm/prism-code-editor@3/dist/prism/languages/typescript.js';
-window.prismCodeEditor = { fullEditor, updateTheme };
-window.dispatchEvent(new Event('pce-ready'));
-`;
-document.head.appendChild(script);
-window.addEventListener(
-"pce-ready",
-() => resolve(window.prismCodeEditor),
-{ once: true },
-);
-});
-return _pceLoaded.promise;
-}
-if (!customElements.get("ha-htmlcard-textarea")) {
-customElements.define(
-"ha-htmlcard-textarea",
-class extends HTMLElement {
-constructor() {
-super();
-this._value = "";
-this._editorReady = false;
-this._pendingValue = null;
-}
-connectedCallback() {
-if (this._initialized) return;
-this._initialized = true;
-this.innerHTML = `
-<style>
-.pce-container {
-position: relative;
-min-height: 400px;
-border: 1px solid var(--divider-color, #e0e0e0);
-border-radius: 10px;
-overflow: hidden;
-box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04), inset 0 1px 2px rgba(0, 0, 0, 0.02);
-transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-.pce-container:focus-within {
-border-color: var(--primary-color, #03a9f4);
-box-shadow: 0 0 0 2px rgba(var(--rgb-primary-color, 3, 169, 244), 0.1), inset 0 1px 2px rgba(0, 0, 0, 0.02);
-}
-.pce-container.loading {
-height: 400px;
-}
-.pce-container .prism-code-editor {
-height: 300px !important;
-min-height: 350px !important;
-font-size: 13px !important;
-}
-.pce-fallback {
-width: 100%;
-height: 400px;
-padding: 14px 16px;
-border: none;
-background: var(--card-background-color, #fff);
-color: var(--primary-text-color, #333);
-font-family: 'SF Mono', 'Consolas', 'Monaco', monospace;
-font-size: 13px;
-line-height: 1.6;
-resize: vertical;
-box-sizing: border-box;
-outline: none;
-}
-.pce-container.loading .pce-fallback {
-color: transparent;
-caret-color: transparent;
-}
-.pce-skeleton {
-position: absolute;
-inset: 0;
-min-height: 400px;
-padding: 18px 16px;
-background: var(--card-background-color, #fff);
-pointer-events: none;
-box-sizing: border-box;
-z-index: 2;
-}
-.pce-container:not(.loading) .pce-skeleton {
-display: none;
-}
-.pce-skeleton-line {
-height: 12px;
-margin-bottom: 12px;
-border-radius: 7px;
-background: linear-gradient(
-90deg,
-rgba(142, 151, 164, 0.10) 0%,
-rgba(142, 151, 164, 0.18) 45%,
-rgba(255, 255, 255, 0.26) 55%,
-rgba(142, 151, 164, 0.10) 100%
-);
-background-size: 200% 100%;
-animation: pce-skeleton-shimmer 2.2s infinite ease-in-out;
-}
-.pce-skeleton-line:nth-child(1) { width: 38%; }
-.pce-skeleton-line:nth-child(2) { width: 82%; }
-.pce-skeleton-line:nth-child(3) { width: 74%; margin-left: 18px; }
-.pce-skeleton-line:nth-child(4) { width: 66%; margin-left: 36px; }
-.pce-skeleton-line:nth-child(5) { width: 88%; margin-left: 18px; }
-.pce-skeleton-line:nth-child(6) { width: 56%; }
-.pce-skeleton-line:nth-child(7) { width: 78%; }
-.pce-skeleton-line:nth-child(8) { width: 62%; margin-left: 18px; }
-@keyframes pce-skeleton-shimmer {
-0% { background-position: 200% 0; }
-100% { background-position: -200% 0; }
-}
-</style>
-<div class="pce-container loading">
-<textarea class="pce-fallback" spellcheck="false"></textarea>
-<div class="pce-skeleton" aria-hidden="true">
-<div class="pce-skeleton-line"></div>
-<div class="pce-skeleton-line"></div>
-<div class="pce-skeleton-line"></div>
-<div class="pce-skeleton-line"></div>
-<div class="pce-skeleton-line"></div>
-<div class="pce-skeleton-line"></div>
-<div class="pce-skeleton-line"></div>
-<div class="pce-skeleton-line"></div>
-</div>
-</div>
-`;
-this._container = this.querySelector(".pce-container");
-this._fallback = this.querySelector(".pce-fallback");
-this._fallback.value = this._value;
-this._fallback.addEventListener("input", () => {
-this._value = this._fallback.value;
-this.dispatchEvent(
-new CustomEvent("change", {
-detail: { value: this._value },
-bubbles: true,
-composed: true,
-}),
-);
-});
-this._initEditor();
-}
-async _initEditor() {
-try {
-const pce = await _loadPrismEditor();
-this._fallback.style.visibility = "hidden";
-const initialValue =
-this._pendingValue !== null ? this._pendingValue : this._value;
-const haThemes =
-document.querySelector("home-assistant")?.hass?.themes;
-const isDark =
-haThemes?.darkMode ||
-document.body.getAttribute("data-theme")?.includes("dark") ||
-getComputedStyle(document.body)
-.getPropertyValue("--primary-background-color")
-?.trim()
-?.match(/^#[0-3]/) ||
-window.matchMedia("(prefers-color-scheme: dark)").matches;
-const theme = isDark ? "vs-code-dark" : "vs-code-light";
-this._editor = pce.fullEditor(
-this._container,
-{
-language: "html",
-theme: theme,
-value: initialValue,
-lineNumbers: true,
-wordWrap: false,
-tabSize: 2,
-},
-() => {
-this._editorReady = true;
-this._fallback.style.display = "none";
-this._container.classList.remove("loading");
-this._value = initialValue;
-const shadow = this._editor.scrollContainer.parentNode;
-if (shadow instanceof ShadowRoot) {
-const style = document.createElement("style");
-style.textContent = `.prism-code-editor { height: 400px !important; font-size: 11px !important; }`;
-shadow.appendChild(style);
-}
-this._editor.addListener("update", (code) => {
-this._value = code;
-this.dispatchEvent(
-new CustomEvent("change", {
-detail: { value: this._value },
-bubbles: true,
-composed: true,
-}),
-);
-});
-},
-);
-} catch (e) {
-this._container.classList.remove("loading");
-this._fallback.style.visibility = "visible";
-this._fallback.style.display = "block";
-}
-}
-set value(val) {
-const newVal = val || "";
-if (this._editorReady && this._editor) {
-if (this._editor.value !== newVal) {
-this._editor.setOptions({ value: newVal });
-this._value = newVal;
-}
-} else {
-this._pendingValue = newVal;
-this._value = newVal;
-if (this._fallback) {
-this._fallback.value = newVal;
-}
-}
-}
-get value() {
-return this._value;
-}
-},
-);
-}
-if (!customElements.get("ha-htmlcard-textfield")) {
-customElements.define(
-"ha-htmlcard-textfield",
-class extends HTMLElement {
-constructor() {
-super();
-this.attachShadow({ mode: "open" });
-this.shadowRoot.innerHTML = `
-<style>
-:host {
-display: block;
-}
-input {
-width: 100%;
-padding: 8px;
-border: 1px solid var(--divider-color, #e0e0e0);
-border-radius: 4px;
-background: var(--card-background-color, #fff);
-color: var(--primary-text-color, #000);
-}
-</style>
-<input type="text" />
-`;
-this._input = this.shadowRoot.querySelector("input");
-this._input.addEventListener("input", () => {
-this.dispatchEvent(
-new CustomEvent("change", {
-detail: { value: this._input.value },
-bubbles: true,
-composed: true,
-}),
-);
-});
-}
-set value(val) {
-this._input.value = val;
-}
-get value() {
-return this._input.value;
-}
-set type(val) {
-this._input.type = val;
-}
-},
-);
-}
-if (!customElements.get("ha-htmlcard-switch")) {
-customElements.define(
-"ha-htmlcard-switch",
-class extends HTMLElement {
-constructor() {
-super();
-this.attachShadow({ mode: "open" });
-this.shadowRoot.innerHTML = `
-<style>
-:host {
-display: inline-block;
-}
-label {
-position: relative;
-display: inline-block;
-width: 40px;
-height: 24px;
-}
-input {
-opacity: 0;
-width: 0;
-height: 0;
-}
-span {
-position: absolute;
-cursor: pointer;
-top: 0;
-left: 0;
-right: 0;
-bottom: 0;
-background-color: #ccc;
-transition: .4s;
-border-radius: 24px;
-}
-span:before {
-position: absolute;
-content: "";
-height: 16px;
-width: 16px;
-left: 4px;
-bottom: 4px;
-background-color: white;
-transition: .4s;
-border-radius: 50%;
-}
-input:checked + span {
-background-color: var(--primary-color, #03a9f4);
-}
-input:checked + span:before {
-transform: translateX(16px);
-}
-</style>
-<label>
-<input type="checkbox" />
-<span></span>
-</label>
-`;
-this._input = this.shadowRoot.querySelector("input");
-this._input.addEventListener("change", () => {
-this.dispatchEvent(
-new CustomEvent("change", {
-detail: { checked: this._input.checked },
-bubbles: true,
-composed: true,
-}),
-);
-});
-}
-set checked(val) {
-this._input.checked = val;
-}
-get checked() {
-return this._input.checked;
-}
-},
-);
-}
-if (!customElements.get("ha-htmlcard-formfield")) {
-customElements.define(
-"ha-htmlcard-formfield",
-class extends HTMLElement {
-constructor() {
-super();
-this.attachShadow({ mode: "open" });
-this.shadowRoot.innerHTML = `
-<style>
-:host {
-display: flex;
-align-items: center;
-padding: 4px 0;
-}
-label {
-padding-left: 8px;
-color: var(--primary-text-color, #000);
-}
-</style>
-<slot></slot>
-<label><slot name="label"></slot></label>
-`;
-}
-},
-);
-}
-const I18N = {
-zh: {
-htmlContent: "HTML 内容",
-options: "选项设置",
-scripts: "外部脚本",
-store: "模块商店",
-disableParse: "纯HTML模式",
-disableParseDesc: "默认关闭(使用Jinja2)，开启后直接渲染HTML",
-updateInterval: "更新间隔 (ms)",
-updateIntervalDesc: "0 为禁用自动更新",
-ignoreLineBreaks: "忽略换行",
-ignoreLineBreaksDesc: "忽略HTML中的换行符",
-addScript: "添加",
-scriptPlaceholder: "输入脚本 URL",
-searchPlaceholder: "搜索模块...",
-import: "导入",
-delete: "删除",
-loading: "加载中...",
-noModules: "暂无模块",
-noCustomModules: "暂无自定义模块",
-confirmDelete: "确定删除此模块?",
-customModule: "自定义模块",
-headerDesc: "高级 HTML 卡片编辑器，支持 Jinja2 模板语法",
-headerDesc2: "可使用 Home Assistant 状态、属性和服务调用",
-realtime: "实时更新",
-extScripts: "外部脚本",
-customStyle: "自定义样式",
-yamlHint: "支持直接粘贴完整YAML配置",
-storeDesc: "从社区获取模块",
-version: "版本",
-by: "作者",
-supports: "支持",
-viewSource: "查看",
-slideToImport: "滑动导入 →",
-loadError: "加载失败，请稍后重试",
-refreshing: "刷新中...",
-},
-"zh-Hant": {
-htmlContent: "HTML 內容",
-options: "選項設置",
-scripts: "外部腳本",
-store: "模組商店",
-disableParse: "純HTML模式",
-disableParseDesc: "預設關閉(使用Jinja2)，開啟後直接渲染HTML",
-updateInterval: "更新間隔 (ms)",
-updateIntervalDesc: "0 為禁用自動更新",
-ignoreLineBreaks: "忽略換行",
-ignoreLineBreaksDesc: "忽略HTML中的換行符",
-addScript: "添加",
-scriptPlaceholder: "輸入腳本 URL",
-searchPlaceholder: "搜尋模組...",
-import: "導入",
-delete: "刪除",
-loading: "載入中...",
-noModules: "暫無模組",
-noCustomModules: "暫無自定義模組",
-confirmDelete: "確定刪除此模組?",
-customModule: "自定義模組",
-headerDesc: "高級 HTML 卡片編輯器，支持 Jinja2 模板語法",
-headerDesc2: "可使用 Home Assistant 狀態、屬性和服務調用",
-realtime: "即時更新",
-extScripts: "外部腳本",
-customStyle: "自定義樣式",
-yamlHint: "支持直接貼上完整YAML配置",
-storeDesc: "從社區獲取模組",
-version: "版本",
-by: "作者",
-supports: "支持",
-viewSource: "查看",
-slideToImport: "滑動導入 →",
-loadError: "載入失敗，請稍後重試",
-refreshing: "刷新中...",
-},
-ja: {
-htmlContent: "HTML コンテンツ",
-options: "オプション",
-scripts: "外部スクリプト",
-store: "モジュールストア",
-disableParse: "純粋HTMLモード",
-disableParseDesc: "デフォルトオフ(Jinja2使用)、オンでHTML直接レンダリング",
-updateInterval: "更新間隔 (ms)",
-updateIntervalDesc: "0で自動更新無効",
-ignoreLineBreaks: "改行を無視",
-ignoreLineBreaksDesc: "HTML内の改行を無視",
-addScript: "追加",
-scriptPlaceholder: "スクリプトURLを入力",
-searchPlaceholder: "モジュールを検索...",
-import: "インポート",
-delete: "削除",
-loading: "読み込み中...",
-noModules: "モジュールなし",
-noCustomModules: "カスタムモジュールなし",
-confirmDelete: "このモジュールを削除しますか？",
-customModule: "カスタムモジュール",
-headerDesc: "Jinja2テンプレート対応の高度なHTMLカードエディター",
-headerDesc2: "Home Assistantの状態、属性、サービスを使用可能",
-realtime: "リアルタイム",
-extScripts: "スクリプト",
-customStyle: "カスタムCSS",
-yamlHint: "完全なYAML設定を直接貼り付け可能",
-storeDesc: "コミュニティからモジュールを取得",
-version: "v",
-by: "作者",
-supports: "対応",
-viewSource: "表示",
-slideToImport: "スライドでインポート →",
-loadError: "読み込み失敗、後でもう一度お試しください",
-refreshing: "更新中...",
-},
-de: {
-htmlContent: "HTML-Inhalt",
-options: "Optionen",
-scripts: "Externe Skripte",
-store: "Modul-Store",
-disableParse: "Reiner HTML-Modus",
-disableParseDesc:
-"Standard aus (Jinja2), aktivieren für direktes HTML-Rendering",
-updateInterval: "Aktualisierungsintervall (ms)",
-updateIntervalDesc: "0 deaktiviert Auto-Update",
-ignoreLineBreaks: "Zeilenumbrüche ignorieren",
-ignoreLineBreaksDesc: "Zeilenumbrüche in HTML ignorieren",
-addScript: "Hinzufügen",
-scriptPlaceholder: "Skript-URL eingeben",
-searchPlaceholder: "Module suchen...",
-import: "Importieren",
-delete: "Löschen",
-loading: "Laden...",
-noModules: "Keine Module",
-noCustomModules: "Keine benutzerdefinierten Module",
-confirmDelete: "Dieses Modul löschen?",
-customModule: "Benutzerdefiniertes Modul",
-headerDesc: "Erweiterter HTML-Karten-Editor mit Jinja2-Vorlage",
-headerDesc2: "Home Assistant Zustände, Attribute und Dienste nutzen",
-realtime: "Echtzeit",
-extScripts: "Skripte",
-customStyle: "Benutzerdefiniertes CSS",
-yamlHint: "Vollständige YAML-Konfiguration direkt einfügen",
-storeDesc: "Module aus der Community abrufen",
-version: "v",
-by: "von",
-supports: "Unterstützt",
-viewSource: "Anzeigen",
-slideToImport: "Zum Importieren schieben →",
-loadError: "Laden fehlgeschlagen, bitte später erneut versuchen",
-refreshing: "Aktualisieren...",
-},
-en: {
-htmlContent: "HTML Content",
-options: "Options",
-scripts: "External Scripts",
-store: "Module Store",
-disableParse: "Pure HTML Mode",
-disableParseDesc:
-"Off by default (uses Jinja2), enable to render HTML directly",
-updateInterval: "Update Interval (ms)",
-updateIntervalDesc: "0 to disable auto update",
-ignoreLineBreaks: "Ignore Line Breaks",
-ignoreLineBreaksDesc: "Ignore line breaks in HTML",
-addScript: "Add",
-scriptPlaceholder: "Enter script URL",
-searchPlaceholder: "Search modules...",
-import: "Import",
-delete: "Delete",
-loading: "Loading...",
-noModules: "No modules",
-noCustomModules: "No custom modules",
-confirmDelete: "Delete this module?",
-customModule: "Custom Module",
-headerDesc: "Advanced HTML card editor with Jinja2 template",
-headerDesc2: "Use Home Assistant states, attributes and services",
-realtime: "Realtime",
-extScripts: "Scripts",
-customStyle: "Custom CSS",
-yamlHint: "Paste full YAML config directly",
-storeDesc: "Get modules from community",
-version: "v",
-by: "by",
-supports: "Supports",
-viewSource: "View",
-slideToImport: "Slide to Import →",
-loadError: "Failed to load, please try again",
-refreshing: "Refreshing...",
-},
-};
-const MODULE_STORE_CONFIG = {
-repo: "ha-china/html-card-pro",
-storeUrl: "https://cdn.jsdelivr.net/gh/ha-china/html-card-pro@main/store.json",
-rawBase: "https://cdn.jsdelivr.net/gh/ha-china/html-card-pro@main/",
-cacheKey: "html-pro-card-modules-cache",
-cacheTTL: 10 * 60 * 1000,
-};
-const _hasExecutableScript = (content) =>
-/<script\b/i.test(content) ||
-/<script[^>]+type=["'](?:text|application)\/typescript["']/i.test(content) ||
-/\$\{/.test(content);
-class HtmlTemplateCardEditor extends LitElement {
-static get properties() {
-return {
-_config: { type: Object },
-hass: { type: Object },
-_showStore: { type: Boolean },
-_showHtml: { type: Boolean },
-_showOptions: { type: Boolean },
-_showScripts: { type: Boolean },
-_storeModules: { type: Array },
-_savedModules: { type: Array },
-_storeLoading: { type: Boolean },
-_storeSearch: { type: String },
-};
-}
-get _lang() {
-const lang = this.hass?.language || "";
-if (
-lang === "zh-Hant" ||
-lang.startsWith("zh-TW") ||
-lang.startsWith("zh-HK")
-)
-return "zh-Hant";
-if (lang.startsWith("zh")) return "zh";
-if (lang.startsWith("ja")) return "ja";
-if (lang.startsWith("de")) return "de";
-return "en";
-}
-_t(key) {
-return I18N[this._lang]?.[key] || I18N.en[key] || key;
-}
-constructor() {
-super();
-this._showStore = false;
-this._showHtml = true;
-this._showOptions = false;
-this._showScripts = false;
-this._storeModules = [];
-this._savedModules = this._loadSavedModules();
-this._storeLoading = false;
-this._storeSearch = "";
-}
-_loadSavedModules() {
-try {
-const saved = localStorage.getItem("html-pro-card-modules");
-return saved ? JSON.parse(saved) : [];
-} catch {
-return [];
-}
-}
-_saveSavedModules() {
-localStorage.setItem(
-"html-pro-card-modules",
-JSON.stringify(this._savedModules),
-);
-}
-_getCachedModules() {
-try {
-const cached = localStorage.getItem(MODULE_STORE_CONFIG.cacheKey);
-if (!cached) return null;
-const { data, timestamp } = JSON.parse(cached);
-if (Date.now() - timestamp > MODULE_STORE_CONFIG.cacheTTL) return null;
-return data;
-} catch {
-return null;
-}
-}
-_setCachedModules(data) {
-try {
-localStorage.setItem(
-MODULE_STORE_CONFIG.cacheKey,
-JSON.stringify({
-data,
-timestamp: Date.now(),
-}),
-);
-} catch {}
-}
-_parseModuleFromMarkdown(text) {
-const modules = [];
-const yamlBlockRegex = /```ya?ml\s*([\s\S]*?)```/gi;
-let match;
-while ((match = yamlBlockRegex.exec(text)) !== null) {
-const yamlContent = match[1].trim();
-try {
-if (
-yamlContent.startsWith("type: custom:html-pro-card") ||
-yamlContent.includes("\ntype: custom:html-pro-card")
-) {
-const cardConfig = this._parseCardYaml(yamlContent);
-if (cardConfig && cardConfig.content) {
-const titleMatch = text.match(/\*\*([^*]+)\*\*/);
-const authorMatch =
-text.match(/\*\*Author\*\*:\s*(\S+)/i) ||
-text.match(/Author:\s*(\S+)/i);
-const versionMatch =
-text.match(/\*\*Version\*\*:\s*(\S+)/i) ||
-text.match(/Version:\s*(\S+)/i);
-modules.push({
-name: titleMatch ? titleMatch[1].trim() : "Untitled Module",
-version: versionMatch ? versionMatch[1] : "1.0",
-creator: authorMatch ? authorMatch[1] : "Community",
-description: "",
-_cardConfig: cardConfig,
-code: cardConfig.content,
-scripts: cardConfig.scripts || [],
-});
-}
-} else {
-const module = this._parseModuleYaml(yamlContent);
-if (module && module.name && module.code) {
-modules.push(module);
-}
-}
-} catch {}
-}
-return modules;
-}
-_parseCardYaml(yamlText) {
-const result = {};
-const lines = yamlText.split("\n");
-let currentKey = null;
-let multilineValue = [];
-let inMultiline = false;
-let baseIndent = 0;
-let inArray = false;
-let arrayKey = null;
-let arrayValues = [];
-for (let i = 0; i < lines.length; i++) {
-const line = lines[i];
-const trimmed = line.trim();
-if (!trimmed && !inMultiline) continue;
-const indent = line.search(/\S|$/);
-if (inMultiline) {
-if (indent > baseIndent || trimmed === "") {
-multilineValue.push(line.slice(baseIndent + 2) || "");
-continue;
-} else {
-result[currentKey] = multilineValue.join("\n");
-inMultiline = false;
-multilineValue = [];
-}
-}
-if (inArray) {
-if (trimmed.startsWith("- ")) {
-arrayValues.push(this._cleanYamlScalar(trimmed.slice(2).trim()));
-continue;
-} else if (indent <= baseIndent) {
-result[arrayKey] = arrayValues;
-inArray = false;
-arrayValues = [];
-} else {
-continue;
-}
-}
-const kvMatch = trimmed.match(/^([\w_-]+):\s*(.*)$/);
-if (kvMatch) {
-const [, key, value] = kvMatch;
-const valTrim = value.trim();
-if (/^\|[-+]?$|^>[-+]?$/.test(valTrim)) {
-currentKey = key;
-baseIndent = indent;
-inMultiline = true;
-multilineValue = [];
-} else if (valTrim === "") {
-arrayKey = key;
-baseIndent = indent;
-inArray = true;
-arrayValues = [];
-} else if (valTrim.startsWith('"') || valTrim.startsWith("'")) {
-result[key] = this._cleanYamlScalar(valTrim);
-} else {
-let val = this._cleanYamlScalar(valTrim);
-if (val === "true" || val === "false") {
-val = val === "true";
-}
-result[key] = val;
-}
-}
-}
-if (inMultiline && currentKey) {
-result[currentKey] = multilineValue.join("\n");
-}
-if (inArray && arrayKey) {
-result[arrayKey] = arrayValues;
-}
-// 格式化布尔值和整型
-for (const key of ["do_not_parse", "ignore_line_breaks"]) {
-if (result[key] !== undefined) {
-result[key] = result[key] === true || result[key] === "true" || result[key] === 1 || result[key] === "1" || result[key] === "on";
-}
-}
-if (result.update_interval !== undefined) {
-const parsed = parseInt(result.update_interval);
-result.update_interval = isNaN(parsed) ? 0 : parsed;
-}
-for (const key of ["entities", "scripts"]) {
-if (result[key] !== undefined) {
-result[key] = this._normalizeYamlList(result[key]);
-}
-}
-if (result.content !== undefined && result.do_not_parse === undefined) {
-result.do_not_parse = _hasExecutableScript(result.content || "");
-}
-return result;
-}
-_parseModuleYaml(yamlText) {
-const lines = yamlText.split("\n");
-const result = { editor: [] };
-let currentKey = null;
-let currentIndent = 0;
-let multilineValue = [];
-let inMultiline = false;
-let inEditor = false;
-let editorItem = null;
-let inSelector = false;
-let selectorData = {};
-for (let i = 0; i < lines.length; i++) {
-const line = lines[i];
-const trimmed = line.trim();
-if (!trimmed) continue;
-const indent = line.search(/\S/);
-if (inMultiline) {
-if (indent > currentIndent || trimmed === "") {
-multilineValue.push(line.slice(currentIndent + 2) || "");
-continue;
-} else {
-result[currentKey] = multilineValue.join("\n");
-inMultiline = false;
-multilineValue = [];
-}
-}
-if (indent === 0 && trimmed.endsWith(":") && !trimmed.includes(" ")) {
-const key = trimmed.slice(0, -1);
-if (key === "editor") {
-inEditor = true;
-continue;
-}
-currentKey = key;
-continue;
-}
-if (inEditor) {
-if (indent === 0 && !trimmed.startsWith("-")) {
-inEditor = false;
-} else if (trimmed.startsWith("- name:")) {
-if (editorItem) result.editor.push(editorItem);
-editorItem = { name: trimmed.replace("- name:", "").trim() };
-inSelector = false;
-} else if (editorItem && indent >= 2) {
-const kvMatch = trimmed.match(/^([\w-]+):\s*(.*)$/);
-if (kvMatch) {
-const [, k, v] = kvMatch;
-if (k === "selector") {
-inSelector = true;
-selectorData = {};
-} else if (inSelector && indent >= 4) {
-if (k === "select" || k === "text" || k === "condition") {
-editorItem.selector = { type: k };
-}
-} else {
-editorItem[k] = v.replace(/^["']|["']$/g, "");
-}
-}
-}
-continue;
-}
-const kvMatch = trimmed.match(/^([\w-]+):\s*(.*)$/);
-if (kvMatch) {
-const [, key, value] = kvMatch;
-if (value === "|") {
-currentKey = key;
-currentIndent = indent;
-inMultiline = true;
-multilineValue = [];
-} else if (value.startsWith('"') || value.startsWith("'")) {
-result[key] = this._cleanYamlScalar(value);
-} else {
-result[key] = this._cleanYamlScalar(value);
-}
-}
-}
-if (inMultiline && currentKey) {
-result[currentKey] = multilineValue.join("\n");
-}
-if (editorItem) result.editor.push(editorItem);
-const firstKey = Object.keys(result)[0];
-if (firstKey && firstKey !== "name" && !result.name) {
-result.id = firstKey;
-const nested = this._parseNestedModule(yamlText, firstKey);
-if (nested) return nested;
-}
-return result;
-}
-_parseNestedModule(yamlText, rootKey) {
-const lines = yamlText.split("\n");
-const result = { id: rootKey, editor: [] };
-let inRoot = false;
-let currentKey = null;
-let multilineValue = [];
-let inMultiline = false;
-let baseIndent = 0;
-for (const line of lines) {
-const trimmed = line.trim();
-if (!trimmed) continue;
-const indent = line.search(/\S/);
-if (trimmed === rootKey + ":") {
-inRoot = true;
-baseIndent = indent;
-continue;
-}
-if (!inRoot) continue;
-if (indent <= baseIndent && trimmed.endsWith(":")) {
-break;
-}
-if (inMultiline) {
-if (indent > baseIndent + 4 || trimmed === "") {
-multilineValue.push(line.slice(baseIndent + 6) || "");
-continue;
-} else {
-result[currentKey] = multilineValue.join("\n");
-inMultiline = false;
-multilineValue = [];
-}
-}
-const kvMatch = trimmed.match(/^([\w-]+):\s*(.*)$/);
-if (kvMatch && indent === baseIndent + 4) {
-const [, key, value] = kvMatch;
-if (value === "|") {
-currentKey = key;
-inMultiline = true;
-multilineValue = [];
-} else if (value.startsWith('"') || value.startsWith("'")) {
-result[key] = this._cleanYamlScalar(value);
-} else {
-result[key] = this._cleanYamlScalar(value);
-}
-}
-}
-if (inMultiline && currentKey) {
-result[currentKey] = multilineValue.join("\n");
-}
-return result.name ? result : null;
-}
-setConfig(config) {
-const cleanedConfig = { ...config };
-if (cleanedConfig.scripts && Array.isArray(cleanedConfig.scripts)) {
-cleanedConfig.scripts = cleanedConfig.scripts.filter(
-(url) => url !== null && url !== undefined,
-);
-}
-this._config = cleanedConfig;
-}
-render() {
-if (!this._config) {
-return html``;
-}
-return html`
-<style>
-.card-config {
-padding: 16px;
-}
-.collapse-panel {
-border: 1px solid var(--divider-color, #e0e0e0);
-border-radius: 10px;
-margin-bottom: 12px;
-overflow: hidden;
-background: var(--card-background-color, #fff);
-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
-}
-.collapse-header {
-display: flex;
-justify-content: space-between;
-align-items: center;
-padding: 12px 16px;
-cursor: pointer;
-background: transparent;
-user-select: none;
-}
-.collapse-header:hover {
-background: rgba(0, 0, 0, 0.015);
-}
-.collapse-header.expanded {
-border-bottom: 1px solid var(--divider-color, #e0e0e0);
-}
-.collapse-header-left {
-display: flex;
-align-items: center;
-gap: 12px;
-}
-.collapse-icon {
-width: 20px;
-height: 20px;
-color: var(--secondary-text-color);
-flex-shrink: 0;
-transition: color 0.2s ease;
-}
-.collapse-header:hover .collapse-icon {
-color: var(--primary-color);
-}
-.collapse-header.expanded .collapse-icon {
-color: var(--primary-color);
-}
-.collapse-title {
-font-size: 14px;
-font-weight: 600;
-color: var(--primary-text-color);
-letter-spacing: -0.2px;
-}
-.collapse-arrow {
-width: 8px;
-height: 8px;
-border-radius: 50%;
-background: var(--divider-color, #ddd);
-transition: all 0.25s ease;
-flex-shrink: 0;
-}
-.collapse-arrow.expanded {
-background: var(--primary-color, #03a9f4);
-box-shadow: 0 0 0 3px rgba(var(--rgb-primary-color), 0.15);
-}
-.collapse-body {
-max-height: 0;
-overflow: hidden;
-transition: max-height 0.25s ease;
-}
-.collapse-body.expanded {
-max-height: 600px;
-}
-.collapse-content {
-padding: 16px 18px 18px;
-}
-.editor-control {
-width: 100%;
-}
-.option-row {
-display: flex;
-align-items: center;
-justify-content: space-between;
-padding: 14px 16px;
-margin: 0 -16px;
-border-radius: 8px;
-transition: background 0.2s ease;
-}
-.option-row:hover {
-background: rgba(var(--rgb-primary-color), 0.02);
-}
-.option-row:not(:last-child) {
-border-bottom: 1px solid var(--divider-color, #e0e0e0);
-border-radius: 0;
-}
-.option-row:first-child {
-border-radius: 8px 8px 0 0;
-}
-.option-row:last-child {
-border-radius: 0 0 8px 8px;
-}
-.option-label {
-font-size: 14px;
-font-weight: 500;
-color: var(--primary-text-color);
-}
-.option-desc {
-font-size: 12px;
-color: var(--secondary-text-color);
-margin-top: 4px;
-line-height: 1.4;
-}
-.interval-input {
-width: 80px;
-height: 36px;
-padding: 0 12px;
-border: 1px solid var(--divider-color);
-border-radius: 8px;
-font-size: 14px;
-font-weight: 500;
-text-align: center;
-background: var(--card-background-color);
-color: var(--primary-text-color);
-transition: border-color 0.2s ease;
--moz-appearance: textfield;
-}
-.interval-input::-webkit-outer-spin-button,
-.interval-input::-webkit-inner-spin-button {
--webkit-appearance: none;
-margin: 0;
-}
-.interval-input:focus {
-outline: none;
-border-color: var(--primary-color);
-}
-ha-switch {
---mdc-theme-secondary: var(--primary-color);
-}
-.script-input-container {
-display: flex;
-align-items: center;
-gap: 0;
-margin-bottom: 12px;
-border: 1px solid var(--divider-color, #e0e0e0);
-border-radius: 10px;
-background: var(--card-background-color, #fff);
-overflow: hidden;
-box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
-transition:
-border-color 0.2s ease,
-box-shadow 0.2s ease;
-}
-.script-input-container:focus-within {
-border-color: var(--primary-color, #03a9f4);
-box-shadow: 0 0 0 2px rgba(var(--rgb-primary-color), 0.08);
-}
-.script-input-container input {
-flex: 1;
-padding: 10px 12px;
-font-size: 13px;
-border: none;
-background: transparent;
-color: var(--primary-text-color, #333);
-outline: none;
-box-sizing: border-box;
-}
-.script-input-container button {
-height: 38px;
-padding: 0 16px;
-font-size: 12px;
-font-weight: 500;
-border: none;
-background: var(--primary-color, #03a9f4);
-color: #fff;
-cursor: pointer;
-white-space: nowrap;
-}
-.script-input-container button:hover {
-opacity: 0.9;
-}
-.script-item {
-display: flex;
-align-items: center;
-gap: 0;
-margin-bottom: 8px;
-border: 1px solid var(--divider-color, #e0e0e0);
-border-radius: 10px;
-background: var(--card-background-color, #fff);
-overflow: hidden;
-box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
-transition: border-color 0.2s ease;
-}
-.script-item:focus-within {
-border-color: var(--primary-color, #03a9f4);
-}
-.script-item input {
-flex: 1;
-padding: 10px 12px;
-font-size: 12px;
-border: none;
-background: transparent;
-color: var(--primary-text-color, #333);
-outline: none;
-box-sizing: border-box;
-}
-.script-item button {
-height: 38px;
-width: 38px;
-padding: 0;
-border: none;
-background: transparent;
-color: var(--error-color, #e53935);
-cursor: pointer;
-font-size: 14px;
-display: flex;
-align-items: center;
-justify-content: center;
-}
-.script-item button:hover {
-background: rgba(229, 57, 53, 0.1);
-}
-.store-search {
-display: flex;
-align-items: center;
-gap: 0;
-margin-bottom: 12px;
-border: 1px solid var(--divider-color, #e0e0e0);
-border-radius: 10px;
-background: var(--card-background-color, #fff);
-overflow: hidden;
-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
-transition:
-border-color 0.2s ease,
-box-shadow 0.2s ease;
-}
-.store-search:focus-within {
-border-color: var(--primary-color, #03a9f4);
-box-shadow: 0 0 0 2px rgba(var(--rgb-primary-color), 0.08);
-}
-.store-search input {
-flex: 1;
-padding: 10px 12px;
-border: none;
-font-size: 13px;
-box-sizing: border-box;
-background: transparent;
-color: var(--primary-text-color);
-outline: none;
-}
-.store-search-btn {
-display: flex;
-align-items: center;
-justify-content: center;
-width: 38px;
-height: 38px;
-border: none;
-background: transparent;
-cursor: pointer;
-color: var(--secondary-text-color);
-flex-shrink: 0;
-}
-.store-search-btn:hover {
-color: var(--primary-color);
-background: rgba(var(--rgb-primary-color), 0.05);
-border-radius: 6px;
-}
-.store-search-btn.loading {
-animation: spin 1s linear infinite;
-}
-.store-search-btn svg {
-width: 16px;
-height: 16px;
-}
-@keyframes spin {
-from {
-transform: rotate(0deg);
-}
-to {
-transform: rotate(360deg);
-}
-}
-.store-list {
-max-height: 320px;
-overflow-y: auto;
-scrollbar-width: none;
--ms-overflow-style: none;
-}
-.store-list::-webkit-scrollbar {
-display: none;
-}
-.store-item {
-display: grid;
-grid-template-columns: 72px 1fr;
-border-radius: 10px;
-border: 1px solid var(--divider-color);
-margin-bottom: 10px;
-background: var(--card-background-color);
-overflow: hidden;
-box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
-transition: border-color 0.2s ease;
-}
-.store-item:hover {
-border-color: var(--primary-color);
-}
-.store-item:last-child {
-margin-bottom: 0;
-}
-.store-skeleton {
-display: grid;
-grid-template-columns: 72px 1fr;
-border-radius: 10px;
-border: 1px solid rgba(142, 151, 164, 0.16);
-margin-bottom: 10px;
-background: var(--card-background-color);
-overflow: hidden;
-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.025);
-}
-.store-skeleton-left {
-background: linear-gradient(
-135deg,
-rgba(238, 240, 243, 0.92),
-rgba(222, 226, 231, 0.82)
-);
-height: 100%;
-min-height: 100px;
-align-self: stretch;
-position: relative;
-overflow: hidden;
-}
-.store-skeleton-left::after {
-content: "";
-position: absolute;
-inset: 0;
-background: linear-gradient(
-90deg,
-transparent,
-rgba(255, 255, 255, 0.36),
-transparent
-);
-transform: translateX(-100%);
-animation: skeleton-sweep 2.4s infinite ease-in-out;
-}
-.store-skeleton-right {
-padding: 16px 18px;
-display: flex;
-flex-direction: column;
-gap: 10px;
-}
-.skeleton-line {
-height: 12px;
-background: linear-gradient(
-90deg,
-rgba(142, 151, 164, 0.10) 0%,
-rgba(142, 151, 164, 0.17) 48%,
-rgba(255, 255, 255, 0.26) 56%,
-rgba(142, 151, 164, 0.10) 100%
-);
-background-size: 200% 100%;
-animation: skeleton-shimmer 2.2s infinite ease-in-out;
-border-radius: 7px;
-}
-.skeleton-line.title {
-width: 50%;
-height: 16px;
-}
-.skeleton-line.desc {
-width: 90%;
-}
-.skeleton-line.desc2 {
-width: 70%;
-}
-.skeleton-line.btn {
-width: 100%;
-height: 32px;
-margin-top: 6px;
-}
-@keyframes skeleton-shimmer {
-0% {
-background-position: 200% 0;
-}
-100% {
-background-position: -200% 0;
-}
-}
-@keyframes skeleton-sweep {
-0% {
-transform: translateX(-100%);
-}
-60%,
-100% {
-transform: translateX(100%);
-}
-}
-.store-item-left {
-background: var(--secondary-background-color);
-display: flex;
-align-items: center;
-justify-content: center;
-position: relative;
-cursor: default;
-min-height: 100px;
-align-self: stretch;
-}
-.store-item-left img {
-width: 100%;
-height: 100%;
-object-fit: cover;
-}
-.store-item-left-placeholder {
-width: 100%;
-height: 100%;
-display: flex;
-align-items: center;
-justify-content: center;
-background:
-radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.7), transparent 32%),
-linear-gradient(135deg, rgba(238, 240, 243, 0.95), rgba(222, 226, 231, 0.9));
-box-shadow: inset 0 0 0 1px rgba(128, 138, 150, 0.12);
-}
-.store-item-left-placeholder svg {
-width: 28px;
-height: 28px;
-color: rgba(111, 119, 130, 0.45);
-opacity: 0.75;
-}
-.store-item-right {
-padding: 16px 14px;
-display: flex;
-flex-direction: column;
-gap: 4px;
-}
-.store-item-header {
-display: flex;
-justify-content: space-between;
-align-items: flex-start;
-}
-.store-item-title-group {
-display: flex;
-align-items: center;
-gap: 8px;
-}
-.store-item-title-group h4 {
-margin: 0;
-font-size: 14px;
-font-weight: 500;
-color: var(--primary-text-color);
-letter-spacing: -0.2px;
-}
-.store-item-author {
-font-size: 12px;
-color: var(--primary-color);
-cursor: pointer;
-font-weight: 500;
-margin-left: 4px;
-}
-.store-item-author:hover {
-text-decoration: underline;
-}
-.store-item-version {
-font-size: 10px;
-padding: 2px 6px;
-color: var(--secondary-text-color);
-background: transparent;
-border: 1px solid var(--divider-color);
-border-radius: 4px;
-font-weight: 500;
-}
-.store-item-desc {
-margin: 0;
-font-size: 13px;
-color: var(--secondary-text-color);
-line-height: 1.6;
-}
-.store-item-tags {
-display: flex;
-flex-wrap: wrap;
-gap: 6px;
-}
-.store-item-tag {
-display: inline-block;
-font-size: 9px;
-font-weight: 600;
-color: var(--primary-color);
-background: rgba(var(--rgb-primary-color), 0.08);
-padding: 3px 8px;
-border-radius: 4px;
-text-transform: uppercase;
-letter-spacing: 0.3px;
-cursor: pointer;
-}
-.store-item-actions {
-display: flex;
-gap: 10px;
-align-items: center;
-margin-top: 6px;
-}
-.store-item-btn {
-height: 34px;
-padding: 0 14px;
-border: none;
-border-radius: 8px;
-cursor: pointer;
-font-size: 12px;
-font-weight: 500;
-background: var(--card-background-color);
-border: 1px solid var(--divider-color);
-color: var(--secondary-text-color);
-display: flex;
-align-items: center;
-justify-content: center;
-gap: 5px;
-transition: all 0.2s ease;
-}
-.store-item-btn:hover {
-color: var(--primary-color);
-border-color: var(--primary-color);
-}
-.store-item-btn svg {
-width: 15px;
-height: 15px;
-}
-.slide-track {
-flex: 1;
-height: 35px;
-border: 1px solid var(--divider-color);
-border-radius: 17px;
-position: relative;
-overflow: hidden;
-display: flex;
-align-items: center;
-transition: all 0.2s ease;
-}
-.slide-track.active {
-border-color: var(--primary-color);
-}
-.slide-hint {
-position: absolute;
-width: 100%;
-text-align: center;
-font-size: 11px;
-color: var(--secondary-text-color);
-font-weight: 500;
-letter-spacing: 0.3px;
-pointer-events: none;
-opacity: 0.5;
-}
-.slide-handle {
-width: 60px;
-height: 28px;
-background: var(--primary-color);
-border-radius: 14px;
-position: absolute;
-left: 3px;
-cursor: grab;
-display: flex;
-align-items: center;
-justify-content: center;
-color: var(--text-primary-color, #fff);
-z-index: 2;
-transition: all 0.15s ease;
-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
-}
-.slide-handle:hover {
-box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-}
-.slide-handle:active {
-cursor: grabbing;
-transform: scale(0.97);
-}
-.slide-handle svg {
-width: 14px;
-height: 14px;
-}
-.store-error {
-text-align: center;
-padding: 24px;
-color: var(--error-color, #e53935);
-font-size: 13px;
-}
-.store-loading {
-text-align: center;
-padding: 24px;
-color: var(--secondary-text-color);
-font-size: 13px;
-}
-.header-section {
-margin-bottom: 20px;
-padding: 20px;
-text-align: center;
-position: relative;
-}
-.panels-wrapper {
-background: rgba(0, 0, 0, 0.02);
-border-radius: 12px;
-padding: 12px;
-}
-.header-version {
-position: absolute;
-top: 12px;
-right: 12px;
-font-size: 10px;
-padding: 3px 8px;
-background: var(--primary-color, #03a9f4);
-color: #fff;
-border-radius: 10px;
-font-weight: 600;
-}
-.header-logo {
-width: 48px;
-height: 48px;
-margin: 0 auto 12px;
-display: flex;
-align-items: center;
-justify-content: center;
-}
-.header-logo svg {
-width: 48px;
-height: 48px;
-color: var(--primary-color, #03a9f4);
-}
-.header-desc {
-font-size: 13px;
-color: var(--secondary-text-color);
-line-height: 1.6;
-margin-bottom: 12px;
-}
-.header-features {
-display: flex;
-justify-content: center;
-gap: 16px;
-flex-wrap: wrap;
-}
-.header-feature {
-display: flex;
-align-items: center;
-gap: 6px;
-font-size: 12px;
-color: var(--primary-text-color);
-}
-.header-feature svg {
-width: 14px;
-height: 14px;
-color: var(--primary-color, #03a9f4);
-}
-</style>
-<div class="card-config">
-<div class="panels-wrapper">
-<!-- Header -->
-<div class="header-section">
-<a
-href="https://github.com/knoop7/html-card-pro"
-target="_blank"
-class="header-version"
-style="text-decoration:none;color:#fff;"
->v${HTML_PRO_CARD_VERSION}</a
->
-<div class="header-logo">
-<svg viewBox="0 0 24 24" fill="currentColor">
-<path
-d="M13 2V3H12V9H11V10H9V11H8V12H7V13H5V12H4V11H3V9H2V15H3V16H4V17H5V18H6V22H8V21H7V20H8V19H9V18H10V19H11V22H13V21H12V17H13V16H14V15H15V12H16V13H17V11H15V9H20V8H17V7H22V3H21V2M14 3H15V4H14Z"
-/>
-</svg>
-</div>
-<div class="header-desc">
-${this._t("headerDesc")}<br />
-${this._t("headerDesc2")}
-</div>
-<div class="header-features">
-<div class="header-feature">
-<svg
-viewBox="0 0 24 24"
-fill="none"
-stroke="currentColor"
-stroke-width="2"
->
-<circle cx="12" cy="12" r="10"></circle>
-<path d="M12 6v6l4 2"></path>
-</svg>
-${this._t("realtime")}
-</div>
-<div class="header-feature">
-<svg
-viewBox="0 0 24 24"
-fill="none"
-stroke="currentColor"
-stroke-width="2"
->
-<path
-d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
-></path>
-<polyline points="14 2 14 8 20 8"></polyline>
-</svg>
-${this._t("extScripts")}
-</div>
-<div class="header-feature">
-<svg
-viewBox="0 0 24 24"
-fill="none"
-stroke="currentColor"
-stroke-width="2"
->
-<rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-<line x1="3" y1="9" x2="21" y2="9"></line>
-<line x1="9" y1="21" x2="9" y2="9"></line>
-</svg>
-${this._t("customStyle")}
-</div>
-</div>
-</div>
-<!-- HTML 内容 -->
-<div class="collapse-panel">
-<div
-class="collapse-header ${this._showHtml ? "expanded" : ""}"
-@click="${() => {
-this._showHtml = !this._showHtml;
-this.requestUpdate();
-}}"
->
-<div class="collapse-header-left">
-<svg
-class="collapse-icon"
-viewBox="0 0 24 24"
-fill="none"
-stroke="currentColor"
-stroke-width="2"
-stroke-linecap="round"
-stroke-linejoin="round"
->
-<polyline points="16 18 22 12 16 6"></polyline>
-<polyline points="8 6 2 12 8 18"></polyline>
-</svg>
-<span class="collapse-title">${this._t("htmlContent")}</span>
-</div>
-<span
-class="collapse-arrow ${this._showHtml ? "expanded" : ""}"
-></span>
-</div>
-<div class="collapse-body ${this._showHtml ? "expanded" : ""}">
-<div class="collapse-content">
-<div
-style="font-size:11px;color:#999;margin:-8px 0 8px;text-align:center;"
->
-${this._t("yamlHint")}
-</div>
-<ha-htmlcard-textarea
-class="editor-control"
-.value="${this._config.content || ""}"
-@change="${this._handleContentChange}"
-></ha-htmlcard-textarea>
-</div>
-</div>
-</div>
-<!-- 选项设置 -->
-<div class="collapse-panel">
-<div
-class="collapse-header ${this._showOptions ? "expanded" : ""}"
-@click="${() => {
-this._showOptions = !this._showOptions;
-this.requestUpdate();
-}}"
->
-<div class="collapse-header-left">
-<svg
-class="collapse-icon"
-viewBox="0 0 24 24"
-fill="none"
-stroke="currentColor"
-stroke-width="2"
-stroke-linecap="round"
-stroke-linejoin="round"
->
-<circle cx="12" cy="12" r="3"></circle>
-<path
-d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"
-></path>
-</svg>
-<span class="collapse-title">${this._t("options")}</span>
-</div>
-<span
-class="collapse-arrow ${this._showOptions ? "expanded" : ""}"
-></span>
-</div>
-<div class="collapse-body ${this._showOptions ? "expanded" : ""}">
-<div class="collapse-content">
-<div class="option-row">
-<div>
-<div class="option-label">${this._t("disableParse")}</div>
-<div class="option-desc">
-${this._t("disableParseDesc")}
-</div>
-</div>
-<ha-htmlcard-switch
-.checked="${this._config.do_not_parse || false}"
-@change="${this._handleParseChange}"
-></ha-htmlcard-switch>
-</div>
-<div class="option-row">
-<div>
-<div class="option-label">
-${this._t("ignoreLineBreaks")}
-</div>
-<div class="option-desc">
-${this._t("ignoreLineBreaksDesc")}
-</div>
-</div>
-<ha-htmlcard-switch
-.checked="${this._config.ignore_line_breaks || false}"
-@change="${this._handleLineBreaksChange}"
-></ha-htmlcard-switch>
-</div>
-<div class="option-row">
-<div>
-<div class="option-label">${this._t("updateInterval")}</div>
-<div class="option-desc">
-${this._t("updateIntervalDesc")}
-</div>
-</div>
-<input
-type="number"
-class="interval-input"
-.value="${this._config.update_interval || 0}"
-@change="${this._handleIntervalChange}"
-/>
-</div>
-</div>
-</div>
-</div>
-<!-- 外部脚本 -->
-<div class="collapse-panel">
-<div
-class="collapse-header ${this._showScripts ? "expanded" : ""}"
-@click="${() => {
-this._showScripts = !this._showScripts;
-this.requestUpdate();
-}}"
->
-<div class="collapse-header-left">
-<svg
-class="collapse-icon"
-viewBox="0 0 24 24"
-fill="none"
-stroke="currentColor"
-stroke-width="2"
-stroke-linecap="round"
-stroke-linejoin="round"
->
-<path
-d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
-></path>
-<polyline points="14 2 14 8 20 8"></polyline>
-<line x1="16" y1="13" x2="8" y2="13"></line>
-<line x1="16" y1="17" x2="8" y2="17"></line>
-<polyline points="10 9 9 9 8 9"></polyline>
-</svg>
-<span class="collapse-title">${this._t("scripts")}</span>
-</div>
-<span
-class="collapse-arrow ${this._showScripts ? "expanded" : ""}"
-></span>
-</div>
-<div class="collapse-body ${this._showScripts ? "expanded" : ""}">
-<div class="collapse-content">
-<div class="script-input-container">
-<input
-type="url"
-placeholder="${this._t("scriptPlaceholder")}"
-.value="${this._newScriptUrl || ""}"
-@change="${(e) => (this._newScriptUrl = e.target.value)}"
-/>
-<button @click="${this._addScript}">
-${this._t("addScript")}
-</button>
-</div>
-${(this._config.scripts || []).map(
-(script, index) => html`
-<div class="script-item">
-<input
-type="url"
-.value="${script}"
-@change="${(e) =>
-this._updateScript(index, e.target.value)}"
-/>
-<button @click="${() => this._removeScript(index)}">
-<svg
-viewBox="0 0 24 24"
-fill="none"
-stroke="currentColor"
-stroke-width="2"
-style="width:14px;height:14px"
->
-<line x1="18" y1="6" x2="6" y2="18" />
-<line x1="6" y1="6" x2="18" y2="18" />
-</svg>
-</button>
-</div>
-`,
-)}
-</div>
-</div>
-</div>
-<!-- 模块商店 -->
-<div class="collapse-panel">
-<div
-class="collapse-header ${this._showStore ? "expanded" : ""}"
-@click="${this._toggleStore}"
->
-<div class="collapse-header-left">
-<svg
-class="collapse-icon"
-viewBox="0 0 24 24"
-fill="none"
-stroke="currentColor"
-stroke-width="2"
-stroke-linecap="round"
-stroke-linejoin="round"
->
-<path
-d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"
-></path>
-<polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
-<line x1="12" y1="22.08" x2="12" y2="12"></line>
-</svg>
-<span class="collapse-title">${this._t("store")}</span>
-</div>
-<span
-class="collapse-arrow ${this._showStore ? "expanded" : ""}"
-></span>
-</div>
-<div class="collapse-body ${this._showStore ? "expanded" : ""}">
-<div class="collapse-content">
-<div class="store-search">
-<input
-type="text"
-placeholder="${this._t("searchPlaceholder")}"
-.value="${this._storeSearch}"
-@input="${(e) => {
-this._storeSearch = e.target.value;
-this.requestUpdate();
-}}"
-/>
-<button
-class="store-search-btn ${this._storeLoading
-? "loading"
-: ""}"
-@click="${() => this._loadStoreModules()}"
-title="${this._t("refresh")}"
->
-<svg
-viewBox="0 0 24 24"
-fill="none"
-stroke="currentColor"
-stroke-width="2"
->
-<path d="M23 4v6h-6M1 20v-6h6" />
-<path
-d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"
-/>
-</svg>
-</button>
-</div>
-<div class="store-list">
-${this._storeLoading
-? this._renderSkeleton()
-: this._renderOnlineModules()}
-</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-`;
-}
-_handleContentChange(e) {
-if (!this._config) return;
-let value = e.detail.value || "";
-value = this._normalizeRadius(value);
-let newConfig;
-if (
-/\btype:\s*custom:html-pro-card\b/.test(value) &&
-/\bcontent:\s*/.test(value)
-) {
-const parsed = this._parseYaml(value);
-if (parsed.content !== undefined) {
-newConfig = {
-...this._config,
-content: this._normalizeRadius(parsed.content || ""),
-do_not_parse:
-parsed.do_not_parse !== undefined
-? parsed.do_not_parse
-: _hasExecutableScript(parsed.content || ""),
-update_interval:
-parsed.update_interval !== undefined
-? parsed.update_interval
-: this._config.update_interval,
-ignore_line_breaks:
-parsed.ignore_line_breaks !== undefined
-? parsed.ignore_line_breaks
-: this._config.ignore_line_breaks,
-scripts: parsed.scripts || this._config.scripts,
-entities: parsed.entities || this._config.entities,
-};
-} else {
-newConfig = { ...this._config, content: value };
-}
-} else {
-newConfig = { ...this._config, content: value };
-}
-this.dispatchEvent(
-new CustomEvent("config-changed", {
-detail: { config: newConfig },
-bubbles: true,
-composed: true,
-}),
-);
-}
-_normalizeRadius(text) {
-return text.replace(/border-radius\s*:\s*([^;}\n]+)/gi, (match, value) => {
-const v = value.trim().toLowerCase();
-if (v.includes("50%") || v.includes("100%") || v.includes("/"))
-return match;
-if (v.split(/\s+/).length > 1) return match;
-const num = parseFloat(v);
-if (!isNaN(num) && num > 10 && v.includes("px"))
-return "border-radius: 10px";
-return match;
-});
-}
-_handleParseChange(e) {
-this._valueChanged("do_not_parse", e.target.checked);
-}
-_handleLineBreaksChange(e) {
-this._valueChanged("ignore_line_breaks", e.target.checked);
-}
-_handleIntervalChange(e) {
-const value = parseInt(e.target.value) || 0;
-this._valueChanged("update_interval", value);
-}
-_valueChanged(key, value) {
-if (!this._config) return;
-const newConfig = {
-...this._config,
-[key]: value,
-};
-this.dispatchEvent(
-new CustomEvent("config-changed", {
-detail: { config: newConfig },
-bubbles: true,
-composed: true,
-}),
-);
-}
-_addScript() {
-if (!this._newScriptUrl) return;
-const scripts = [...(this._config.scripts || []), this._newScriptUrl];
-this._valueChanged("scripts", scripts);
-this._newScriptUrl = "";
-this.requestUpdate();
-}
-_updateScript(index, value) {
-const scripts = [...(this._config.scripts || [])];
-scripts[index] = value;
-this._valueChanged("scripts", scripts);
-}
-_removeScript(index) {
-const scripts = [...(this._config.scripts || [])];
-scripts.splice(index, 1);
-this._valueChanged("scripts", scripts);
-}
-_toggleStore() {
-this._showStore = !this._showStore;
-if (this._showStore && this._storeModules.length === 0) {
-this._loadOnlineModules();
-}
-this.requestUpdate();
-}
-_switchTab(tab) {
-this._storeTab = tab;
-if (tab === "online" && this._storeModules.length === 0) {
-this._loadOnlineModules();
-}
-this.requestUpdate();
-}
-_parseYaml(text) {
-const lines = text.split("\n");
-const result = {};
-let currentKey = null;
-let multilineValue = [];
-let inMultiline = false;
-let inArray = false;
-let arrayValue = [];
-let baseIndent = 0;
-for (const line of lines) {
-const trimmed = line.trim();
-const indent = line.search(/\S|$/);
-if (inMultiline) {
-if (indent > baseIndent || trimmed === "") {
-multilineValue.push(line.slice(baseIndent + 2) || "");
-continue;
-} else {
-result[currentKey] = multilineValue.join("\n");
-inMultiline = false;
-multilineValue = [];
-}
-}
-if (inArray) {
-const arrayMatch = line.match(/^\s+-\s+(.+)$/);
-if (arrayMatch) {
-arrayValue.push(this._cleanYamlScalar(arrayMatch[1].trim()));
-continue;
-} else if (trimmed && indent <= baseIndent) {
-result[currentKey] = arrayValue;
-inArray = false;
-arrayValue = [];
-}
-}
-if (!inMultiline && !inArray) {
-const match = trimmed.match(/^([\w_-]+):\s*(.*)$/);
-if (match) {
-currentKey = match[1];
-const value = match[2].trim();
-if (/^\|[-+]?$|^>[-+]?$/.test(value)) {
-inMultiline = true;
-baseIndent = indent;
-multilineValue = [];
-} else if (value === "" || value.trim() === "") {
-inArray = true;
-baseIndent = indent;
-arrayValue = [];
-} else if (currentKey === "scripts" && value.trim()) {
-result[currentKey] = [this._cleanYamlScalar(value)];
-} else {
-let val = this._cleanYamlScalar(value);
-if (val === "true" || val === "false") {
-val = val === "true";
-}
-result[currentKey] = val;
-}
-}
-}
-}
-if (inMultiline && currentKey) {
-result[currentKey] = multilineValue.join("\n");
-}
-if (inArray && currentKey && arrayValue.length > 0) {
-result[currentKey] = arrayValue;
-}
-// 格式化布尔值和整型
-for (const key of ["do_not_parse", "ignore_line_breaks"]) {
-if (result[key] !== undefined) {
-result[key] = result[key] === true || result[key] === "true" || result[key] === 1 || result[key] === "1" || result[key] === "on";
-}
-}
-if (result.update_interval !== undefined) {
-const parsed = parseInt(result.update_interval);
-result.update_interval = isNaN(parsed) ? 0 : parsed;
-}
-for (const key of ["entities", "scripts"]) {
-if (result[key] !== undefined) {
-result[key] = this._normalizeYamlList(result[key]);
-}
-}
-return result;
-}
-_normalizeYamlList(value) {
-const values = Array.isArray(value) ? value : [value];
-return values.map((item) => this._cleanYamlScalar(item)).filter(Boolean);
-}
-_cleanYamlScalar(value) {
-if (value === undefined || value === null) return "";
-return String(value)
-.trim()
-.replace(/\s+#.*$/, "")
-.replace(/^["']|["']$/g, "")
-.trim();
-}
-_loadStoreModules() {
-return this._loadOnlineModules(true);
-}
-async _loadOnlineModules(forceRefresh = false) {
-if (!forceRefresh) {
-const cached = this._getCachedModules();
-if (cached && cached.length > 0) {
-this._storeModules = cached;
-this._storeLoading = false;
-this.requestUpdate();
-return;
-}
-}
-this._storeLoading = true;
-this._storeError = null;
-this.requestUpdate();
-try {
-const modules = await this._fetchModulesFromDiscussions(forceRefresh);
-if (modules.length > 0) {
-this._storeModules = modules;
-this._setCachedModules(modules);
-} else {
-this._storeModules = this._getBuiltinModules();
-}
-} catch (e) {
-console.error("[html-pro-card] Failed to load modules:", e);
-this._storeError = e.message;
-this._storeModules = this._getBuiltinModules();
-}
-this._storeLoading = false;
-this.requestUpdate();
-}
-async _fetchModulesFromDiscussions(forceRefresh = false) {
-const modules = [];
-try {
-const storeUrl = forceRefresh
-? `${MODULE_STORE_CONFIG.storeUrl}?_t=${Date.now()}`
-: MODULE_STORE_CONFIG.storeUrl;
-const storeRes = await fetch(storeUrl);
-if (!storeRes.ok) throw new Error("Failed to fetch store.json");
-const storeIndex = await storeRes.json();
-for (const entry of storeIndex) {
-try {
-const yamlUrl = forceRefresh
-? `${MODULE_STORE_CONFIG.rawBase}${entry.file}?_t=${Date.now()}`
-: `${MODULE_STORE_CONFIG.rawBase}${entry.file}`;
-const yamlRes = await fetch(yamlUrl);
-if (!yamlRes.ok) continue;
-const yamlText = await yamlRes.text();
-const meta = {};
-const lines = yamlText.split("\n");
-let contentStart = 0;
-for (let i = 0; i < lines.length; i++) {
-const line = lines[i];
-if (!line.startsWith("#")) {
-contentStart = i;
-break;
-}
-const match = line.match(/^#\s*(\w+):\s*(.+)/);
-if (match) {
-meta[match[1].toLowerCase()] = match[2].trim();
-}
-}
-const cardYaml = lines.slice(contentStart).join("\n").trim();
-const module = {
-id: entry.id || meta.id || "",
-name: entry.name || meta.name || "Untitled",
-version: entry.version || meta.version || "1.0",
-creator: entry.creator || meta.author || "Community",
-description: entry.description || meta.description || "",
-image: entry.image || meta.image || "",
-link: entry.link || meta.link || "",
-tags: entry.tags || (meta.tags ? meta.tags.split(",").map((t) => t.trim()) : []),
-_yaml: cardYaml,
-_cardConfig: this._parseCardYaml(cardYaml),
-};
-module.code = module._cardConfig?.content || "";
-modules.push(module);
-} catch (e) {
-console.warn(`[html-pro-card] Failed to load ${entry.file}:`, e);
-}
-}
-} catch (e) {
-console.warn("[html-pro-card] Failed to fetch store:", e);
-}
-if (modules.length === 0) {
-return this._getBuiltinModules();
-}
-modules.sort((a, b) => Number(b.id) - Number(a.id));
-const seen = new Set();
-return modules.filter((m) => {
-const key = m.name || m.id;
-if (seen.has(key)) return false;
-seen.add(key);
-return true;
-});
-}
-_extractTagsFromTitle(title) {
-const match = title.match(/^\[([^\]]+)\]/);
-if (match) {
-return match[1]
-.split(/[,，、]/)
-.map((t) => t.trim())
-.filter(Boolean);
-}
-return [];
-}
-_getBuiltinModules() {
-return [
-{
-id: "clock",
-name: "Digital Clock",
-version: "1.0",
-creator: "knoop7",
-description: "A simple digital clock with customizable style",
-supported: ["button", "separator"],
-code: `<style>.clock{font-size:48px;font-family:monospace;text-align:center;padding:40px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border-radius:16px}</style><div class="clock" id="clock">00:00:00</div><script>setInterval(function(){$("#clock").textContent=new Date().toLocaleTimeString();},1000);</script>`,
-},
-{
-id: "avatar-card",
-name: "Avatar Card",
-version: "1.0",
-creator: "knoop7",
-description: "User profile card with avatar and stats",
-supported: ["button"],
-code: `<style>.avatar-card{padding:24px;background:#fff;border-radius:16px;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,0.08)}.avatar-img{width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#667eea,#764ba2);margin:0 auto 16px;display:flex;align-items:center;justify-content:center;font-size:32px;color:#fff}.avatar-name{font-size:18px;font-weight:600;color:#333;margin-bottom:4px}.avatar-role{font-size:12px;color:#999}</style><div class="avatar-card"><div class="avatar-img">👤</div><div class="avatar-name">Smart Home</div><div class="avatar-role">Admin</div></div>`,
-},
-];
-}
-_renderOnlineModules() {
-if (this._storeError) {
-return html`<div class="store-error">
-${this._t("loadError")}: ${this._storeError}
-</div>`;
-}
-const filtered = this._storeModules.filter((m) => {
-if (!this._storeSearch) return true;
-const searchTerms = this._storeSearch
-.toLowerCase()
-.split(/\s+/)
-.filter((t) => t);
-const tags = (m._tags || m.tags || []).map((t) => t.toLowerCase());
-const name = (m.name || "").toLowerCase();
-const desc = (m.description || m.desc || "").toLowerCase();
-const author = (m.creator || m.author || "").toLowerCase();
-return searchTerms.every((term) => {
-const tagTerm = term.startsWith("#") ? term.slice(1) : term;
-if (tags.some((t) => t.includes(tagTerm))) return true;
-if (name.includes(term)) return true;
-if (desc.includes(term)) return true;
-if (author.includes(term)) return true;
-return false;
-});
-});
-if (filtered.length === 0) {
-return html`<div class="store-loading">${this._t("noModules")}</div>`;
-}
-return html`${filtered.map((m) => this._renderModuleCard(m))}`;
-}
-_renderSkeleton() {
-return html`
-${[1, 2, 3].map(
-() => html`
-<div class="store-skeleton">
-<div class="store-skeleton-left"></div>
-<div class="store-skeleton-right">
-<div class="skeleton-line title"></div>
-<div class="skeleton-line desc"></div>
-<div class="skeleton-line desc2"></div>
-<div class="skeleton-line btn"></div>
-</div>
-</div>
-`,
-)}
-`;
-}
-_renderModuleCard(m) {
-const version = m.version || "1.0";
-const creator = m.creator || m.author || "Community";
-const description = m.description || m.desc || "";
-const tags = m._tags || m.tags || [];
-const link = m.link || "";
-const image = m.image || "";
-return html`
-<div class="store-item">
-<div class="store-item-left">
-${image
-? html`
-<img
-src="${image}"
-alt="${m.name}"
-loading="lazy"
-@error=${(ev) => this._replaceStoreImageFallback(ev.currentTarget)}
-/>
-`
-: html`
-<div class="store-item-left-placeholder">
-<svg
-viewBox="0 0 24 24"
-fill="none"
-stroke="currentColor"
-stroke-width="1.5"
->
-<rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-<circle cx="8.5" cy="8.5" r="1.5" />
-<polyline points="21 15 16 10 5 21" />
-</svg>
-</div>
-`}
-</div>
-<div class="store-item-right">
-<div class="store-item-header">
-<div class="store-item-title-group">
-<h4>${m.name}</h4>
-</div>
-<span class="store-item-version">v${version}</span>
-</div>
-<p class="store-item-desc">
-${description
-? description.length > 80
-? description.slice(0, 80) + "..."
-: description
-: ""}
-<span
-class="store-item-author"
-@click="${(e) => {
-e.stopPropagation();
-window.open(`https://github.com/${creator}`, "_blank");
-}}"
->@${creator}</span
->
-</p>
-<div class="store-item-actions">
-${link
-? html`<button
-class="store-item-btn"
-@click="${() => window.open(link, "_blank")}"
->
-<svg
-viewBox="0 0 24 24"
-fill="none"
-stroke="currentColor"
-stroke-width="2"
->
-<polyline points="16 18 22 12 16 6" />
-<polyline points="8 6 2 12 8 18" />
-</svg>
-${this._t("viewSource")}
-</button>`
-: ""}
-<div class="slide-track" data-module-id="${m.id || m.name}">
-<span class="slide-hint">${this._t("slideToImport")}</span>
-<div
-class="slide-handle"
-@mousedown="${(e) => this._startSlide(e, m)}"
-@touchstart="${(e) => this._startSlide(e, m)}"
->
-<svg
-viewBox="0 0 24 24"
-fill="none"
-stroke="currentColor"
-stroke-width="2"
->
-<polyline points="9 18 15 12 9 6" />
-</svg>
-</div>
-</div>
-</div>
-</div>
-</div>
-`;
-}
-_replaceStoreImageFallback(img) {
-if (!img || img.dataset.htmlProFallbackApplied) return;
-img.dataset.htmlProFallbackApplied = "true";
-const placeholder = document.createElement("div");
-placeholder.className = "store-item-left-placeholder";
-placeholder.innerHTML = `
-<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-<rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-<circle cx="8.5" cy="8.5" r="1.5"></circle>
-<polyline points="21 15 16 10 5 21"></polyline>
-</svg>
-`;
-img.replaceWith(placeholder);
-}
-_previewImage(url) {
-const overlay = document.createElement("div");
-overlay.style.cssText =
-"position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:9999;display:flex;align-items:center;justify-content:center;cursor:zoom-out";
-overlay.innerHTML = `<img src="${url}" style="max-width:90%;max-height:90%;border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,0.5)"/>`;
-overlay.onclick = () => overlay.remove();
-document.body.appendChild(overlay);
-}
-_startSlide(e, module) {
-e.preventDefault();
-const handle = e.currentTarget;
-const track = handle.parentElement;
-const hint = track.querySelector(".slide-hint");
-const startX = e.touches ? e.touches[0].clientX : e.clientX;
-const maxDistance = track.clientWidth - handle.clientWidth - 6;
-handle.style.transition = "none";
-track.classList.add("active");
-const onMove = (ev) => {
-const currentX = ev.touches ? ev.touches[0].clientX : ev.clientX;
-let moveX = currentX - startX;
-if (moveX < 0) moveX = 0;
-if (moveX > maxDistance) moveX = maxDistance;
-handle.style.transform = `translateX(${moveX}px)`;
-if (hint) hint.style.opacity = String(1 - moveX / maxDistance);
-};
-const onEnd = () => {
-document.removeEventListener("mousemove", onMove);
-document.removeEventListener("mouseup", onEnd);
-document.removeEventListener("touchmove", onMove);
-document.removeEventListener("touchend", onEnd);
-const transform = new WebKitCSSMatrix(getComputedStyle(handle).transform);
-const finalX = transform.m41;
-handle.style.transition = "transform 0.3s ease";
-if (finalX >= maxDistance * 0.85) {
-handle.style.transform = `translateX(${maxDistance}px)`;
-track.classList.add("active");
-setTimeout(() => {
-this._importModule(module);
-handle.style.transform = "translateX(0)";
-track.classList.remove("active");
-if (hint) hint.style.opacity = "0.7";
-}, 200);
-} else {
-handle.style.transform = "translateX(0)";
-track.classList.remove("active");
-if (hint) hint.style.opacity = "0.7";
-}
-};
-document.addEventListener("mousemove", onMove);
-document.addEventListener("mouseup", onEnd);
-document.addEventListener("touchmove", onMove, { passive: true });
-document.addEventListener("touchend", onEnd);
-}
-_renderSavedModules() {
-const filtered = this._savedModules.filter(
-(m) =>
-!this._storeSearch ||
-m.name.toLowerCase().includes(this._storeSearch.toLowerCase()),
-);
-if (filtered.length === 0) {
-return html`<div class="store-loading">
-${this._t("noCustomModules")}
-</div>`;
-}
-return filtered.map(
-(m, i) => html`
-<div class="store-item">
-<div class="store-item-info">
-<h4>${m.name}</h4>
-<p>${m.desc || this._t("customModule")}</p>
-</div>
-<div class="store-item-actions">
-<button
-class="store-item-btn import"
-@click="${() => this._importModule(m)}"
->
-${this._t("import")}
-</button>
-<button
-class="store-item-btn delete"
-@click="${() => this._deleteModule(i)}"
->
-${this._t("delete")}
-</button>
-</div>
-</div>
-`,
-);
-}
-async _importModule(m) {
-if (!this._config) return;
-let newConfig;
-if (m._cardConfig) {
-newConfig = {
-...this._config,
-...m._cardConfig,
-type: "custom:html-pro-card",
-};
-} else {
-const content = m.code || m.content || "";
-newConfig = {
-...this._config,
-content: content,
-do_not_parse: _hasExecutableScript(content),
-update_interval: this._config.update_interval || 10000,
-ignore_line_breaks: true,
-scripts: m.scripts || this._config.scripts || [],
-};
-}
-if (m.editor && Array.isArray(m.editor)) {
-newConfig._moduleEditor = m.editor;
-newConfig._moduleName = m.name;
-}
-this.dispatchEvent(
-new CustomEvent("config-changed", {
-detail: { config: newConfig },
-bubbles: true,
-composed: true,
-}),
-);
-this.requestUpdate();
-setTimeout(() => {
-if (this.shadowRoot) {
-this.shadowRoot.activeElement?.blur();
-document.activeElement?.blur();
-}
-}, 50);
-}
-_deleteModule(index) {
-if (!confirm(this._t("confirmDelete"))) return;
-this._savedModules = this._savedModules.filter((_, i) => i !== index);
-this._saveSavedModules();
-this.requestUpdate();
-}
-}
-if (!customElements.get("html-pro-card-editor")) {
-customElements.define("html-pro-card-editor", HtmlTemplateCardEditor);
-}
-class HtmlTemplateCard extends HTMLElement {
-static get properties() {
-return {
-hass: { type: Object },
-_config: { type: Object },
-};
-}
-static async getConfigElement() {
-return document.createElement("html-pro-card-editor");
-}
-static preProcessScripts(config) {
-if (typeof config.scripts === "string")
-config.scripts = config.scripts
-.split("\n")
-.filter((url) => url.trim() !== "");
-return config;
-}
-static getStubConfig() {
-return {
-content: `<style>
-.pro{padding:20px}
-.pro-h{display:flex;align-items:center;gap:16px;margin-bottom:12px}
-.pro-icon{width:36px;height:36px;color:var(--primary-color)}
-.pro-t{font-size:14px;font-weight:500;color:var(--primary-text-color)}
-.pro-sub{font-size:13px;color:var(--secondary-text-color);opacity:0.7}
-.pro-c{font-size:12px;color:var(--secondary-text-color);line-height:1.6}
-</style>
-<div class="pro">
-<div class="pro-h">
-<svg class="pro-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2V3H12V9H11V10H9V11H8V12H7V13H5V12H4V11H3V9H2V15H3V16H4V17H5V18H6V22H8V21H7V20H8V19H9V18H10V19H11V22H13V21H12V17H13V16H14V15H15V12H16V13H17V11H15V9H20V8H17V7H22V3H21V2M14 3H15V4H14Z"/></svg>
-<div><span class="pro-t">HTML Pro Card</span><div class="pro-sub" id="pro-sub"></div></div>
-</div>
-<div class="pro-c" id="pro-desc"></div>
-</div>
-<script>
-var hass = document.querySelector('home-assistant')?.hass;
-var lang = (hass?.language || navigator.language || '').toLowerCase();
-var desc = {
-'zh-cn': '是一款专为 Home Assistant 设计的高级 HTML 卡片组件。它支持完整的 Jinja2 模板语法，让您可以动态获取任意实体的状态、属性和历史数据。通过内置的服务调用接口，您可以直接在卡片中控制灯光、开关、空调等设备。卡片支持自定义 CSS 样式和外部 JavaScript 脚本，让您能够创建独一无二的交互式仪表盘。',
-'zh-hk': '是一款專為 Home Assistant 設計的高級 HTML 卡片組件。它支持完整的 Jinja2 模板語法，讓您可以動態獲取任意實體的狀態、屬性和歷史數據。通過內置的服務調用接口，您可以直接在卡片中控制燈光、開關、空調等設備。卡片支持自定義 CSS 樣式和外部 JavaScript 腳本，讓您能夠創建獨一無二的交互式儀表盤。',
-'ja': 'Home Assistant 向けに設計された高度な HTML カードコンポーネントです。完全な Jinja2 テンプレート構文をサポートし、任意のエンティティの状態、属性、履歴データを動的に取得できます。組み込みのサービス呼び出しにより、照明、スイッチ、エアコンなどのデバイスをカードから直接制御できます。カスタム CSS と外部 JavaScript により、ユニークなインタラクティブダッシュボードを作成できます。',
-'de': 'ist eine erweiterte HTML-Kartenkomponente für Home Assistant. Sie unterstützt die vollständige Jinja2-Vorlagensyntax und ermöglicht den dynamischen Zugriff auf Entitätszustände, Attribute und Verlaufsdaten. Mit integrierten Serviceaufrufen können Sie Lichter, Schalter und Klimageräte direkt steuern. Benutzerdefiniertes CSS und externe JS-Skripte ermöglichen einzigartige interaktive Dashboards.',
-'en': 'is an advanced HTML card component designed for Home Assistant. It supports full Jinja2 template syntax, allowing you to dynamically access any entity state, attributes and history. With built-in service calls, you can control lights, switches, climate devices directly. Custom CSS and external JS scripts enable unique interactive dashboards.'
-};
-var text = desc[lang] || (lang.startsWith('zh-tw') || lang.startsWith('zh-hk') ? desc['zh-tw'] : lang.startsWith('zh') ? desc['zh-cn'] : lang.startsWith('ja') ? desc['ja'] : lang.startsWith('de') ? desc['de'] : desc['en']);
-$('#pro-sub').textContent = 'By knoop7';
-$('#pro-desc').textContent = text;
-</script>`,
-update_interval: 10000,
-do_not_parse: false,
-ignore_line_breaks: true,
-scripts: [],
-};
-}
-connectedCallback() {
-if (!this._instanceId)
-this._instanceId = "hpc_" + Math.random().toString(36).slice(2, 9);
-this._createRootElement();
-this._setupEventListeners();
-if (this._config && this._hass) {
-this._processAndRender();
-}
-}
-disconnectedCallback() {
-if (this._timeUpdateInterval) {
-clearInterval(this._timeUpdateInterval);
-this._timeUpdateInterval = null;
-}
-this._removeEventListeners();
-if (this._templateSubscription) {
-try {
-this._templateSubscription();
-} catch {}
-this._templateSubscription = null;
-}
-const ov = window._htmlProCardOverlay;
-if (ov && this._instanceId) {
-ov.querySelectorAll(`[data-hpc-owner="${this._instanceId}"]`).forEach(
-(el) => el.remove(),
-);
-}
-if (this._styleObservers) {
-this._styleObservers.forEach((obs) => obs.disconnect());
-this._styleObservers = [];
-}
-if (window._htmlProCardLightDOMContainer && this._instanceId) {
-const el = window._htmlProCardLightDOMContainer.querySelector(
-`[data-card-id="${this._instanceId}"]`,
-);
-if (el) el.remove();
-}
-}
-_createRootElement() {
-if (this._rootElement && this.contains(this._rootElement)) return;
-this._rootElement = document.createElement("ha-card");
-this._rootElement.style.borderRadius = "10px";
-this._rootElement.style.overflow = "hidden";
-this.appendChild(this._rootElement);
-}
-_setupEventListeners() {
-if (!this._rootElement) return;
-if (this._boundHandlers) return;
-this._boundHandlers = {
-touchStart: this._handleTouchStart.bind(this),
-touchEnd: this._handleTouchEnd.bind(this),
-mouseDown: this._handleMouseDown.bind(this),
-mouseUp: this._handleMouseUp.bind(this),
-click: this._handleClick.bind(this),
-};
-this._rootElement.addEventListener(
-"touchstart",
-this._boundHandlers.touchStart,
-{ passive: true },
-);
-this._rootElement.addEventListener(
-"touchend",
-this._boundHandlers.touchEnd,
-);
-this._rootElement.addEventListener(
-"touchcancel",
-this._boundHandlers.touchEnd,
-);
-this._rootElement.addEventListener(
-"mousedown",
-this._boundHandlers.mouseDown,
-);
-this._rootElement.addEventListener("mouseup", this._boundHandlers.mouseUp);
-this._rootElement.addEventListener("click", this._boundHandlers.click);
-}
-_removeEventListeners() {
-if (!this._rootElement || !this._boundHandlers) return;
-this._rootElement.removeEventListener(
-"touchstart",
-this._boundHandlers.touchStart,
-);
-this._rootElement.removeEventListener(
-"touchend",
-this._boundHandlers.touchEnd,
-);
-this._rootElement.removeEventListener(
-"touchcancel",
-this._boundHandlers.touchEnd,
-);
-this._rootElement.removeEventListener(
-"mousedown",
-this._boundHandlers.mouseDown,
-);
-this._rootElement.removeEventListener(
-"mouseup",
-this._boundHandlers.mouseUp,
-);
-this._rootElement.removeEventListener("click", this._boundHandlers.click);
-this._boundHandlers = null;
-}
-_handleTouchStart(e) {
-const target = e.target.closest("[data-long-press]");
-if (!target) return;
-const entityId = target.dataset.entity;
-if (!entityId) return;
-this._longPressTimeout = setTimeout(() => {
-this._showMoreInfo(entityId);
-this._longPressTimeout = null;
-}, 500);
-}
-_handleTouchEnd() {
-if (this._longPressTimeout) {
-clearTimeout(this._longPressTimeout);
-this._longPressTimeout = null;
-}
-}
-_handleMouseDown(e) {
-const target = e.target.closest("[data-long-press]");
-if (!target) return;
-const entityId = target.dataset.entity;
-if (!entityId) return;
-this._longPressTimeout = setTimeout(() => {
-this._showMoreInfo(entityId);
-this._longPressTimeout = null;
-}, 500);
-}
-_handleMouseUp() {
-if (this._longPressTimeout) {
-clearTimeout(this._longPressTimeout);
-this._longPressTimeout = null;
-}
-}
-_handleClick(e) {
-if (this._longPressTimeout) {
-clearTimeout(this._longPressTimeout);
-this._longPressTimeout = null;
-return;
-}
-const actionTarget = e.target.closest("[data-action]");
-if (actionTarget) {
-const entityId =
-actionTarget.dataset.entity ||
-actionTarget.closest("[data-entity]")?.dataset.entity;
-const action = actionTarget.dataset.action;
-if (!entityId || !action) return;
-if (action === "toggle") this._callService(entityId, "toggle");
-else if (action === "turn_on") this._callService(entityId, "turn_on");
-else if (action === "turn_off") this._callService(entityId, "turn_off");
-else if (action === "more-info") this._showMoreInfo(entityId);
-else {
-const [domain] = entityId.split(".");
-this._hass?.callService(domain, action, { entity_id: entityId });
-}
-return;
-}
-}
-_showMoreInfo(entityId) {
-if (!entityId) return;
-const event = new CustomEvent("hass-more-info", {
-detail: { entityId },
-bubbles: true,
-composed: true,
-});
-this.dispatchEvent(event);
-}
-_toggle(entityId) {
-if (!entityId || !this._hass?.states[entityId]) return;
-const domain = entityId.split(".")[0];
-const toggleDomains = [
-"light",
-"switch",
-"fan",
-"input_boolean",
-"automation",
-"script",
-"cover",
-"lock",
-"media_player",
-];
-if (toggleDomains.includes(domain)) {
-this._hass.callService(domain, "toggle", { entity_id: entityId });
-} else {
-this._showMoreInfo(entityId);
-}
-}
-set hass(hass) {
-const oldHass = this._hass;
-this._hass = hass;
-if (this._rootElement) this._rootElement.hass = hass;
-if (!this._config) return;
-if (!this._entities) this._calculateEntities();
-const shouldUpdate = this._shouldUpdate(oldHass);
-if (shouldUpdate) {
-if (this._config.do_not_parse) {
-this._updateStates();
-} else {
-this._processAndRender();
-}
-if (
-this._rootElement &&
-typeof this._rootElement._onHassUpdate === "function"
-) {
-try {
-this._rootElement._onHassUpdate(hass);
-} catch {}
-}
-}
-}
-_setupTimeUpdate() {
-if (this._timeUpdateInterval) clearInterval(this._timeUpdateInterval);
-if (this._config.update_interval && this._config.update_interval > 0) {
-const interval = Math.max(this._config.update_interval, 1000);
-this._timeUpdateInterval = setInterval(() => {
-if (this._config.do_not_parse) {
-this._updateStates();
-} else {
-this._processAndRender();
-}
-}, interval);
-}
-}
-_processAndRender() {
-if (!this._rootElement || !this._config || !this._hass) return;
-if (this._renderDebounce) clearTimeout(this._renderDebounce);
-this._renderDebounce = setTimeout(() => {
-try {
-this._renderContent();
-} catch {
-this._renderFallback();
-}
-}, 50);
-}
-_renderContent() {
-let content = this._config.content || "";
-if (!this._config.ignore_line_breaks) {
-content = content.replace(/\r?\n|\r/g, "");
-}
-if (this._config.do_not_parse) {
-this._render(content);
-} else {
-if (this._templateSubscription) {
-try {
-this._templateSubscription();
-} catch {}
-this._templateSubscription = null;
-}
-try {
-this._hass.connection
-.subscribeMessage(
-(msg) => {
-try {
-this._render(msg.result);
-} catch (e) {
-this._renderError("Render error: " + (e.message || e));
-}
-},
-{ type: "render_template", template: content },
-)
-.then((unsub) => {
-this._templateSubscription = unsub;
-})
-.catch((e) => {
-this._renderError("Template error: " + (e.message || e));
-});
-} catch (e) {
-this._renderError("Template error: " + (e.message || e));
-}
-}
-}
-async _loadExternalScripts(scripts) {
-const promises = scripts.map((url) => this._loadScript(url));
-return Promise.all(promises);
-}
-async _loadScript(url) {
-if (_globalLoadedScripts.has(url)) return;
-_globalLoadedScripts.add(url);
-await new Promise((resolve, reject) => {
-const script = document.createElement("script");
-script.async = true;
-script.src = url;
-script.onload = resolve;
-script.onerror = () => {
-_globalLoadedScripts.delete(url);
-reject(new Error("Failed: " + url));
-};
-document.body.appendChild(script);
-});
-}
-_isPrerenderScript(url) {
-return /(?:tailwindcss|twcss|unocss|windi|twind)\b/i.test(url);
-}
-_getPrerenderScripts() {
-const scripts = this._config.scripts;
-if (!scripts || !Array.isArray(scripts)) return [];
-return scripts.filter((url) => this._isPrerenderScript(url));
-}
-_getNonPrerenderScripts() {
-const scripts = this._config.scripts;
-if (!scripts || !Array.isArray(scripts)) return [];
-return scripts.filter((url) => !this._isPrerenderScript(url));
-}
-_updateLightDOMShadow(content) {
-if (!window._htmlProCardLightDOMContainer) {
-const container = document.createElement("div");
-container.id = "html-pro-card-light-dom-container";
-container.style.cssText =
-"position:absolute;top:-9999px;left:-9999px;width:1px;height:1px;overflow:hidden;pointer-events:none;";
-document.body.appendChild(container);
-window._htmlProCardLightDOMContainer = container;
-}
-let shadowContentEl = window._htmlProCardLightDOMContainer.querySelector(
-`[data-card-id="${this._instanceId}"]`,
-);
-if (!shadowContentEl) {
-shadowContentEl = document.createElement("div");
-shadowContentEl.setAttribute("data-card-id", this._instanceId);
-window._htmlProCardLightDOMContainer.appendChild(shadowContentEl);
-}
-shadowContentEl.innerHTML = content;
-}
-_isPrerenderStyleTag(styleEl) {
-if (styleEl.id && /(?:tailwind|unocss|windi|twind)/i.test(styleEl.id))
-return true;
-if (
-styleEl.hasAttribute("data-tailwind") ||
-styleEl.hasAttribute("data-unocss")
-)
-return true;
-const text = styleEl.textContent || "";
-if (/(?:--tw-|tailwind|unocss|windi|twind)/i.test(text)) return true;
-try {
-if (styleEl.sheet && styleEl.sheet.cssRules) {
-for (let i = 0; i < Math.min(styleEl.sheet.cssRules.length, 10); i++) {
-const ruleText = styleEl.sheet.cssRules[i].cssText || "";
-if (/(?:--tw-|tailwind|unocss|windi|twind)/i.test(ruleText))
-return true;
-}
-}
-} catch (e) {}
-return false;
-}
-_clonePrerenderStylesToCard() {
-if (!this._rootElement) return;
-if (!this._styleObservers) this._styleObservers = [];
-// Ensure our card root has the scoping class
-this._rootElement.classList.add("html-pro-prerender-style-root");
-// Clear previously cloned styles to avoid accumulation
-this._rootElement
-.querySelectorAll(".html-pro-prerender-style")
-.forEach((el) => el.remove());
-const current = document.head.querySelectorAll("style");
-for (const s of current) {
-if (!this._isPrerenderStyleTag(s)) continue;
-const clone = document.createElement("style");
-clone.classList.add("html-pro-prerender-style");
-this._rootElement.appendChild(clone);
-const syncRules = () => {
-let cssText = s.textContent || "";
-// If textContent is empty but sheet rules exist (CSSOM direct manipulation)
-if (!cssText && s.sheet && s.sheet.cssRules) {
-try {
-const rules = [];
-for (let i = 0; i < s.sheet.cssRules.length; i++) {
-rules.push(s.sheet.cssRules[i].cssText);
-}
-cssText = rules.join("\n");
-} catch (e) {}
-}
-if (cssText) {
-// Wrap the entire CSS text in a nested rule for .html-pro-prerender-style-root
-clone.textContent = `.html-pro-prerender-style-root {\n${cssText}\n}`;
-}
-};
-const observer = new MutationObserver(syncRules);
-observer.observe(s, {
-characterData: true,
-childList: true,
-subtree: true,
-});
-this._styleObservers.push(observer);
-syncRules();
-}
-}
-_scheduleStyleSync() {
-this._clonePrerenderStylesToCard();
-const delays = [100, 500, 1000, 2000];
-delays.forEach((delay) => {
-setTimeout(() => {
-if (this._rootElement) {
-this._clonePrerenderStylesToCard();
-}
-}, delay);
-});
-}
-_applyPreviewCompactStyles() {
-if (!this._rootElement) return;
-// Unconditionally ensure our card has the base styling/scoping classes
-this._rootElement.classList.add("html-pro-prerender-style-root");
-if (this._isEditorPreview()) {
-this._rootElement.classList.add("editor-preview");
-let previewStyle = this._rootElement.querySelector(
-".html-pro-preview-compact-style",
-);
-if (!previewStyle) {
-previewStyle = document.createElement("style");
-previewStyle.classList.add("html-pro-preview-compact-style");
-previewStyle.textContent = `
-.html-pro-prerender-style-root.editor-preview {
-flex-shrink: 0 !important;
-min-height: min-content !important;
-max-height: none !important;
-display: block !important;
-}
-`;
-this._rootElement.appendChild(previewStyle);
-}
-} else {
-this._rootElement.classList.remove("editor-preview");
-const previewStyle = this._rootElement.querySelector(
-".html-pro-preview-compact-style",
-);
-if (previewStyle) previewStyle.remove();
-}
-}
-_render(content) {
-if (!this._rootElement || !this._hass) return;
-if (this._lastContent === content && this._rendered) return;
-this._lastContent = content;
-const prerender = this._getPrerenderScripts();
-const loadingSkeleton = `
-<div class="html-pro-loading-skeleton" aria-hidden="true">
-<div class="html-pro-loading-skeleton-line hero"></div>
-<div class="html-pro-loading-skeleton-line title"></div>
-<div class="html-pro-loading-skeleton-line body-1"></div>
-<div class="html-pro-loading-skeleton-line body-2"></div>
-<div class="html-pro-loading-skeleton-line body-3"></div>
-</div>
-`;
-if (prerender.length > 0) {
-this._rootElement.classList.add("html-pro-loading");
-this._rootElement.classList.remove("html-pro-rendering");
-this._updateLightDOMShadow(content);
-} else {
-this._rootElement.classList.remove("html-pro-loading");
-this._rootElement.classList.add("html-pro-rendering");
-}
-const _doRender = () => {
-try {
-this._applyPreviewCompactStyles();
-window.hassTemplateCard = {
-hass: this._hass,
-config: this._config,
-root: this._rootElement,
-};
-window._htmlProCardRoots.add(this._rootElement);
-if (this._isEditorPreview()) {
-this._rootElement.innerHTML = `
-<div class="html-pro-preview-wrapper" style="overflow: auto !important; display: block !important; width: 100%; box-sizing: border-box;">
-${content}
-</div>
-${loadingSkeleton}
-`;
-} else {
-this._rootElement.innerHTML = `
-${content}
-${loadingSkeleton}
-`;
-}
-this._applyImageFallbacks();
-this._setupClickHandlers(this._rootElement);
-if (prerender.length > 0) {
-this._scheduleStyleSync();
-setTimeout(() => {
-if (this._rootElement) {
-this._rootElement.classList.remove("html-pro-loading");
-this._rootElement
-.querySelectorAll(".html-pro-loading-skeleton")
-.forEach((el) => el.remove());
-}
-}, 350);
-} else {
-requestAnimationFrame(() => {
-setTimeout(() => {
-if (!this._rootElement) return;
-this._rootElement.classList.remove("html-pro-rendering");
-this._rootElement
-.querySelectorAll(".html-pro-loading-skeleton")
-.forEach((el) => el.remove());
-}, 180);
-});
-}
-if (!this._rendered) {
-this._rendered = true;
-const remaining = this._getNonPrerenderScripts();
-if (remaining.length > 0) {
-this._loadExternalScripts(remaining)
-.then(() => {
-setTimeout(() => this._executeInlineScripts(), 200);
-})
-.catch(() => {
-setTimeout(() => this._executeInlineScripts(), 200);
-});
-} else {
-setTimeout(() => this._executeInlineScripts(), 0);
-}
-}
-this._validateRendered();
-this.dispatchEvent(
-new CustomEvent("content-rendered", {
-bubbles: true,
-composed: true,
-detail: { hass: this._hass, config: this._config },
-}),
-);
-} catch (e) {
-this._renderError("Render error: " + (e.message || e));
-}
-};
-if (!this._rendered && prerender.length > 0) {
-this._loadExternalScripts(prerender).then(_doRender).catch(_doRender);
-return;
-}
-_doRender();
-}
-_applyImageFallbacks() {
-if (!this._rootElement) return;
-this._rootElement.querySelectorAll("img").forEach((img) => {
-if (img.dataset.htmlProImageFallbackBound) return;
-img.dataset.htmlProImageFallbackBound = "true";
-img.addEventListener("error", () => this._replaceBrokenImage(img), {
-once: true,
-});
-if (img.complete && img.naturalWidth === 0) {
-this._replaceBrokenImage(img);
-}
-});
-}
-_replaceBrokenImage(img) {
-if (!img || !img.parentElement || img.dataset.htmlProFallbackApplied)
-return;
-img.dataset.htmlProFallbackApplied = "true";
-const rect = img.getBoundingClientRect();
-const computed = getComputedStyle(img);
-const placeholder = document.createElement("span");
-placeholder.className = "html-pro-image-fallback";
-placeholder.setAttribute("role", "img");
-placeholder.setAttribute("aria-label", img.alt || "Image unavailable");
-const fallbackWidth =
-rect.width > 0 ? `${rect.width}px` : computed.width || "100%";
-const fallbackHeight =
-rect.height > 0 ? `${rect.height}px` : computed.height || "140px";
-placeholder.style.setProperty("--html-pro-fallback-width", fallbackWidth);
-placeholder.style.setProperty("--html-pro-fallback-height", fallbackHeight);
-placeholder.style.borderRadius = computed.borderRadius;
-placeholder.style.margin = computed.margin;
-if (computed.display === "block") {
-placeholder.style.setProperty("display", "flex", "important");
-}
-img.replaceWith(placeholder);
-}
-_isEditorPreview() {
-try {
-let el = this.parentElement;
-for (let i = 0; i < 5 && el; i++) {
-if (el.localName === "hui-card" && el.hasAttribute("preview"))
-return true;
-if (el.localName === "hui-card-preview") return true;
-el = el.parentElement || el.getRootNode()?.host;
-}
-} catch {}
-return false;
-}
-_renderError(message) {
-if (!this._rootElement) return;
-if (!this._isEditorPreview()) return;
-this._rootElement.innerHTML = "";
-this._clearErrorBanners();
-this.appendChild(this._createErrorCard(message, "error"));
-console.error("[html-pro-card]", message);
-}
-_validateRendered() {
-if (!this._rootElement || !this._hass || !this._entities) return;
-if (!this._isEditorPreview()) return;
-this._clearErrorBanners();
-const missing = [];
-for (const eid of this._entities) {
-if (!this._hass.states[eid]) missing.push(eid);
-}
-if (missing.length === 0) return;
-this.appendChild(
-this._createErrorCard(
-"Entity not found: " + missing.join(", "),
-"warning",
-),
-);
-}
-_clearErrorBanners() {
-this.querySelectorAll(":scope > .hpc-error-banner").forEach((el) =>
-el.remove(),
-);
-}
-_createErrorCard(message, severity) {
-const wrapper = document.createElement("div");
-wrapper.className = "hpc-error-banner";
-wrapper.dataset.severity = severity || "error";
-const isWarn = severity === "warning";
-const color = isWarn
-? "var(--warning-color,#ffa726)"
-: "var(--error-color,#db4437)";
-const icon = isWarn
-? '<path d="M1,21H23L12,2Zm12-3H11V16h2Zm0-4H11V10h2Z"/>'
-: '<path d="M11,15H13V17H11V15M11,7H13V13H11V7M12,2C6.47,2 2,6.5 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20Z"/>';
-wrapper.style.cssText =
-"position:relative;border-radius:var(--ha-card-border-radius,12px);overflow:hidden;margin:4px 0;";
-wrapper.innerHTML =
-'<div style="position:absolute;inset:0;background:' +
-color +
-';opacity:0.12;pointer-events:none;border-radius:inherit"></div>' +
-'<div style="display:flex;align-items:center;gap:8px;padding:12px 16px;position:relative">' +
-'<svg viewBox="0 0 24 24" style="width:24px;height:24px;flex-shrink:0;fill:' +
-color +
-'">' +
-icon +
-"</svg>" +
-'<span style="font-size:13px;font-weight:500;color:var(--primary-text-color,#212121);overflow:hidden;text-overflow:ellipsis;word-break:break-word;line-height:1.4">' +
-message.replace(/</g, "&lt;").replace(/>/g, "&gt;") +
-"</span>" +
-"</div>";
-return wrapper;
-}
-async _executeInlineScripts() {
-if (!this._rootElement) return;
-const scripts = Array.from(this._rootElement.querySelectorAll("script"));
-const root = this._rootElement;
-const self = this;
-const _rawOverlay = window._htmlProCardOverlay;
-const _ownerId = self._instanceId;
-const overlay = new Proxy(_rawOverlay, {
-get(target, prop) {
-if (prop === "appendChild" || prop === "append" || prop === "prepend") {
-return (...args) => {
-args.forEach((a) => {
-if (a?.setAttribute) a.setAttribute("data-hpc-owner", _ownerId);
-});
-return target[prop](...args);
-};
-}
-const val = target[prop];
-return typeof val === "function" ? val.bind(target) : val;
-},
-});
-// Extract and preload all external scripts declared via <script src="..."> inside the template content
-const externalUrls = scripts
-.filter((s) => s.src)
-.map((s) => s.src);
-if (externalUrls.length > 0) {
-try {
-await this._loadExternalScripts(externalUrls);
-} catch (e) {
-console.warn("[html-pro-card] failed to load some inline content external scripts:", e);
-}
-}
-scripts.forEach((oldScript) => {
-if (oldScript.src) return; // Already preloaded above
-const code = oldScript.textContent.trim();
-if (!code) return;
-setTimeout(() => {
-const run = async () => {
-try {
-const finalCode = oldScript.type === "text/typescript" || oldScript.type === "application/typescript"
-? await window.claw.ts.transpile(code)
-: code;
-const fn = new Function(
-"root",
-"card",
-"$",
-"$$",
-"hass",
-"config",
-"overlay",
-finalCode,
-);
-const hassProxy = new Proxy(
-{},
-{
-get: (_, prop) => {
-const v = self._hass[prop];
-return typeof v === "function" ? v.bind(self._hass) : v;
-},
-},
-);
-fn(
-root,
-root,
-(s) => root.querySelector(s),
-(s) => root.querySelectorAll(s),
-hassProxy,
-self._config,
-overlay,
-);
-} catch (e) {
-console.error("[html-pro-card] script error:", e);
-}
-};
-run();
-}, 100);
-});
-}
-_setupClickHandlers(card) {
-const self = this;
-card.querySelectorAll("[data-entity]").forEach((el) => {
-const entityId = el.dataset.entity;
-const [domain] = entityId.split(".");
-el.querySelectorAll("[data-action]").forEach((btn) => {
-btn.onclick = (e) => {
-e.stopPropagation();
-const action = btn.dataset.action;
-if (action === "toggle") self._callService(entityId, "toggle");
-else if (action === "turn_on") self._callService(entityId, "turn_on");
-else if (action === "turn_off")
-self._callService(entityId, "turn_off");
-else if (action === "more-info") self._showMoreInfo(entityId);
-else self._hass.callService(domain, action, { entity_id: entityId });
-};
-});
-el.querySelectorAll('input[type="range"]').forEach((slider) => {
-slider.oninput = (e) => e.stopPropagation();
-slider.onchange = (e) => {
-e.stopPropagation();
-const val = parseFloat(e.target.value);
-if (slider.dataset.brightness !== undefined) {
-self._hass.callService("light", "turn_on", {
-entity_id: entityId,
-brightness: Math.round((val * 255) / 100),
-});
-} else if (slider.dataset.temperature !== undefined) {
-self._hass.callService("climate", "set_temperature", {
-entity_id: entityId,
-temperature: val,
-});
-} else if (slider.dataset.volume !== undefined) {
-self._hass.callService("media_player", "volume_set", {
-entity_id: entityId,
-volume_level: val / 100,
-});
-} else if (slider.dataset.position !== undefined) {
-self._hass.callService("cover", "set_cover_position", {
-entity_id: entityId,
-position: val,
-});
-} else if (slider.dataset.speed !== undefined) {
-self._hass.callService("fan", "set_percentage", {
-entity_id: entityId,
-percentage: val,
-});
-}
-setTimeout(() => self._updateStates(), 100);
-};
-});
-el.querySelectorAll("select[data-option]").forEach((select) => {
-select.onchange = (e) => {
-e.stopPropagation();
-self._hass.callService("input_select", "select_option", {
-entity_id: entityId,
-option: e.target.value,
-});
-setTimeout(() => self._updateStates(), 100);
-};
-});
-el.querySelectorAll('input[type="number"][data-value]').forEach(
-(input) => {
-input.onchange = (e) => {
-e.stopPropagation();
-self._hass.callService("input_number", "set_value", {
-entity_id: entityId,
-value: parseFloat(e.target.value),
-});
-setTimeout(() => self._updateStates(), 100);
-};
-},
-);
-});
-}
-_callService(entityId, action) {
-if (!this._hass) return;
-const [domain] = entityId.split(".");
-const state = this._hass.states[entityId];
-let serviceDomain = domain;
-let service = action;
-if (domain === "button") {
-service = "press";
-} else if (domain === "script") {
-serviceDomain = "script";
-service = entityId.split(".")[1];
-} else if (domain === "scene") {
-service = "turn_on";
-} else if (domain === "automation") {
-service =
-action === "toggle"
-? "toggle"
-: action === "turn_off"
-? "turn_off"
-: "trigger";
-} else if (domain === "input_button") {
-service = "press";
-} else if (domain === "lock") {
-if (action === "toggle")
-service = state?.state === "locked" ? "unlock" : "lock";
-else service = action;
-} else if (domain === "cover") {
-if (action === "toggle")
-service =
-state?.state === "open" || state?.state === "opening"
-? "close_cover"
-: "open_cover";
-else service = action;
-} else if (action === "toggle" && state) {
-service = state.state === "on" ? "turn_off" : "turn_on";
-}
-if (domain === "script") {
-this._hass.callService(serviceDomain, service, {});
-} else {
-this._hass.callService(serviceDomain, service, { entity_id: entityId });
-}
-setTimeout(() => this._updateStates(), 100);
-}
-_renderFallback() {
-if (!this._rootElement || !this._hass) return;
-const entities = this._entities || [];
-const content = entities
-.map((entityId) => {
-const state = this._hass.states[entityId];
-if (!state) return "";
-return `<div class="entity" data-entity="${entityId}"><div class="entity-name">${state.attributes.friendly_name || entityId}</div><div class="state-text">${state.state}</div></div>`;
-})
-.join("");
-this._rootElement.innerHTML = content;
-this._processStyles();
-this._setupEventListeners();
-}
-_updateStates() {
-if (!this._entities || !this._hass || !this._rootElement) return;
-try {
-this._entities.forEach((entityId) => {
-const stateObj = this._hass.states[entityId];
-if (!stateObj) return;
-const elements = this._rootElement.querySelectorAll(
-`[data-entity="${entityId}"]`,
-);
-elements.forEach((el) => {
-try {
-el.dataset.state = stateObj.state;
-el.querySelectorAll("[data-state-text]").forEach((e) => {
-const map = e.dataset.map;
-if (map) {
-try {
-e.textContent =
-JSON.parse(map)[stateObj.state] || stateObj.state;
-} catch {
-e.textContent = stateObj.state;
-}
-} else {
-e.textContent = stateObj.state;
-}
-});
-el.querySelectorAll("[data-attr]").forEach((e) => {
-const attr = e.dataset.attr;
-e.textContent = stateObj.attributes[attr] ?? "";
-});
-el.querySelectorAll("[data-brightness]").forEach((e) => {
-const b = stateObj.attributes.brightness;
-if (e.tagName === "INPUT")
-e.value = b ? Math.round((b * 100) / 255) : 0;
-else e.textContent = b ? Math.round((b * 100) / 255) + "%" : "0%";
-});
-el.querySelectorAll("[data-temperature]").forEach((e) => {
-e.textContent =
-stateObj.attributes.temperature ??
-stateObj.attributes.current_temperature ??
-"";
-});
-el.querySelectorAll("[data-friendly-name]").forEach((e) => {
-e.textContent = stateObj.attributes.friendly_name || entityId;
-});
-} catch {}
-});
-});
-} catch {}
-}
-_resolveWatchList() {
-const patterns = this._rootElement._watchedEntities;
-const ids = [];
-const allIds = Object.keys(this._hass.states);
-for (const p of patterns) {
-if (p.endsWith(".")) {
-for (const id of allIds) {
-if (id.startsWith(p)) ids.push(id);
-}
-} else {
-ids.push(p);
-}
-}
-this._resolvedWatch = { src: patterns, ids, count: allIds.length };
-}
-_shouldUpdate(oldHass) {
-if (!this._rendered) return true;
-if (!oldHass) return false;
-if (this._config.always_update) return true;
-if (!this._entities || this._entities.length === 0) {
-if (this._hasScript && this._rootElement?._watchedEntities) {
-const stateCount = Object.keys(this._hass.states).length;
-if (
-!this._resolvedWatch ||
-this._resolvedWatch.src !== this._rootElement._watchedEntities ||
-this._resolvedWatch.count !== stateCount
-) {
-this._resolveWatchList();
-}
-const ids = this._resolvedWatch?.ids;
-if (!ids || ids.length === 0) return false;
-return ids.some((id) => oldHass.states[id] !== this._hass.states[id]);
-}
-return false;
-}
-return this._entities.some((entity) => {
-const oldState = oldHass.states[entity];
-const newState = this._hass.states[entity];
-if (!oldState || !newState) return false;
-if (oldState.state !== newState.state) return true;
-if (
-JSON.stringify(oldState.attributes) !==
-JSON.stringify(newState.attributes)
-)
-return true;
-return false;
-});
-}
-setConfig(config) {
-const oldConfig = this._config;
-const defaultConfig = {
-content: "",
-update_interval: 10000,
-do_not_parse: false,
-ignore_line_breaks: true,
-scripts: [],
-};
-config = { ...defaultConfig, ...config };
-config = this.constructor.preProcessScripts(config);
-if (!config.content) throw new Error("Content must be defined");
-if (config.scripts && !Array.isArray(config.scripts))
-throw new Error("Scripts must be an array");
-const configChanged =
-!oldConfig ||
-oldConfig.content !== config.content ||
-oldConfig.do_not_parse !== config.do_not_parse;
-this._hasScript = config.content.includes("<script");
-this._config = config;
-if (configChanged) {
-this._rendered = false;
-this._lastContent = null;
-}
-this._calculateEntities();
-if (!this._rootElement) this._createRootElement();
-this._setupEventListeners();
-this._setupTimeUpdate();
-if (this._hass && this._rootElement) {
-this._processAndRender();
-}
-}
-_calculateEntities() {
-this._entities = new Set();
-if (this._config.entities?.length)
-this._config.entities.forEach((entity) => {
-const normalized = String(entity || "")
-.trim()
-.replace(/^["']|["']$/g, "")
-.trim();
-if (normalized) this._entities.add(normalized);
-});
-const entityRegex =
-/\b(?:light|switch|sensor|binary_sensor|climate|media_player|fan|cover|input_boolean|input_number|input_select|input_text|input_button|button|scene|script|automation|person|zone|weather|camera|vacuum|lock|number|select|text|timer|counter|group|device_tracker|water_heater|humidifier|siren|update|event|image|lawn_mower|valve|todo|date|time|datetime|schedule|notify|tts|remote|alarm_control_panel)\.[a-z][a-z0-9]*(?:_[a-z0-9]+)+\b/g;
-const matches = this._config.content.match(entityRegex) || [];
-matches.forEach((m) => this._entities.add(m));
-this._entities = Array.from(this._entities);
-}
-_processStyles() {
-const style = document.createElement("style");
-style.textContent =
-'[data-entity]{cursor:pointer;-webkit-tap-highlight-color:transparent}input[type="range"]{-webkit-appearance:none;width:100%;background:transparent}input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none}';
-this._rootElement.insertBefore(style, this._rootElement.firstChild);
-}
-getCardSize() {
-return 1;
-}
-}
-if (!customElements.get("html-pro-card")) {
-customElements.define("html-pro-card", HtmlTemplateCard);
-}
-window.customCards = window.customCards || [];
-window.customCards.push({
-type: "html-pro-card",
-name: "HTML Pro Card",
-preview: true,
-description: "Advanced HTML card with Jinja2 template support",
-});
-(function () {
-if (window.claw) return;
-const _getHass = () => document.querySelector("home-assistant")?.hass;
-const _overlay =
-window._htmlProCardOverlay ||
-(() => {
-const o = document.createElement("div");
-o.id = "html-pro-card-overlay";
-o.style.cssText =
-"position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:2147483647;";
-document.body.appendChild(o);
-return o;
-})();
-const claw = {};
-claw.hass = () => _getHass();
-claw.callService = (domain, service, data) => {
-const h = _getHass();
-if (!h) throw new Error("hass not available");
-return h.callService(domain, service, data || {});
-};
-claw.state = (entityId) => {
-const h = _getHass();
-return h?.states?.[entityId] || null;
-};
-claw.states = (filter) => {
-const h = _getHass();
-if (!h?.states) return {};
-if (!filter) return h.states;
-const out = {};
-for (const [k, v] of Object.entries(h.states)) {
-if (k.startsWith(filter) || k.includes(filter)) out[k] = v;
-}
-return out;
-};
-claw.toggle = (entityId) => {
-const s = claw.state(entityId);
-if (!s) return;
-const [domain] = entityId.split(".");
-const svc = s.state === "on" ? "turn_off" : "turn_on";
-return claw.callService(domain, svc, { entity_id: entityId });
-};
-claw.press = (entityId) => {
-const [domain] = entityId.split(".");
-if (domain === "button" || domain === "input_button")
-return claw.callService(domain, "press", { entity_id: entityId });
-if (domain === "scene")
-return claw.callService("scene", "turn_on", { entity_id: entityId });
-if (domain === "script")
-return claw.callService("script", entityId.split(".")[1], {});
-if (domain === "automation")
-return claw.callService("automation", "trigger", { entity_id: entityId });
-return claw.toggle(entityId);
-};
-claw.navigate = (path) => {
-history.pushState(null, "", path);
-window.dispatchEvent(new CustomEvent("location-changed"));
-};
-claw.moreInfo = (entityId) => {
-const ev = new Event("hass-more-info", { bubbles: true, composed: true });
-ev.detail = { entityId };
-document.querySelector("home-assistant")?.dispatchEvent(ev);
-};
-claw.fire = (type, detail) => {
-const h = _getHass();
-if (!h?.connection) return;
-h.connection.sendMessage({
-type: "fire_event",
-event_type: type,
-event_data: detail || {},
-});
-};
-claw.ws = (msg) => {
-const h = _getHass();
-if (!h?.connection) throw new Error("ws not available");
-return h.connection.sendMessagePromise(msg);
-};
-claw.el = (tag, attrs, parent) => {
-const e = document.createElement(tag);
-if (typeof attrs === "string") e.style.cssText = attrs;
-else if (attrs)
-Object.entries(attrs).forEach(([k, v]) =>
-k === "style"
-? (e.style.cssText = v)
-: k === "text"
-? (e.textContent = v)
-: e.setAttribute(k, v),
-);
-if (parent) parent.appendChild(e);
-else document.body.appendChild(e);
-return e;
-};
-claw.remove = (idOrEl) => {
-const el =
-typeof idOrEl === "string" ? document.getElementById(idOrEl) : idOrEl;
-if (el) el.remove();
-};
-claw.inject = (css) => {
-const s = document.createElement("style");
-s.textContent = css;
-document.head.appendChild(s);
-return { remove: () => s.remove() };
-};
-claw.wait = (ms) => new Promise((r) => setTimeout(r, ms));
-claw.deepQuery = (selector) => {
-const walk = (root) => {
-if (!root) return null;
-let el = root.querySelector?.(selector);
-if (el) return el;
-const children = root.querySelectorAll?.("*") || [];
-for (const c of children) {
-if (c.shadowRoot) {
-el = walk(c.shadowRoot);
-if (el) return el;
-}
-}
-return null;
-};
-return walk(document);
-};
-claw.deepQueryAll = (selector) => {
-const results = [];
-const walk = (root) => {
-if (!root) return;
-root.querySelectorAll?.(selector)?.forEach((e) => results.push(e));
-root.querySelectorAll?.("*")?.forEach((c) => {
-if (c.shadowRoot) walk(c.shadowRoot);
-});
-};
-walk(document);
-return results;
-};
-const _fire = (el, type, detail) => {
-const ev = new Event(type, { bubbles: true, cancelable: false, composed: true });
-ev.detail = detail || {};
-el.dispatchEvent(ev);
-return ev;
-};
-const _loadTypeScript = (() => {
-let promise;
-return () => {
-if (window.ts?.transpileModule) return Promise.resolve(window.ts);
-if (promise) return promise;
-promise = new Promise((resolve, reject) => {
-const existing = document.querySelector("script[data-html-pro-ts]");
-if (existing) {
-existing.addEventListener("load", () => resolve(window.ts), { once: true });
-existing.addEventListener("error", reject, { once: true });
-return;
-}
-const s = document.createElement("script");
-s.src = "https://cdn.jsdelivr.net/npm/typescript@5.6.3/lib/typescript.js";
-s.async = true;
-s.dataset.htmlProTs = "1";
-s.onload = () => window.ts?.transpileModule ? resolve(window.ts) : reject(new Error("TypeScript compiler not available"));
-s.onerror = () => reject(new Error("Failed to load TypeScript compiler"));
-document.head.appendChild(s);
-});
-return promise;
-};
-})();
-const _tsToJs = async (code, options = {}) => {
-const ts = await _loadTypeScript();
-const result = ts.transpileModule(code, {
-compilerOptions: {
-target: ts.ScriptTarget.ES2020,
-module: ts.ModuleKind.None,
-useDefineForClassFields: false,
-importsNotUsedAsValues: ts.ImportsNotUsedAsValues?.Remove,
-...options,
-},
-reportDiagnostics: true,
-});
-const errors = (result.diagnostics || []).filter((d) => d.category === ts.DiagnosticCategory.Error);
-if (errors.length) {
-const msg = errors.map((d) => ts.flattenDiagnosticMessageText(d.messageText, "\n")).join("\n");
-throw new Error(msg);
-}
-return result.outputText;
-};
-const _ensureDialogLoaded = () => {
-return new Promise((resolve) => {
-if (customElements.get("dialog-data-entry-flow")) {
-resolve();
-return;
-}
-const origDefine = customElements.define.bind(customElements);
-customElements.define = function(name, ctor, options) {
-origDefine(name, ctor, options);
-if (name === "dialog-data-entry-flow") {
-customElements.define = origDefine;
-resolve();
-}
-};
-claw.navigate("/config/integrations");
-setTimeout(() => {
-customElements.define = origDefine;
-resolve();
-}, 5000);
-});
-};
-claw.options = {
-async list() {
-return _getHass().callWS({ type: "config_entries/get" });
-},
-async find(domainOrTitle) {
-const entries = await this.list();
-return entries.find(e => e.domain === domainOrTitle || e.title === domainOrTitle || e.entry_id === domainOrTitle);
-},
-async dialog(entryOrId, callback) {
-const entry = typeof entryOrId === "string" ? await this.find(entryOrId) : entryOrId;
-if (!entry) throw new Error("Entry not found: " + entryOrId);
-const ha = document.querySelector("home-assistant");
-const hass = _getHass();
-const domain = entry.domain;
-await Promise.all([
-_ensureDialogLoaded(),
-hass.loadFragmentTranslation("config"),
-hass.loadBackendTranslation("options", domain),
-hass.loadBackendTranslation("selector", domain),
-]);
-_fire(ha, "show-dialog", {
-dialogTag: "dialog-data-entry-flow",
-dialogImport: () => Promise.resolve(),
-dialogParams: {
-startFlowHandler: entry.entry_id,
-domain: domain,
-manifest: null,
-dialogClosedCallback: callback,
-flowConfig: {
-flowType: "options_flow",
-showDevices: false,
-createFlow: (h, handler) => h.callApi("POST", "config/config_entries/options/flow", { handler }),
-fetchFlow: (h, flowId) => h.callApi("GET", `config/config_entries/options/flow/${flowId}`),
-handleFlowStep: (h, flowId, data) => h.callApi("POST", `config/config_entries/options/flow/${flowId}`, data),
-deleteFlow: (h, flowId) => h.callApi("DELETE", `config/config_entries/options/flow/${flowId}`),
-renderAbortDescription: (h, s) => h.localize(`component.${s.translation_domain || domain}.options.abort.${s.reason}`, s.description_placeholders) || s.reason,
-renderShowFormStepHeader: (h, s) => h.localize(`component.${s.translation_domain || domain}.options.step.${s.step_id}.title`, s.description_placeholders) || h.localize("ui.dialogs.options_flow.form.header"),
-renderShowFormStepDescription: (h, s) => h.localize(`component.${s.translation_domain || domain}.options.step.${s.step_id}.description`, s.description_placeholders) || "",
-renderShowFormStepFieldLabel: (h, s, f, o) => {
-const prefix = o?.path?.[0] ? `sections.${o.path[0]}.` : "";
-return h.localize(`component.${domain}.options.step.${s.step_id}.${prefix}data.${f.name}`, s.description_placeholders) || f.name;
-},
-renderShowFormStepFieldHelper: (h, s, f, o) => {
-const prefix = o?.path?.[0] ? `sections.${o.path[0]}.` : "";
-return h.localize(`component.${s.translation_domain || domain}.options.step.${s.step_id}.${prefix}data_description.${f.name}`, s.description_placeholders) || "";
-},
-renderShowFormStepFieldError: (h, s, e) => h.localize(`component.${s.translation_domain || domain}.options.error.${e}`, s.description_placeholders) || e,
-renderShowFormStepFieldLocalizeValue: (h, s, k) => h.localize(`component.${domain}.selector.${k}`),
-renderShowFormStepSubmitButton: (h, s) => h.localize(`component.${domain}.options.step.${s.step_id}.submit`) || h.localize(`ui.panel.config.integrations.config_flow.${s.last_step === false ? "next" : "submit"}`),
-renderExternalStepHeader: () => "",
-renderExternalStepDescription: () => "",
-renderCreateEntryDescription: (h) => h.localize("ui.dialogs.options_flow.success.description"),
-renderShowFormProgressHeader: (h, s) => h.localize(`component.${domain}.options.step.${s.step_id}.title`) || h.localize(`component.${domain}.title`),
-renderShowFormProgressDescription: (h, s) => h.localize(`component.${s.translation_domain || domain}.options.progress.${s.progress_action}`, s.description_placeholders) || "",
-renderMenuHeader: (h, s) => h.localize(`component.${domain}.options.step.${s.step_id}.title`) || h.localize(`component.${domain}.title`),
-renderMenuDescription: (h, s) => h.localize(`component.${s.translation_domain || domain}.options.step.${s.step_id}.description`, s.description_placeholders) || "",
-renderMenuOption: (h, s, o) => h.localize(`component.${s.translation_domain || domain}.options.step.${s.step_id}.menu_options.${o}`, s.description_placeholders) || o,
-renderMenuOptionDescription: (h, s, o) => h.localize(`component.${s.translation_domain || domain}.options.step.${s.step_id}.menu_option_descriptions.${o}`, s.description_placeholders) || "",
-renderLoadingDescription: (h, reason) => h.localize(`component.${domain}.options.loading`) || h.localize(`ui.dialogs.options_flow.loading.${reason}`) || "",
-}
-}
-});
-},
-async read(entryId) {
-const h = _getHass();
-const step = await h.callApi("POST", "config/config_entries/options/flow", { handler: entryId });
-await h.callApi("DELETE", `config/config_entries/options/flow/${step.flow_id}`);
-return step;
-},
-async update(entryId, data) {
-const h = _getHass();
-const step = await h.callApi("POST", "config/config_entries/options/flow", { handler: entryId });
-return h.callApi("POST", `config/config_entries/options/flow/${step.flow_id}`, data);
-}
-};
-const _updateHass = (updates) => {
-const ha = document.querySelector("home-assistant");
-const hass = _getHass();
-const newHass = { ...hass, ...updates };
-if (ha._updateHass) {
-ha._updateHass(updates);
-} else {
-ha.hass = newHass;
-}
-const sidebar = claw.deepQuery("ha-sidebar");
-if (sidebar) {
-sidebar.hass = newHass;
-if (sidebar.requestUpdate) sidebar.requestUpdate();
-}
-const main = claw.deepQuery("home-assistant-main");
-if (main) {
-main.hass = newHass;
-if (main.requestUpdate) main.requestUpdate();
-}
-};
-claw.sidebar = {
-get() {
-return _getHass().panels;
-},
-add(urlPath, config) {
-const hass = _getHass();
-const newPanels = {
-...hass.panels,
-[urlPath]: {
-component_name: config.component || "iframe",
-config: config.config || { url: config.url },
-icon: config.icon || "mdi:application",
-title: config.title || urlPath,
-url_path: urlPath,
-show_in_sidebar: config.showInSidebar !== false,
-require_admin: config.requireAdmin || false,
-}
-};
-_updateHass({ panels: newPanels });
-return newPanels[urlPath];
-},
-remove(urlPath) {
-const hass = _getHass();
-const { [urlPath]: _, ...rest } = hass.panels;
-_updateHass({ panels: rest });
-},
-update(urlPath, config) {
-const hass = _getHass();
-if (!hass.panels[urlPath]) return null;
-const newPanels = {
-...hass.panels,
-[urlPath]: { ...hass.panels[urlPath], ...config }
-};
-_updateHass({ panels: newPanels });
-return newPanels[urlPath];
-},
-hide(urlPath) {
-return this.update(urlPath, { show_in_sidebar: false });
-},
-show(urlPath) {
-return this.update(urlPath, { show_in_sidebar: true });
-}
-};
-claw.ui = {
-get root() {
-return document.querySelector("home-assistant");
-},
-get main() {
-return claw.deepQuery("home-assistant-main");
-},
-get sidebar() {
-return claw.deepQuery("ha-sidebar");
-},
-get drawer() {
-return claw.deepQuery("ha-drawer");
-},
-get appLayout() {
-return claw.deepQuery("ha-app-layout");
-},
-get topBar() {
-return claw.deepQuery("app-toolbar") || claw.deepQuery("ha-top-app-bar-fixed");
-},
-get panel() {
-return claw.deepQuery("[id^='panel-']") || claw.deepQuery("partial-panel-resolver");
-},
-immersive(enable = true) {
-const sidebar = this.sidebar;
-const topBar = this.topBar;
-const drawer = this.drawer;
-if (enable) {
-if (sidebar) sidebar.style.display = "none";
-if (topBar) topBar.style.display = "none";
-if (drawer) drawer.setAttribute("narrow", "");
-document.body.style.setProperty("--ha-sidebar-width", "0px");
-} else {
-if (sidebar) sidebar.style.display = "";
-if (topBar) topBar.style.display = "";
-if (drawer) drawer.removeAttribute("narrow");
-document.body.style.removeProperty("--ha-sidebar-width");
-}
-},
-kiosk(enable = true) {
-_updateHass({ kioskMode: enable });
-}
-};
-claw.hook = {
-_hooks: {},
-on(event, callback) {
-if (!this._hooks[event]) this._hooks[event] = [];
-this._hooks[event].push(callback);
-return () => this.off(event, callback);
-},
-off(event, callback) {
-if (!this._hooks[event]) return;
-this._hooks[event] = this._hooks[event].filter(cb => cb !== callback);
-},
-emit(event, data) {
-if (!this._hooks[event]) return;
-this._hooks[event].forEach(cb => cb(data));
-},
-element(tagName, callback) {
-const origDefine = customElements.define.bind(customElements);
-customElements.define = function(name, ctor, options) {
-if (name === tagName) {
-const wrappedCtor = class extends ctor {
-connectedCallback() {
-super.connectedCallback?.();
-callback(this);
-}
-};
-origDefine(name, wrappedCtor, options);
-customElements.define = origDefine;
-} else {
-origDefine(name, ctor, options);
-}
-};
-if (customElements.get(tagName)) {
-claw.deepQueryAll(tagName).forEach(el => callback(el));
-}
-},
-hass(callback) {
-const ha = document.querySelector("home-assistant");
-if (!ha) return;
-let lastHass = ha.hass;
-Object.defineProperty(ha, "hass", {
-get() { return lastHass; },
-set(val) {
-const oldHass = lastHass;
-lastHass = val;
-callback(val, oldHass);
-},
-configurable: true
-});
-}
-};
-claw.ws = {
-send(msg) {
-return _getHass().connection.sendMessage(msg);
-},
-call(msg) {
-return _getHass().connection.sendMessagePromise(msg);
-},
-subscribe(eventType, callback) {
-return _getHass().connection.subscribeEvents(callback, eventType);
-},
-subscribeMessage(msg, callback) {
-return _getHass().connection.subscribeMessage(callback, msg);
-}
-};
-claw.api = {
-get(path) {
-return _getHass().callApi("GET", path);
-},
-post(path, data) {
-return _getHass().callApi("POST", path, data);
-},
-put(path, data) {
-return _getHass().callApi("PUT", path, data);
-},
-delete(path) {
-return _getHass().callApi("DELETE", path);
-},
-fetch(path, init) {
-return _getHass().fetchWithAuth(path, init);
-}
-};
-claw.ts = {
-load() {
-return _loadTypeScript();
-},
-transpile(code, options) {
-return _tsToJs(code, options);
-},
-async run(code, scope = {}) {
-const js = await _tsToJs(code);
-const keys = Object.keys(scope);
-const vals = keys.map((k) => scope[k]);
-return new Function("claw", "hass", ...keys, js)(
-claw,
-_getHass(),
-...vals,
-);
-},
-async card(code, ctx = {}) {
-const js = await _tsToJs(code);
-return new Function(
-"root",
-"card",
-"$",
-"$$",
-"hass",
-"config",
-"overlay",
-"claw",
-js,
-)(
-ctx.root,
-ctx.card || ctx.root,
-ctx.$ || ((s) => ctx.root?.querySelector(s)),
-ctx.$$ || ((s) => ctx.root?.querySelectorAll(s)),
-ctx.hass || _getHass(),
-ctx.config || {},
-ctx.overlay || window._htmlProCardOverlay,
-claw,
-);
-},
-async module(code, scope = {}) {
-const js = await _tsToJs(code, { module: window.ts.ModuleKind.ES2020 });
-const blob = new Blob([js], { type: "text/javascript" });
-const url = URL.createObjectURL(blob);
-try {
-const mod = await import(url);
-if (typeof mod.default === "function") {
-return mod.default({ claw, hass: _getHass(), ...scope });
-}
-return mod;
-} finally {
-URL.revokeObjectURL(url);
-}
-}
-};
-claw.config = {
-async entries(params) {
-return _getHass().callWS({ type: "config_entries/get", ...params });
-},
-async entry(entryId) {
-const result = await _getHass().callWS({ type: "config_entries/get_single", entry_id: entryId });
-return result.config_entry;
-},
-async update(entryId, params) {
-return _getHass().callWS({ type: "config_entries/update", entry_id: entryId, ...params });
-},
-async delete(entryId) {
-return claw.api.delete(`config/config_entries/entry/${entryId}`);
-},
-async reload(entryId) {
-return claw.api.post(`config/config_entries/entry/${entryId}/reload`);
-},
-async disable(entryId) {
-return _getHass().callWS({ type: "config_entries/disable", entry_id: entryId, disabled_by: "user" });
-},
-async enable(entryId) {
-return _getHass().callWS({ type: "config_entries/disable", entry_id: entryId, disabled_by: null });
-},
-subscribe(callback) {
-return _getHass().connection.subscribeMessage(callback, { type: "config_entries/subscribe" });
-},
-flow: {
-async create(handler, entryId) {
-return claw.api.post("config/config_entries/flow", { handler, entry_id: entryId });
-},
-async get(flowId) {
-return claw.api.get(`config/config_entries/flow/${flowId}`);
-},
-async submit(flowId, data) {
-return claw.api.post(`config/config_entries/flow/${flowId}`, data);
-},
-async delete(flowId) {
-return claw.api.delete(`config/config_entries/flow/${flowId}`);
-},
-async progress() {
-return _getHass().connection.sendMessagePromise({ type: "config_entries/flow/progress" });
-},
-subscribe(callback) {
-return _getHass().connection.subscribeMessage(callback, { type: "config_entries/flow/subscribe" });
-}
-},
-options: claw.options
-};
-claw.panels = {
-async get() {
-return _getHass().connection.sendMessagePromise({ type: "get_panels" });
-},
-subscribe(callback) {
-return _getHass().connection.subscribeEvents(() => {
-this.get().then(callback);
-}, "panels_updated");
-}
-};
-claw.states = {
-get(entityId) {
-return entityId ? _getHass().states[entityId] : _getHass().states;
-},
-async set(entityId, state, attributes) {
-return _getHass().callApi("POST", "states/" + entityId, { state, attributes });
-},
-subscribe(callback) {
-return claw.hook.hass((hass, oldHass) => {
-if (hass.states !== oldHass?.states) callback(hass.states);
-});
-}
-};
-claw.services = {
-get(domain) {
-const services = _getHass().services;
-return domain ? services[domain] : services;
-},
-async call(domain, service, data, target) {
-return _getHass().callService(domain, service, data, target);
-}
-};
-claw.areas = {
-async get() {
-return _getHass().callWS({ type: "config/area_registry/list" });
-},
-async create(name, params) {
-return _getHass().callWS({ type: "config/area_registry/create", name, ...params });
-},
-async update(areaId, params) {
-return _getHass().callWS({ type: "config/area_registry/update", area_id: areaId, ...params });
-},
-async delete(areaId) {
-return _getHass().callWS({ type: "config/area_registry/delete", area_id: areaId });
-}
-};
-claw.devices = {
-async get() {
-return _getHass().callWS({ type: "config/device_registry/list" });
-},
-async update(deviceId, params) {
-return _getHass().callWS({ type: "config/device_registry/update", device_id: deviceId, ...params });
-}
-};
-claw.entities = {
-async get() {
-return _getHass().callWS({ type: "config/entity_registry/list" });
-},
-async getEntry(entityId) {
-return _getHass().callWS({ type: "config/entity_registry/get", entity_id: entityId });
-},
-async update(entityId, params) {
-return _getHass().callWS({ type: "config/entity_registry/update", entity_id: entityId, ...params });
-},
-async remove(entityId) {
-return _getHass().callWS({ type: "config/entity_registry/remove", entity_id: entityId });
-}
-};
-claw.automations = {
-async get() {
-return claw.api.get("config/automation/config");
-},
-async getConfig(automationId) {
-return claw.api.get(`config/automation/config/${automationId}`);
-},
-async create(config) {
-return claw.api.post("config/automation/config", config);
-},
-async update(automationId, config) {
-return claw.api.put(`config/automation/config/${automationId}`, config);
-},
-async delete(automationId) {
-return claw.api.delete(`config/automation/config/${automationId}`);
-},
-async trigger(entityId) {
-return claw.services.call("automation", "trigger", { entity_id: entityId });
-}
-};
-claw.scripts = {
-async get() {
-return claw.api.get("config/script/config");
-},
-async getConfig(scriptId) {
-return claw.api.get(`config/script/config/${scriptId}`);
-},
-async create(config) {
-return claw.api.post("config/script/config", config);
-},
-async update(scriptId, config) {
-return claw.api.put(`config/script/config/${scriptId}`, config);
-},
-async delete(scriptId) {
-return claw.api.delete(`config/script/config/${scriptId}`);
-},
-async run(entityId, variables) {
-return claw.services.call("script", entityId.replace("script.", ""), variables);
-}
-};
-claw.scenes = {
-async get() {
-return claw.api.get("config/scene/config");
-},
-async create(config) {
-return claw.api.post("config/scene/config", config);
-},
-async update(sceneId, config) {
-return claw.api.put(`config/scene/config/${sceneId}`, config);
-},
-async delete(sceneId) {
-return claw.api.delete(`config/scene/config/${sceneId}`);
-},
-async activate(entityId) {
-return claw.services.call("scene", "turn_on", { entity_id: entityId });
-}
-};
-claw.lovelace = {
-async getConfig() {
-return _getHass().callWS({ type: "lovelace/config" });
-},
-async saveConfig(config) {
-return _getHass().callWS({ type: "lovelace/config/save", config });
-},
-async getDashboards() {
-return _getHass().callWS({ type: "lovelace/dashboards/list" });
-},
-async createDashboard(params) {
-return _getHass().callWS({ type: "lovelace/dashboards/create", ...params });
-},
-async updateDashboard(dashboardId, params) {
-return _getHass().callWS({ type: "lovelace/dashboards/update", dashboard_id: dashboardId, ...params });
-},
-async deleteDashboard(dashboardId) {
-return _getHass().callWS({ type: "lovelace/dashboards/delete", dashboard_id: dashboardId });
-},
-async getResources() {
-return _getHass().callWS({ type: "lovelace/resources" });
-},
-async createResource(params) {
-return _getHass().callWS({ type: "lovelace/resources/create", ...params });
-},
-async updateResource(resourceId, params) {
-return _getHass().callWS({ type: "lovelace/resources/update", resource_id: resourceId, ...params });
-},
-async deleteResource(resourceId) {
-return _getHass().callWS({ type: "lovelace/resources/delete", resource_id: resourceId });
-}
-};
-claw.users = {
-async get() {
-return _getHass().callWS({ type: "config/auth/list" });
-},
-async create(params) {
-return _getHass().callWS({ type: "config/auth/create", ...params });
-},
-async delete(userId) {
-return _getHass().callWS({ type: "config/auth/delete", user_id: userId });
-}
-};
-claw.system = {
-async info() {
-return _getHass().callWS({ type: "config/core/info" });
-},
-async restart() {
-return claw.services.call("homeassistant", "restart");
-},
-async stop() {
-return claw.services.call("homeassistant", "stop");
-},
-async checkConfig() {
-return claw.services.call("homeassistant", "check_config");
-},
-async reloadCore() {
-return claw.services.call("homeassistant", "reload_core_config");
-}
-};
-window.claw = claw;
-})();
+import{html,LitElement}from"https://unpkg.com/lit-element@2.4.0/lit-element.js?module";const HTML_PRO_CARD_VERSION="3.7";console.info("%cHTML Pro %c 3.7","color:#03a9f4;font-weight:600","color:#999");const _globalLoadedScripts=window._htmlProCardScripts||(window._htmlProCardScripts=new Set);if(!document.getElementById("html-pro-card-overlay")){const e=document.createElement("div");e.id="html-pro-card-overlay",e.style.cssText="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:2147483647;",document.body.appendChild(e)}if(window._htmlProCardOverlay=document.getElementById("html-pro-card-overlay"),function(){const e=window._htmlProCardOverlay;if(!e)return;window.addEventListener("location-changed",()=>{e.innerHTML=""}),e.addEventListener("click",t=>{const o=t.target.closest("[data-action][data-entity]")||t.target.closest("[data-action]");if(!o)return;const s=o.dataset.entity||o.closest("[data-entity]")?.dataset.entity,i=o.dataset.action;if(!s||!i)return;const r=document.querySelector("home-assistant")?.hass;if(!r)return;const[n]=s.split(".");if("more-info"===i){const t=new Event("hass-more-info",{bubbles:!0,composed:!0});return t.detail={entityId:s},void e.dispatchEvent(t)}let a=i;if("toggle"===i){const e=r.states[s];if("lock"===n)a="locked"===e?.state?"unlock":"lock";else if("cover"===n)a="open"===e?.state||"opening"===e?.state?"close_cover":"open_cover";else if("button"===n||"input_button"===n)a="press";else if("scene"===n)a="turn_on";else{if("script"===n)return void r.callService("script",s.split(".")[1],{});e&&(a="on"===e.state?"turn_off":"turn_on")}}r.callService(n,a,{entity_id:s})})}(),!window._htmlProCardRoots){window._htmlProCardRoots=new Set;const e=document.getElementById.bind(document),t=document.querySelector.bind(document),o=document.querySelectorAll.bind(document);document.getElementById=function(t){for(const e of window._htmlProCardRoots){const o=e.querySelector("#"+t);if(o)return o}return e(t)},document.querySelector=function(e){for(const t of window._htmlProCardRoots){const o=t.querySelector(e);if(o)return o}return t(e)},document.querySelectorAll=function(e){const t=[];for(const o of window._htmlProCardRoots)t.push(...o.querySelectorAll(e));return t.length>0?t:o(e)}}const _pceLoaded={promise:null};function _loadPrismEditor(){return _pceLoaded.promise||(_pceLoaded.promise=new Promise(e=>{if(window.prismCodeEditor)return void e(window.prismCodeEditor);const t=document.createElement("script");t.type="module",t.textContent="\n      import { fullEditor, updateTheme } from 'https://cdn.jsdelivr.net/npm/prism-code-editor@3/dist/setups/index.js';\n      import 'https://cdn.jsdelivr.net/npm/prism-code-editor@3/dist/prism/languages/markup.js';\n      import 'https://cdn.jsdelivr.net/npm/prism-code-editor@3/dist/prism/languages/css.js';\n      import 'https://cdn.jsdelivr.net/npm/prism-code-editor@3/dist/prism/languages/javascript.js';\n      import 'https://cdn.jsdelivr.net/npm/prism-code-editor@3/dist/prism/languages/typescript.js';\n      window.prismCodeEditor = { fullEditor, updateTheme };\n      window.dispatchEvent(new Event('pce-ready'));\n    ",document.head.appendChild(t),window.addEventListener("pce-ready",()=>e(window.prismCodeEditor),{once:!0})})),_pceLoaded.promise}customElements.get("ha-htmlcard-textarea")||customElements.define("ha-htmlcard-textarea",class extends HTMLElement{constructor(){super(),this._value="",this._editorReady=!1,this._pendingValue=null}connectedCallback(){this._initialized||(this._initialized=!0,this.innerHTML="\n        <style>\n          .pce-container {\n            border: 1px solid var(--divider-color, #e0e0e0);\n            border-radius: 10px;\n            overflow: hidden;\n            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04), inset 0 1px 2px rgba(0, 0, 0, 0.02);\n            transition: border-color 0.2s ease, box-shadow 0.2s ease;\n          }\n          .pce-container:focus-within {\n            border-color: var(--primary-color, #03a9f4);\n            box-shadow: 0 0 0 2px rgba(var(--rgb-primary-color, 3, 169, 244), 0.1), inset 0 1px 2px rgba(0, 0, 0, 0.02);\n          }\n          .pce-container .prism-code-editor {\n            height: 300px !important;\n            min-height: 350px !important;\n            font-size: 13px !important;\n          }\n          .pce-fallback {\n            width: 100%;\n            height: 400px;\n            padding: 14px 16px;\n            border: none;\n            background: var(--card-background-color, #fff);\n            color: var(--primary-text-color, #333);\n            font-family: 'SF Mono', 'Consolas', 'Monaco', monospace;\n            font-size: 13px;\n            line-height: 1.6;\n            resize: vertical;\n            box-sizing: border-box;\n            outline: none;\n          }\n        </style>\n        <div class=\"pce-container\">\n          <textarea class=\"pce-fallback\" spellcheck=\"false\"></textarea>\n        </div>\n      ",this._container=this.querySelector(".pce-container"),this._fallback=this.querySelector(".pce-fallback"),this._fallback.value=this._value,this._fallback.addEventListener("input",()=>{this._value=this._fallback.value,this.dispatchEvent(new CustomEvent("change",{detail:{value:this._value},bubbles:!0,composed:!0}))}),this._initEditor())}async _initEditor(){try{const e=await _loadPrismEditor();this._fallback.style.display="none";const t=null!==this._pendingValue?this._pendingValue:this._value,o=document.querySelector("home-assistant")?.hass?.themes,s=o?.darkMode||document.body.getAttribute("data-theme")?.includes("dark")||getComputedStyle(document.body).getPropertyValue("--primary-background-color")?.trim()?.match(/^#[0-3]/)||window.matchMedia("(prefers-color-scheme: dark)").matches?"vs-code-dark":"vs-code-light";this._editor=e.fullEditor(this._container,{language:"html",theme:s,value:t,lineNumbers:!0,wordWrap:!1,tabSize:2},()=>{this._editorReady=!0,this._value=t;const e=this._editor.scrollContainer.parentNode;if(e instanceof ShadowRoot){const t=document.createElement("style");t.textContent=".prism-code-editor { height: 400px !important; font-size: 13px !important; }",e.appendChild(t)}this._editor.addListener("update",e=>{this._value=e,this.dispatchEvent(new CustomEvent("change",{detail:{value:this._value},bubbles:!0,composed:!0}))})})}catch(e){this._fallback.style.display="block"}}set value(e){const t=e||"";this._editorReady&&this._editor?this._editor.value!==t&&(this._editor.setOptions({value:t}),this._value=t):(this._pendingValue=t,this._value=t,this._fallback&&(this._fallback.value=t))}get value(){return this._value}}),customElements.get("ha-htmlcard-textfield")||customElements.define("ha-htmlcard-textfield",class extends HTMLElement{constructor(){super(),this.attachShadow({mode:"open"}),this.shadowRoot.innerHTML='\n        <style>\n          :host {\n            display: block;\n          }\n          input {\n            width: 100%;\n            padding: 8px;\n            border: 1px solid var(--divider-color, #e0e0e0);\n            border-radius: 4px;\n            background: var(--card-background-color, #fff);\n            color: var(--primary-text-color, #000);\n          }\n        </style>\n        <input type="text" />\n      ',this._input=this.shadowRoot.querySelector("input"),this._input.addEventListener("input",()=>{this.dispatchEvent(new CustomEvent("change",{detail:{value:this._input.value},bubbles:!0,composed:!0}))})}set value(e){this._input.value=e}get value(){return this._input.value}set type(e){this._input.type=e}}),customElements.get("ha-htmlcard-switch")||customElements.define("ha-htmlcard-switch",class extends HTMLElement{constructor(){super(),this.attachShadow({mode:"open"}),this.shadowRoot.innerHTML='\n        <style>\n          :host {\n            display: inline-block;\n          }\n          label {\n            position: relative;\n            display: inline-block;\n            width: 40px;\n            height: 24px;\n          }\n          input {\n            opacity: 0;\n            width: 0;\n            height: 0;\n          }\n          span {\n            position: absolute;\n            cursor: pointer;\n            top: 0;\n            left: 0;\n            right: 0;\n            bottom: 0;\n            background-color: #ccc;\n            transition: .4s;\n            border-radius: 24px;\n          }\n          span:before {\n            position: absolute;\n            content: "";\n            height: 16px;\n            width: 16px;\n            left: 4px;\n            bottom: 4px;\n            background-color: white;\n            transition: .4s;\n            border-radius: 50%;\n          }\n          input:checked + span {\n            background-color: var(--primary-color, #03a9f4);\n          }\n          input:checked + span:before {\n            transform: translateX(16px);\n          }\n        </style>\n        <label>\n          <input type="checkbox" />\n          <span></span>\n        </label>\n      ',this._input=this.shadowRoot.querySelector("input"),this._input.addEventListener("change",()=>{this.dispatchEvent(new CustomEvent("change",{detail:{checked:this._input.checked},bubbles:!0,composed:!0}))})}set checked(e){this._input.checked=e}get checked(){return this._input.checked}}),customElements.get("ha-htmlcard-formfield")||customElements.define("ha-htmlcard-formfield",class extends HTMLElement{constructor(){super(),this.attachShadow({mode:"open"}),this.shadowRoot.innerHTML='\n        <style>\n          :host {\n            display: flex;\n            align-items: center;\n            padding: 4px 0;\n          }\n          label {\n            padding-left: 8px;\n            color: var(--primary-text-color, #000);\n          }\n        </style>\n        <slot></slot>\n        <label><slot name="label"></slot></label>\n      '}});const I18N={zh:{htmlContent:"HTML 内容",options:"选项设置",scripts:"外部脚本",store:"模块商店",disableParse:"纯HTML模式",disableParseDesc:"默认关闭(使用Jinja2)，开启后直接渲染HTML",updateInterval:"更新间隔 (ms)",updateIntervalDesc:"0 为禁用自动更新",ignoreLineBreaks:"忽略换行",ignoreLineBreaksDesc:"忽略HTML中的换行符",addScript:"添加",scriptPlaceholder:"输入脚本 URL",searchPlaceholder:"搜索模块...",import:"导入",delete:"删除",loading:"加载中...",noModules:"暂无模块",noCustomModules:"暂无自定义模块",confirmDelete:"确定删除此模块?",customModule:"自定义模块",headerDesc:"高级 HTML 卡片编辑器，支持 Jinja2 模板语法",headerDesc2:"可使用 Home Assistant 状态、属性和服务调用",realtime:"实时更新",extScripts:"外部脚本",customStyle:"自定义样式",yamlHint:"支持直接粘贴完整YAML配置",storeDesc:"从社区获取模块",version:"版本",by:"作者",supports:"支持",viewSource:"查看",slideToImport:"滑动导入 →",loadError:"加载失败，请稍后重试",refreshing:"刷新中..."},"zh-Hant":{htmlContent:"HTML 內容",options:"選項設置",scripts:"外部腳本",store:"模組商店",disableParse:"純HTML模式",disableParseDesc:"預設關閉(使用Jinja2)，開啟後直接渲染HTML",updateInterval:"更新間隔 (ms)",updateIntervalDesc:"0 為禁用自動更新",ignoreLineBreaks:"忽略換行",ignoreLineBreaksDesc:"忽略HTML中的換行符",addScript:"添加",scriptPlaceholder:"輸入腳本 URL",searchPlaceholder:"搜尋模組...",import:"導入",delete:"刪除",loading:"載入中...",noModules:"暫無模組",noCustomModules:"暫無自定義模組",confirmDelete:"確定刪除此模組?",customModule:"自定義模組",headerDesc:"高級 HTML 卡片編輯器，支持 Jinja2 模板語法",headerDesc2:"可使用 Home Assistant 狀態、屬性和服務調用",realtime:"即時更新",extScripts:"外部腳本",customStyle:"自定義樣式",yamlHint:"支持直接貼上完整YAML配置",storeDesc:"從社區獲取模組",version:"版本",by:"作者",supports:"支持",viewSource:"查看",slideToImport:"滑動導入 →",loadError:"載入失敗，請稍後重試",refreshing:"刷新中..."},ja:{htmlContent:"HTML コンテンツ",options:"オプション",scripts:"外部スクリプト",store:"モジュールストア",disableParse:"純粋HTMLモード",disableParseDesc:"デフォルトオフ(Jinja2使用)、オンでHTML直接レンダリング",updateInterval:"更新間隔 (ms)",updateIntervalDesc:"0で自動更新無効",ignoreLineBreaks:"改行を無視",ignoreLineBreaksDesc:"HTML内の改行を無視",addScript:"追加",scriptPlaceholder:"スクリプトURLを入力",searchPlaceholder:"モジュールを検索...",import:"インポート",delete:"削除",loading:"読み込み中...",noModules:"モジュールなし",noCustomModules:"カスタムモジュールなし",confirmDelete:"このモジュールを削除しますか？",customModule:"カスタムモジュール",headerDesc:"Jinja2テンプレート対応の高度なHTMLカードエディター",headerDesc2:"Home Assistantの状態、属性、サービスを使用可能",realtime:"リアルタイム",extScripts:"スクリプト",customStyle:"カスタムCSS",yamlHint:"完全なYAML設定を直接貼り付け可能",storeDesc:"コミュニティからモジュールを取得",version:"v",by:"作者",supports:"対応",viewSource:"表示",slideToImport:"スライドでインポート →",loadError:"読み込み失敗、後でもう一度お試しください",refreshing:"更新中..."},de:{htmlContent:"HTML-Inhalt",options:"Optionen",scripts:"Externe Skripte",store:"Modul-Store",disableParse:"Reiner HTML-Modus",disableParseDesc:"Standard aus (Jinja2), aktivieren für direktes HTML-Rendering",updateInterval:"Aktualisierungsintervall (ms)",updateIntervalDesc:"0 deaktiviert Auto-Update",ignoreLineBreaks:"Zeilenumbrüche ignorieren",ignoreLineBreaksDesc:"Zeilenumbrüche in HTML ignorieren",addScript:"Hinzufügen",scriptPlaceholder:"Skript-URL eingeben",searchPlaceholder:"Module suchen...",import:"Importieren",delete:"Löschen",loading:"Laden...",noModules:"Keine Module",noCustomModules:"Keine benutzerdefinierten Module",confirmDelete:"Dieses Modul löschen?",customModule:"Benutzerdefiniertes Modul",headerDesc:"Erweiterter HTML-Karten-Editor mit Jinja2-Vorlage",headerDesc2:"Home Assistant Zustände, Attribute und Dienste nutzen",realtime:"Echtzeit",extScripts:"Skripte",customStyle:"Benutzerdefiniertes CSS",yamlHint:"Vollständige YAML-Konfiguration direkt einfügen",storeDesc:"Module aus der Community abrufen",version:"v",by:"von",supports:"Unterstützt",viewSource:"Anzeigen",slideToImport:"Zum Importieren schieben →",loadError:"Laden fehlgeschlagen, bitte später erneut versuchen",refreshing:"Aktualisieren..."},en:{htmlContent:"HTML Content",options:"Options",scripts:"External Scripts",store:"Module Store",disableParse:"Pure HTML Mode",disableParseDesc:"Off by default (uses Jinja2), enable to render HTML directly",updateInterval:"Update Interval (ms)",updateIntervalDesc:"0 to disable auto update",ignoreLineBreaks:"Ignore Line Breaks",ignoreLineBreaksDesc:"Ignore line breaks in HTML",addScript:"Add",scriptPlaceholder:"Enter script URL",searchPlaceholder:"Search modules...",import:"Import",delete:"Delete",loading:"Loading...",noModules:"No modules",noCustomModules:"No custom modules",confirmDelete:"Delete this module?",customModule:"Custom Module",headerDesc:"Advanced HTML card editor with Jinja2 template",headerDesc2:"Use Home Assistant states, attributes and services",realtime:"Realtime",extScripts:"Scripts",customStyle:"Custom CSS",yamlHint:"Paste full YAML config directly",storeDesc:"Get modules from community",version:"v",by:"by",supports:"Supports",viewSource:"View",slideToImport:"Slide to Import →",loadError:"Failed to load, please try again",refreshing:"Refreshing..."}},MODULE_STORE_CONFIG={repo:"ha-china/html-card-pro",storeUrl:"https://cdn.jsdelivr.net/gh/ha-china/html-card-pro@main/store.json",rawBase:"https://cdn.jsdelivr.net/gh/ha-china/html-card-pro@main/",cacheKey:"html-pro-card-modules-cache",cacheTTL:6e5},_hasExecutableScript=e=>/<script\b/i.test(e)||/<script[^>]+type=["'](?:text|application)\/typescript["']/i.test(e)||/\$\{/.test(e);class HtmlTemplateCardEditor extends LitElement{static get properties(){return{_config:{type:Object},hass:{type:Object},_showStore:{type:Boolean},_showHtml:{type:Boolean},_showOptions:{type:Boolean},_showScripts:{type:Boolean},_storeModules:{type:Array},_savedModules:{type:Array},_storeLoading:{type:Boolean},_storeSearch:{type:String}}}get _lang(){const e=this.hass?.language||"";return"zh-Hant"===e||e.startsWith("zh-TW")||e.startsWith("zh-HK")?"zh-Hant":e.startsWith("zh")?"zh":e.startsWith("ja")?"ja":e.startsWith("de")?"de":"en"}_t(e){return I18N[this._lang]?.[e]||I18N.en[e]||e}constructor(){super(),this._showStore=!1,this._showHtml=!0,this._showOptions=!1,this._showScripts=!1,this._storeModules=[],this._savedModules=this._loadSavedModules(),this._storeLoading=!1,this._storeSearch=""}_loadSavedModules(){try{const e=localStorage.getItem("html-pro-card-modules");return e?JSON.parse(e):[]}catch{return[]}}_saveSavedModules(){localStorage.setItem("html-pro-card-modules",JSON.stringify(this._savedModules))}_getCachedModules(){try{const e=localStorage.getItem(MODULE_STORE_CONFIG.cacheKey);if(!e)return null;const{data:t,timestamp:o}=JSON.parse(e);return Date.now()-o>MODULE_STORE_CONFIG.cacheTTL?null:t}catch{return null}}_setCachedModules(e){try{localStorage.setItem(MODULE_STORE_CONFIG.cacheKey,JSON.stringify({data:e,timestamp:Date.now()}))}catch{}}_parseModuleFromMarkdown(e){const t=[],o=/```ya?ml\s*([\s\S]*?)```/gi;let s;for(;null!==(s=o.exec(e));){const o=s[1].trim();try{if(o.startsWith("type: custom:html-pro-card")||o.includes("\ntype: custom:html-pro-card")){const s=this._parseCardYaml(o);if(s&&s.content){const o=e.match(/\*\*([^*]+)\*\*/),i=e.match(/\*\*Author\*\*:\s*(\S+)/i)||e.match(/Author:\s*(\S+)/i),r=e.match(/\*\*Version\*\*:\s*(\S+)/i)||e.match(/Version:\s*(\S+)/i);t.push({name:o?o[1].trim():"Untitled Module",version:r?r[1]:"1.0",creator:i?i[1]:"Community",description:"",_cardConfig:s,code:s.content,scripts:s.scripts||[]})}}else{const e=this._parseModuleYaml(o);e&&e.name&&e.code&&t.push(e)}}catch{}}return t}_parseCardYaml(e){const t={},o=e.split("\n");let s=null,i=[],r=!1,n=0,a=!1,l=null,c=[];for(let e=0;e<o.length;e++){const d=o[e],p=d.trim();if(!p&&!r)continue;const h=d.search(/\S|$/);if(r){if(h>n||""===p){i.push(d.slice(n+2)||"");continue}t[s]=i.join("\n"),r=!1,i=[]}if(a){if(p.startsWith("- ")){c.push(p.slice(2).trim());continue}if(!(h<=n))continue;t[l]=c,a=!1,c=[]}const u=p.match(/^([\w_-]+):\s*(.*)$/);if(u){const[,e,o]=u,d=o.trim();if(/^\|[-+]?$|^>[-+]?$/.test(d))s=e,n=h,r=!0,i=[];else if(""===d)l=e,n=h,a=!0,c=[];else if(d.startsWith('"')||d.startsWith("'"))t[e]=d.slice(1,-1);else{let o=d;"true"!==o&&"false"!==o||(o="true"===o),t[e]=o}}}r&&s&&(t[s]=i.join("\n")),a&&l&&(t[l]=c);for(const e of["do_not_parse","ignore_line_breaks"])void 0!==t[e]&&(t[e]=!0===t[e]||"true"===t[e]||1===t[e]||"1"===t[e]||"on"===t[e]);if(void 0!==t.update_interval){const e=parseInt(t.update_interval);t.update_interval=isNaN(e)?0:e}return void 0!==t.content&&void 0===t.do_not_parse&&(t.do_not_parse=_hasExecutableScript(t.content||"")),t}_parseModuleYaml(e){const t=e.split("\n"),o={editor:[]};let s=null,i=0,r=[],n=!1,a=!1,l=null,c=!1,d={};for(let e=0;e<t.length;e++){const p=t[e],h=p.trim();if(!h)continue;const u=p.search(/\S/);if(n){if(u>i||""===h){r.push(p.slice(i+2)||"");continue}o[s]=r.join("\n"),n=!1,r=[]}if(0===u&&h.endsWith(":")&&!h.includes(" ")){const e=h.slice(0,-1);if("editor"===e){a=!0;continue}s=e;continue}if(a){if(0!==u||h.startsWith("-")){if(h.startsWith("- name:"))l&&o.editor.push(l),l={name:h.replace("- name:","").trim()},c=!1;else if(l&&u>=2){const e=h.match(/^([\w-]+):\s*(.*)$/);if(e){const[,t,o]=e;"selector"===t?(c=!0,d={}):c&&u>=4?"select"!==t&&"text"!==t&&"condition"!==t||(l.selector={type:t}):l[t]=o.replace(/^["']|["']$/g,"")}}}else a=!1;continue}const m=h.match(/^([\w-]+):\s*(.*)$/);if(m){const[,e,t]=m;"|"===t?(s=e,i=u,n=!0,r=[]):t.startsWith('"')||t.startsWith("'")?o[e]=t.slice(1,-1):o[e]=t}}n&&s&&(o[s]=r.join("\n")),l&&o.editor.push(l);const p=Object.keys(o)[0];if(p&&"name"!==p&&!o.name){o.id=p;const t=this._parseNestedModule(e,p);if(t)return t}return o}_parseNestedModule(e,t){const o=e.split("\n"),s={id:t,editor:[]};let i=!1,r=null,n=[],a=!1,l=0;for(const e of o){const o=e.trim();if(!o)continue;const c=e.search(/\S/);if(o===t+":"){i=!0,l=c;continue}if(!i)continue;if(c<=l&&o.endsWith(":"))break;if(a){if(c>l+4||""===o){n.push(e.slice(l+6)||"");continue}s[r]=n.join("\n"),a=!1,n=[]}const d=o.match(/^([\w-]+):\s*(.*)$/);if(d&&c===l+4){const[,e,t]=d;"|"===t?(r=e,a=!0,n=[]):t.startsWith('"')||t.startsWith("'")?s[e]=t.slice(1,-1):s[e]=t}}return a&&r&&(s[r]=n.join("\n")),s.name?s:null}setConfig(e){this._config=e}render(){return this._config?html`
+      <style>
+        .card-config {
+          padding: 16px;
+        }
+        .collapse-panel {
+          border: 1px solid var(--divider-color, #e0e0e0);
+          border-radius: 10px;
+          margin-bottom: 12px;
+          overflow: hidden;
+          background: var(--card-background-color, #fff);
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+        }
+        .collapse-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 12px 16px;
+          cursor: pointer;
+          background: transparent;
+          user-select: none;
+        }
+        .collapse-header:hover {
+          background: rgba(0, 0, 0, 0.015);
+        }
+        .collapse-header.expanded {
+          border-bottom: 1px solid var(--divider-color, #e0e0e0);
+        }
+        .collapse-header-left {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+        .collapse-icon {
+          width: 20px;
+          height: 20px;
+          color: var(--secondary-text-color);
+          flex-shrink: 0;
+          transition: color 0.2s ease;
+        }
+        .collapse-header:hover .collapse-icon {
+          color: var(--primary-color);
+        }
+        .collapse-header.expanded .collapse-icon {
+          color: var(--primary-color);
+        }
+        .collapse-title {
+          font-size: 14px;
+          font-weight: 600;
+          color: var(--primary-text-color);
+          letter-spacing: -0.2px;
+        }
+        .collapse-arrow {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          background: var(--divider-color, #ddd);
+          transition: all 0.25s ease;
+          flex-shrink: 0;
+        }
+        .collapse-arrow.expanded {
+          background: var(--primary-color, #03a9f4);
+          box-shadow: 0 0 0 3px rgba(var(--rgb-primary-color), 0.15);
+        }
+        .collapse-body {
+          max-height: 0;
+          overflow: hidden;
+          transition: max-height 0.25s ease;
+        }
+        .collapse-body.expanded {
+          max-height: 600px;
+        }
+        .collapse-content {
+          padding: 16px 18px 18px;
+        }
+        .editor-control {
+          width: 100%;
+        }
+        .option-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 14px 16px;
+          margin: 0 -16px;
+          border-radius: 8px;
+          transition: background 0.2s ease;
+        }
+        .option-row:hover {
+          background: rgba(var(--rgb-primary-color), 0.02);
+        }
+        .option-row:not(:last-child) {
+          border-bottom: 1px solid var(--divider-color, #e0e0e0);
+          border-radius: 0;
+        }
+        .option-row:first-child {
+          border-radius: 8px 8px 0 0;
+        }
+        .option-row:last-child {
+          border-radius: 0 0 8px 8px;
+        }
+        .option-label {
+          font-size: 14px;
+          font-weight: 500;
+          color: var(--primary-text-color);
+        }
+        .option-desc {
+          font-size: 12px;
+          color: var(--secondary-text-color);
+          margin-top: 4px;
+          line-height: 1.4;
+        }
+        .interval-input {
+          width: 80px;
+          height: 36px;
+          padding: 0 12px;
+          border: 1px solid var(--divider-color);
+          border-radius: 8px;
+          font-size: 14px;
+          font-weight: 500;
+          text-align: center;
+          background: var(--card-background-color);
+          color: var(--primary-text-color);
+          transition: border-color 0.2s ease;
+          -moz-appearance: textfield;
+        }
+        .interval-input::-webkit-outer-spin-button,
+        .interval-input::-webkit-inner-spin-button {
+          -webkit-appearance: none;
+          margin: 0;
+        }
+        .interval-input:focus {
+          outline: none;
+          border-color: var(--primary-color);
+        }
+        ha-switch {
+          --mdc-theme-secondary: var(--primary-color);
+        }
+        .script-input-container {
+          display: flex;
+          align-items: center;
+          gap: 0;
+          margin-bottom: 12px;
+          border: 1px solid var(--divider-color, #e0e0e0);
+          border-radius: 10px;
+          background: var(--card-background-color, #fff);
+          overflow: hidden;
+          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+          transition:
+            border-color 0.2s ease,
+            box-shadow 0.2s ease;
+        }
+        .script-input-container:focus-within {
+          border-color: var(--primary-color, #03a9f4);
+          box-shadow: 0 0 0 2px rgba(var(--rgb-primary-color), 0.08);
+        }
+        .script-input-container input {
+          flex: 1;
+          padding: 10px 12px;
+          font-size: 13px;
+          border: none;
+          background: transparent;
+          color: var(--primary-text-color, #333);
+          outline: none;
+          box-sizing: border-box;
+        }
+        .script-input-container button {
+          height: 38px;
+          padding: 0 16px;
+          font-size: 12px;
+          font-weight: 500;
+          border: none;
+          background: var(--primary-color, #03a9f4);
+          color: #fff;
+          cursor: pointer;
+          white-space: nowrap;
+        }
+        .script-input-container button:hover {
+          opacity: 0.9;
+        }
+        .script-item {
+          display: flex;
+          align-items: center;
+          gap: 0;
+          margin-bottom: 8px;
+          border: 1px solid var(--divider-color, #e0e0e0);
+          border-radius: 10px;
+          background: var(--card-background-color, #fff);
+          overflow: hidden;
+          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+          transition: border-color 0.2s ease;
+        }
+        .script-item:focus-within {
+          border-color: var(--primary-color, #03a9f4);
+        }
+        .script-item input {
+          flex: 1;
+          padding: 10px 12px;
+          font-size: 12px;
+          border: none;
+          background: transparent;
+          color: var(--primary-text-color, #333);
+          outline: none;
+          box-sizing: border-box;
+        }
+        .script-item button {
+          height: 38px;
+          width: 38px;
+          padding: 0;
+          border: none;
+          background: transparent;
+          color: var(--error-color, #e53935);
+          cursor: pointer;
+          font-size: 14px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .script-item button:hover {
+          background: rgba(229, 57, 53, 0.1);
+        }
+        .store-search {
+          display: flex;
+          align-items: center;
+          gap: 0;
+          margin-bottom: 12px;
+          border: 1px solid var(--divider-color, #e0e0e0);
+          border-radius: 10px;
+          background: var(--card-background-color, #fff);
+          overflow: hidden;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+          transition:
+            border-color 0.2s ease,
+            box-shadow 0.2s ease;
+        }
+        .store-search:focus-within {
+          border-color: var(--primary-color, #03a9f4);
+          box-shadow: 0 0 0 2px rgba(var(--rgb-primary-color), 0.08);
+        }
+        .store-search input {
+          flex: 1;
+          padding: 10px 12px;
+          border: none;
+          font-size: 13px;
+          box-sizing: border-box;
+          background: transparent;
+          color: var(--primary-text-color);
+          outline: none;
+        }
+        .store-search-btn {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 38px;
+          height: 38px;
+          border: none;
+          background: transparent;
+          cursor: pointer;
+          color: var(--secondary-text-color);
+          flex-shrink: 0;
+        }
+        .store-search-btn:hover {
+          color: var(--primary-color);
+          background: rgba(var(--rgb-primary-color), 0.05);
+          border-radius: 6px;
+        }
+        .store-search-btn.loading {
+          animation: spin 1s linear infinite;
+        }
+        .store-search-btn svg {
+          width: 16px;
+          height: 16px;
+        }
+        @keyframes spin {
+          from {
+            transform: rotate(0deg);
+          }
+          to {
+            transform: rotate(360deg);
+          }
+        }
+        .store-list {
+          max-height: 320px;
+          overflow-y: auto;
+          scrollbar-width: none;
+          -ms-overflow-style: none;
+        }
+        .store-list::-webkit-scrollbar {
+          display: none;
+        }
+        .store-item {
+          display: grid;
+          grid-template-columns: 72px 1fr;
+          border-radius: 10px;
+          border: 1px solid var(--divider-color);
+          margin-bottom: 10px;
+          background: var(--card-background-color);
+          overflow: hidden;
+          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+          transition: border-color 0.2s ease;
+        }
+        .store-item:hover {
+          border-color: var(--primary-color);
+        }
+        .store-item:last-child {
+          margin-bottom: 0;
+        }
+        .store-skeleton {
+          display: grid;
+          grid-template-columns: 72px 1fr;
+          border-radius: 10px;
+          border: 1px solid var(--divider-color);
+          margin-bottom: 10px;
+          background: var(--card-background-color);
+          overflow: hidden;
+        }
+        .store-skeleton-left {
+          background: var(--secondary-background-color);
+          height: 100px;
+        }
+        .store-skeleton-right {
+          padding: 16px 18px;
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+        }
+        .skeleton-line {
+          height: 12px;
+          background: linear-gradient(
+            90deg,
+            var(--secondary-background-color) 25%,
+            rgba(var(--rgb-primary-color), 0.05) 50%,
+            var(--secondary-background-color) 75%
+          );
+          background-size: 200% 100%;
+          animation: skeleton-shimmer 1.5s infinite;
+          border-radius: 4px;
+        }
+        .skeleton-line.title {
+          width: 50%;
+          height: 16px;
+        }
+        .skeleton-line.desc {
+          width: 90%;
+        }
+        .skeleton-line.desc2 {
+          width: 70%;
+        }
+        .skeleton-line.btn {
+          width: 100%;
+          height: 32px;
+          margin-top: 6px;
+        }
+        @keyframes skeleton-shimmer {
+          0% {
+            background-position: 200% 0;
+          }
+          100% {
+            background-position: -200% 0;
+          }
+        }
+        .store-item-left {
+          background: var(--secondary-background-color);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          position: relative;
+          cursor: default;
+        }
+        .store-item-left img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+        .store-item-left-placeholder {
+          width: 100%;
+          height: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: linear-gradient(
+            135deg,
+            var(--secondary-background-color) 0%,
+            rgba(var(--rgb-primary-color), 0.05) 100%
+          );
+        }
+        .store-item-left-placeholder svg {
+          width: 28px;
+          height: 28px;
+          color: var(--secondary-text-color);
+          opacity: 0.4;
+        }
+        .store-item-right {
+          padding: 16px 14px;
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+        }
+        .store-item-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+        }
+        .store-item-title-group {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+        .store-item-title-group h4 {
+          margin: 0;
+          font-size: 14px;
+          font-weight: 500;
+          color: var(--primary-text-color);
+          letter-spacing: -0.2px;
+        }
+        .store-item-author {
+          font-size: 12px;
+          color: var(--primary-color);
+          cursor: pointer;
+          font-weight: 500;
+          margin-left: 4px;
+        }
+        .store-item-author:hover {
+          text-decoration: underline;
+        }
+        .store-item-version {
+          font-size: 10px;
+          padding: 2px 6px;
+          color: var(--secondary-text-color);
+          background: transparent;
+          border: 1px solid var(--divider-color);
+          border-radius: 4px;
+          font-weight: 500;
+        }
+        .store-item-desc {
+          margin: 0;
+          font-size: 13px;
+          color: var(--secondary-text-color);
+          line-height: 1.6;
+        }
+        .store-item-tags {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 6px;
+        }
+        .store-item-tag {
+          display: inline-block;
+          font-size: 9px;
+          font-weight: 600;
+          color: var(--primary-color);
+          background: rgba(var(--rgb-primary-color), 0.08);
+          padding: 3px 8px;
+          border-radius: 4px;
+          text-transform: uppercase;
+          letter-spacing: 0.3px;
+          cursor: pointer;
+        }
+        .store-item-actions {
+          display: flex;
+          gap: 10px;
+          align-items: center;
+          margin-top: 6px;
+        }
+        .store-item-btn {
+          height: 34px;
+          padding: 0 14px;
+          border: none;
+          border-radius: 8px;
+          cursor: pointer;
+          font-size: 12px;
+          font-weight: 500;
+          background: var(--card-background-color);
+          border: 1px solid var(--divider-color);
+          color: var(--secondary-text-color);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 5px;
+          transition: all 0.2s ease;
+        }
+        .store-item-btn:hover {
+          color: var(--primary-color);
+          border-color: var(--primary-color);
+        }
+        .store-item-btn svg {
+          width: 15px;
+          height: 15px;
+        }
+        .slide-track {
+          flex: 1;
+          height: 35px;
+          border: 1px solid var(--divider-color);
+          border-radius: 17px;
+          position: relative;
+          overflow: hidden;
+          display: flex;
+          align-items: center;
+          transition: all 0.2s ease;
+        }
+        .slide-track.active {
+          border-color: var(--primary-color);
+        }
+        .slide-hint {
+          position: absolute;
+          width: 100%;
+          text-align: center;
+          font-size: 11px;
+          color: var(--secondary-text-color);
+          font-weight: 500;
+          letter-spacing: 0.3px;
+          pointer-events: none;
+          opacity: 0.5;
+        }
+        .slide-handle {
+          width: 60px;
+          height: 28px;
+          background: var(--primary-color);
+          border-radius: 14px;
+          position: absolute;
+          left: 3px;
+          cursor: grab;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: var(--text-primary-color, #fff);
+          z-index: 2;
+          transition: all 0.15s ease;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+        }
+        .slide-handle:hover {
+          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        }
+        .slide-handle:active {
+          cursor: grabbing;
+          transform: scale(0.97);
+        }
+        .slide-handle svg {
+          width: 14px;
+          height: 14px;
+        }
+        .store-error {
+          text-align: center;
+          padding: 24px;
+          color: var(--error-color, #e53935);
+          font-size: 13px;
+        }
+        .store-loading {
+          text-align: center;
+          padding: 24px;
+          color: var(--secondary-text-color);
+          font-size: 13px;
+        }
+        .header-section {
+          margin-bottom: 20px;
+          padding: 20px;
+          text-align: center;
+          position: relative;
+        }
+        .panels-wrapper {
+          background: rgba(0, 0, 0, 0.02);
+          border-radius: 12px;
+          padding: 12px;
+        }
+        .header-version {
+          position: absolute;
+          top: 12px;
+          right: 12px;
+          font-size: 10px;
+          padding: 3px 8px;
+          background: var(--primary-color, #03a9f4);
+          color: #fff;
+          border-radius: 10px;
+          font-weight: 600;
+        }
+        .header-logo {
+          width: 48px;
+          height: 48px;
+          margin: 0 auto 12px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .header-logo svg {
+          width: 48px;
+          height: 48px;
+          color: var(--primary-color, #03a9f4);
+        }
+        .header-desc {
+          font-size: 13px;
+          color: var(--secondary-text-color);
+          line-height: 1.6;
+          margin-bottom: 12px;
+        }
+        .header-features {
+          display: flex;
+          justify-content: center;
+          gap: 16px;
+          flex-wrap: wrap;
+        }
+        .header-feature {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          font-size: 12px;
+          color: var(--primary-text-color);
+        }
+        .header-feature svg {
+          width: 14px;
+          height: 14px;
+          color: var(--primary-color, #03a9f4);
+        }
+      </style>
+
+      <div class="card-config">
+        <div class="panels-wrapper">
+          <!-- Header -->
+          <div class="header-section">
+            <a
+              href="https://github.com/knoop7/html-card-pro"
+              target="_blank"
+              class="header-version"
+              style="text-decoration:none;color:#fff;"
+              >v${"3.7"}</a
+            >
+            <div class="header-logo">
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path
+                  d="M13 2V3H12V9H11V10H9V11H8V12H7V13H5V12H4V11H3V9H2V15H3V16H4V17H5V18H6V22H8V21H7V20H8V19H9V18H10V19H11V22H13V21H12V17H13V16H14V15H15V12H16V13H17V11H15V9H20V8H17V7H22V3H21V2M14 3H15V4H14Z"
+                />
+              </svg>
+            </div>
+            <div class="header-desc">
+              ${this._t("headerDesc")}<br />
+              ${this._t("headerDesc2")}
+            </div>
+            <div class="header-features">
+              <div class="header-feature">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <path d="M12 6v6l4 2"></path>
+                </svg>
+                ${this._t("realtime")}
+              </div>
+              <div class="header-feature">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+                  ></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                </svg>
+                ${this._t("extScripts")}
+              </div>
+              <div class="header-feature">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="3" y1="9" x2="21" y2="9"></line>
+                  <line x1="9" y1="21" x2="9" y2="9"></line>
+                </svg>
+                ${this._t("customStyle")}
+              </div>
+            </div>
+          </div>
+          <!-- HTML 内容 -->
+          <div class="collapse-panel">
+            <div
+              class="collapse-header ${this._showHtml?"expanded":""}"
+              @click="${()=>{this._showHtml=!this._showHtml,this.requestUpdate()}}"
+            >
+              <div class="collapse-header-left">
+                <svg
+                  class="collapse-icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <polyline points="16 18 22 12 16 6"></polyline>
+                  <polyline points="8 6 2 12 8 18"></polyline>
+                </svg>
+                <span class="collapse-title">${this._t("htmlContent")}</span>
+              </div>
+              <span
+                class="collapse-arrow ${this._showHtml?"expanded":""}"
+              ></span>
+            </div>
+            <div class="collapse-body ${this._showHtml?"expanded":""}">
+              <div class="collapse-content">
+                <div
+                  style="font-size:11px;color:#999;margin:-8px 0 8px;text-align:center;"
+                >
+                  ${this._t("yamlHint")}
+                </div>
+                <ha-htmlcard-textarea
+                  class="editor-control"
+                  .value="${this._config.content||""}"
+                  @change="${this._handleContentChange}"
+                ></ha-htmlcard-textarea>
+              </div>
+            </div>
+          </div>
+
+          <!-- 选项设置 -->
+          <div class="collapse-panel">
+            <div
+              class="collapse-header ${this._showOptions?"expanded":""}"
+              @click="${()=>{this._showOptions=!this._showOptions,this.requestUpdate()}}"
+            >
+              <div class="collapse-header-left">
+                <svg
+                  class="collapse-icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <circle cx="12" cy="12" r="3"></circle>
+                  <path
+                    d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"
+                  ></path>
+                </svg>
+                <span class="collapse-title">${this._t("options")}</span>
+              </div>
+              <span
+                class="collapse-arrow ${this._showOptions?"expanded":""}"
+              ></span>
+            </div>
+            <div class="collapse-body ${this._showOptions?"expanded":""}">
+              <div class="collapse-content">
+                <div class="option-row">
+                  <div>
+                    <div class="option-label">${this._t("disableParse")}</div>
+                    <div class="option-desc">
+                      ${this._t("disableParseDesc")}
+                    </div>
+                  </div>
+                  <ha-htmlcard-switch
+                    .checked="${this._config.do_not_parse||!1}"
+                    @change="${this._handleParseChange}"
+                  ></ha-htmlcard-switch>
+                </div>
+                <div class="option-row">
+                  <div>
+                    <div class="option-label">
+                      ${this._t("ignoreLineBreaks")}
+                    </div>
+                    <div class="option-desc">
+                      ${this._t("ignoreLineBreaksDesc")}
+                    </div>
+                  </div>
+                  <ha-htmlcard-switch
+                    .checked="${this._config.ignore_line_breaks||!1}"
+                    @change="${this._handleLineBreaksChange}"
+                  ></ha-htmlcard-switch>
+                </div>
+                <div class="option-row">
+                  <div>
+                    <div class="option-label">${this._t("updateInterval")}</div>
+                    <div class="option-desc">
+                      ${this._t("updateIntervalDesc")}
+                    </div>
+                  </div>
+                  <input
+                    type="number"
+                    class="interval-input"
+                    .value="${this._config.update_interval||0}"
+                    @change="${this._handleIntervalChange}"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 外部脚本 -->
+          <div class="collapse-panel">
+            <div
+              class="collapse-header ${this._showScripts?"expanded":""}"
+              @click="${()=>{this._showScripts=!this._showScripts,this.requestUpdate()}}"
+            >
+              <div class="collapse-header-left">
+                <svg
+                  class="collapse-icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path
+                    d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+                  ></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                  <line x1="16" y1="13" x2="8" y2="13"></line>
+                  <line x1="16" y1="17" x2="8" y2="17"></line>
+                  <polyline points="10 9 9 9 8 9"></polyline>
+                </svg>
+                <span class="collapse-title">${this._t("scripts")}</span>
+              </div>
+              <span
+                class="collapse-arrow ${this._showScripts?"expanded":""}"
+              ></span>
+            </div>
+            <div class="collapse-body ${this._showScripts?"expanded":""}">
+              <div class="collapse-content">
+                <div class="script-input-container">
+                  <input
+                    type="url"
+                    placeholder="${this._t("scriptPlaceholder")}"
+                    .value="${this._newScriptUrl||""}"
+                    @change="${e=>this._newScriptUrl=e.target.value}"
+                  />
+                  <button @click="${this._addScript}">
+                    ${this._t("addScript")}
+                  </button>
+                </div>
+                ${(this._config.scripts||[]).map((e,t)=>html`
+                    <div class="script-item">
+                      <input
+                        type="url"
+                        .value="${e}"
+                        @change="${e=>this._updateScript(t,e.target.value)}"
+                      />
+                      <button @click="${()=>this._removeScript(t)}">
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2"
+                          style="width:14px;height:14px"
+                        >
+                          <line x1="18" y1="6" x2="6" y2="18" />
+                          <line x1="6" y1="6" x2="18" y2="18" />
+                        </svg>
+                      </button>
+                    </div>
+                  `)}
+              </div>
+            </div>
+          </div>
+
+          <!-- 模块商店 -->
+          <div class="collapse-panel">
+            <div
+              class="collapse-header ${this._showStore?"expanded":""}"
+              @click="${this._toggleStore}"
+            >
+              <div class="collapse-header-left">
+                <svg
+                  class="collapse-icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path
+                    d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"
+                  ></path>
+                  <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                  <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                </svg>
+                <span class="collapse-title">${this._t("store")}</span>
+              </div>
+              <span
+                class="collapse-arrow ${this._showStore?"expanded":""}"
+              ></span>
+            </div>
+            <div class="collapse-body ${this._showStore?"expanded":""}">
+              <div class="collapse-content">
+                <div class="store-search">
+                  <input
+                    type="text"
+                    placeholder="${this._t("searchPlaceholder")}"
+                    .value="${this._storeSearch}"
+                    @input="${e=>{this._storeSearch=e.target.value,this.requestUpdate()}}"
+                  />
+                  <button
+                    class="store-search-btn ${this._storeLoading?"loading":""}"
+                    @click="${()=>this._loadStoreModules()}"
+                    title="${this._t("refresh")}"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <path d="M23 4v6h-6M1 20v-6h6" />
+                      <path
+                        d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"
+                      />
+                    </svg>
+                  </button>
+                </div>
+                <div class="store-list">
+                  ${this._storeLoading?this._renderSkeleton():this._renderOnlineModules()}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `:html``}_handleContentChange(e){if(!this._config)return;let t,o=e.detail.value||"";if(o=this._normalizeRadius(o),o.trim().startsWith("type:")&&o.includes("content:")){const e=this._parseYaml(o);t=void 0!==e.content?{...this._config,content:this._normalizeRadius(e.content||""),do_not_parse:void 0!==e.do_not_parse?e.do_not_parse:_hasExecutableScript(e.content||""),update_interval:void 0!==e.update_interval?e.update_interval:this._config.update_interval,ignore_line_breaks:void 0!==e.ignore_line_breaks?e.ignore_line_breaks:this._config.ignore_line_breaks,scripts:e.scripts||this._config.scripts}:{...this._config,content:o}}else t={...this._config,content:o};this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:t},bubbles:!0,composed:!0}))}_normalizeRadius(e){return e.replace(/border-radius\s*:\s*([^;}\n]+)/gi,(e,t)=>{const o=t.trim().toLowerCase();if(o.includes("50%")||o.includes("100%")||o.includes("/"))return e;if(o.split(/\s+/).length>1)return e;const s=parseFloat(o);return!isNaN(s)&&s>10&&o.includes("px")?"border-radius: 10px":e})}_handleParseChange(e){this._valueChanged("do_not_parse",e.target.checked)}_handleLineBreaksChange(e){this._valueChanged("ignore_line_breaks",e.target.checked)}_handleIntervalChange(e){const t=parseInt(e.target.value)||0;this._valueChanged("update_interval",t)}_valueChanged(e,t){if(!this._config)return;const o={...this._config,[e]:t};this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:o},bubbles:!0,composed:!0}))}_addScript(){if(!this._newScriptUrl)return;const e=[...this._config.scripts||[],this._newScriptUrl];this._valueChanged("scripts",e),this._newScriptUrl="",this.requestUpdate()}_updateScript(e,t){const o=[...this._config.scripts||[]];o[e]=t,this._valueChanged("scripts",o)}_removeScript(e){const t=[...this._config.scripts||[]];t.splice(e,1),this._valueChanged("scripts",t)}_toggleStore(){this._showStore=!this._showStore,this._showStore&&0===this._storeModules.length&&this._loadOnlineModules(),this.requestUpdate()}_switchTab(e){this._storeTab=e,"online"===e&&0===this._storeModules.length&&this._loadOnlineModules(),this.requestUpdate()}_parseYaml(e){const t=e.split("\n"),o={};let s=null,i=[],r=!1,n=!1,a=[],l=0;for(const e of t){const t=e.trim(),c=e.search(/\S|$/);if(r){if(c>l||""===t){i.push(e.slice(l+2)||"");continue}o[s]=i.join("\n"),r=!1,i=[]}if(n){const i=e.match(/^\s+-\s+(.+)$/);if(i){a.push(i[1].trim());continue}t&&c<=l&&(o[s]=a,n=!1,a=[])}if(!r&&!n){const e=t.match(/^([\w_-]+):\s*(.*)$/);if(e){s=e[1];const t=e[2].trim();if(/^\|[-+]?$|^>[-+]?$/.test(t))r=!0,l=c,i=[];else if(""===t||""===t.trim())n=!0,l=c,a=[];else if("scripts"===s&&t.trim())o[s]=[t.replace(/^["']|["']$/g,"").trim()];else{let e=t.replace(/^["']|["']$/g,"");"true"!==e&&"false"!==e||(e="true"===e),o[s]=e}}}}r&&s&&(o[s]=i.join("\n")),n&&s&&a.length>0&&(o[s]=a);for(const e of["do_not_parse","ignore_line_breaks"])void 0!==o[e]&&(o[e]=!0===o[e]||"true"===o[e]||1===o[e]||"1"===o[e]||"on"===o[e]);if(void 0!==o.update_interval){const e=parseInt(o.update_interval);o.update_interval=isNaN(e)?0:e}return o}_loadStoreModules(){return this._loadOnlineModules(!0)}async _loadOnlineModules(e=!1){if(!e){const e=this._getCachedModules();if(e&&e.length>0)return this._storeModules=e,this._storeLoading=!1,void this.requestUpdate()}this._storeLoading=!0,this._storeError=null,this.requestUpdate();try{const t=await this._fetchModulesFromDiscussions(e);t.length>0?(this._storeModules=t,this._setCachedModules(t)):this._storeModules=this._getBuiltinModules()}catch(e){console.error("[html-pro-card] Failed to load modules:",e),this._storeError=e.message,this._storeModules=this._getBuiltinModules()}this._storeLoading=!1,this.requestUpdate()}async _fetchModulesFromDiscussions(e=!1){const t=[];try{const o=e?`${MODULE_STORE_CONFIG.storeUrl}?_t=${Date.now()}`:MODULE_STORE_CONFIG.storeUrl,s=await fetch(o);if(!s.ok)throw new Error("Failed to fetch store.json");const i=await s.json();for(const o of i)try{const s=e?`${MODULE_STORE_CONFIG.rawBase}${o.file}?_t=${Date.now()}`:`${MODULE_STORE_CONFIG.rawBase}${o.file}`,i=await fetch(s);if(!i.ok)continue;const r=await i.text(),n={},a=r.split("\n");let l=0;for(let e=0;e<a.length;e++){const t=a[e];if(!t.startsWith("#")){l=e;break}const o=t.match(/^#\s*(\w+):\s*(.+)/);o&&(n[o[1].toLowerCase()]=o[2].trim())}const c=a.slice(l).join("\n").trim(),d={id:o.id||n.id||"",name:o.name||n.name||"Untitled",version:o.version||n.version||"1.0",creator:o.creator||n.author||"Community",description:o.description||n.description||"",image:o.image||n.image||"",link:o.link||n.link||"",tags:o.tags||(n.tags?n.tags.split(",").map(e=>e.trim()):[]),_yaml:c,_cardConfig:this._parseCardYaml(c)};d.code=d._cardConfig?.content||"",t.push(d)}catch(e){console.warn(`[html-pro-card] Failed to load ${o.file}:`,e)}}catch(e){console.warn("[html-pro-card] Failed to fetch store:",e)}if(0===t.length)return this._getBuiltinModules();t.sort((e,t)=>Number(t.id)-Number(e.id));const o=new Set;return t.filter(e=>{const t=e.name||e.id;return!o.has(t)&&(o.add(t),!0)})}_extractTagsFromTitle(e){const t=e.match(/^\[([^\]]+)\]/);return t?t[1].split(/[,，、]/).map(e=>e.trim()).filter(Boolean):[]}_getBuiltinModules(){return[{id:"clock",name:"Digital Clock",version:"1.0",creator:"knoop7",description:"A simple digital clock with customizable style",supported:["button","separator"],code:'<style>.clock{font-size:48px;font-family:monospace;text-align:center;padding:40px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border-radius:16px}</style><div class="clock" id="clock">00:00:00</div><script>setInterval(function(){$("#clock").textContent=new Date().toLocaleTimeString();},1000);<\/script>'},{id:"avatar-card",name:"Avatar Card",version:"1.0",creator:"knoop7",description:"User profile card with avatar and stats",supported:["button"],code:'<style>.avatar-card{padding:24px;background:#fff;border-radius:16px;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,0.08)}.avatar-img{width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#667eea,#764ba2);margin:0 auto 16px;display:flex;align-items:center;justify-content:center;font-size:32px;color:#fff}.avatar-name{font-size:18px;font-weight:600;color:#333;margin-bottom:4px}.avatar-role{font-size:12px;color:#999}</style><div class="avatar-card"><div class="avatar-img">👤</div><div class="avatar-name">Smart Home</div><div class="avatar-role">Admin</div></div>'}]}_renderOnlineModules(){if(this._storeError)return html`<div class="store-error">
+        ${this._t("loadError")}: ${this._storeError}
+      </div>`;const e=this._storeModules.filter(e=>{if(!this._storeSearch)return!0;const t=this._storeSearch.toLowerCase().split(/\s+/).filter(e=>e),o=(e._tags||e.tags||[]).map(e=>e.toLowerCase()),s=(e.name||"").toLowerCase(),i=(e.description||e.desc||"").toLowerCase(),r=(e.creator||e.author||"").toLowerCase();return t.every(e=>{const t=e.startsWith("#")?e.slice(1):e;return!!o.some(e=>e.includes(t))||(!!s.includes(e)||(!!i.includes(e)||!!r.includes(e)))})});return 0===e.length?html`<div class="store-loading">${this._t("noModules")}</div>`:html`${e.map(e=>this._renderModuleCard(e))}`}_renderSkeleton(){return html`
+      ${[1,2,3].map(()=>html`
+          <div class="store-skeleton">
+            <div class="store-skeleton-left"></div>
+            <div class="store-skeleton-right">
+              <div class="skeleton-line title"></div>
+              <div class="skeleton-line desc"></div>
+              <div class="skeleton-line desc2"></div>
+              <div class="skeleton-line btn"></div>
+            </div>
+          </div>
+        `)}
+    `}_renderModuleCard(e){const t=e.version||"1.0",o=e.creator||e.author||"Community",s=e.description||e.desc||"",i=(e._tags||e.tags,e.link||""),r=e.image||"";return html`
+      <div class="store-item">
+        <div class="store-item-left">
+          ${r?html` <img src="${r}" alt="${e.name}" loading="lazy" /> `:html`
+                <div class="store-item-left-placeholder">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                  >
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                    <circle cx="8.5" cy="8.5" r="1.5" />
+                    <polyline points="21 15 16 10 5 21" />
+                  </svg>
+                </div>
+              `}
+        </div>
+        <div class="store-item-right">
+          <div class="store-item-header">
+            <div class="store-item-title-group">
+              <h4>${e.name}</h4>
+            </div>
+            <span class="store-item-version">v${t}</span>
+          </div>
+          <p class="store-item-desc">
+            ${s?s.length>80?s.slice(0,80)+"...":s:""}
+            <span
+              class="store-item-author"
+              @click="${e=>{e.stopPropagation(),window.open(`https://github.com/${o}`,"_blank")}}"
+              >@${o}</span
+            >
+          </p>
+          <div class="store-item-actions">
+            ${i?html`<button
+                  class="store-item-btn"
+                  @click="${()=>window.open(i,"_blank")}"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <polyline points="16 18 22 12 16 6" />
+                    <polyline points="8 6 2 12 8 18" />
+                  </svg>
+                  ${this._t("viewSource")}
+                </button>`:""}
+            <div class="slide-track" data-module-id="${e.id||e.name}">
+              <span class="slide-hint">${this._t("slideToImport")}</span>
+              <div
+                class="slide-handle"
+                @mousedown="${t=>this._startSlide(t,e)}"
+                @touchstart="${t=>this._startSlide(t,e)}"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <polyline points="9 18 15 12 9 6" />
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `}_previewImage(e){const t=document.createElement("div");t.style.cssText="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:9999;display:flex;align-items:center;justify-content:center;cursor:zoom-out",t.innerHTML=`<img src="${e}" style="max-width:90%;max-height:90%;border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,0.5)"/>`,t.onclick=()=>t.remove(),document.body.appendChild(t)}_startSlide(e,t){e.preventDefault();const o=e.currentTarget,s=o.parentElement,i=s.querySelector(".slide-hint"),r=e.touches?e.touches[0].clientX:e.clientX,n=s.clientWidth-o.clientWidth-6;o.style.transition="none",s.classList.add("active");const a=e=>{let t=(e.touches?e.touches[0].clientX:e.clientX)-r;t<0&&(t=0),t>n&&(t=n),o.style.transform=`translateX(${t}px)`,i&&(i.style.opacity=String(1-t/n))},l=()=>{document.removeEventListener("mousemove",a),document.removeEventListener("mouseup",l),document.removeEventListener("touchmove",a),document.removeEventListener("touchend",l);const e=new WebKitCSSMatrix(getComputedStyle(o).transform).m41;o.style.transition="transform 0.3s ease",e>=.85*n?(o.style.transform=`translateX(${n}px)`,s.classList.add("active"),setTimeout(()=>{this._importModule(t),o.style.transform="translateX(0)",s.classList.remove("active"),i&&(i.style.opacity="0.7")},200)):(o.style.transform="translateX(0)",s.classList.remove("active"),i&&(i.style.opacity="0.7"))};document.addEventListener("mousemove",a),document.addEventListener("mouseup",l),document.addEventListener("touchmove",a,{passive:!0}),document.addEventListener("touchend",l)}_renderSavedModules(){const e=this._savedModules.filter(e=>!this._storeSearch||e.name.toLowerCase().includes(this._storeSearch.toLowerCase()));return 0===e.length?html`<div class="store-loading">
+        ${this._t("noCustomModules")}
+      </div>`:e.map((e,t)=>html`
+        <div class="store-item">
+          <div class="store-item-info">
+            <h4>${e.name}</h4>
+            <p>${e.desc||this._t("customModule")}</p>
+          </div>
+          <div class="store-item-actions">
+            <button
+              class="store-item-btn import"
+              @click="${()=>this._importModule(e)}"
+            >
+              ${this._t("import")}
+            </button>
+            <button
+              class="store-item-btn delete"
+              @click="${()=>this._deleteModule(t)}"
+            >
+              ${this._t("delete")}
+            </button>
+          </div>
+        </div>
+      `)}async _importModule(e){if(!this._config)return;let t;if(e._cardConfig)t={...this._config,...e._cardConfig,type:"custom:html-pro-card"};else{const o=e.code||e.content||"";t={...this._config,content:o,do_not_parse:_hasExecutableScript(o),update_interval:this._config.update_interval||1e4,ignore_line_breaks:!0,scripts:e.scripts||this._config.scripts||[]}}e.editor&&Array.isArray(e.editor)&&(t._moduleEditor=e.editor,t._moduleName=e.name),this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:t},bubbles:!0,composed:!0})),this.requestUpdate(),setTimeout(()=>{this.shadowRoot&&(this.shadowRoot.activeElement?.blur(),document.activeElement?.blur())},50)}_deleteModule(e){confirm(this._t("confirmDelete"))&&(this._savedModules=this._savedModules.filter((t,o)=>o!==e),this._saveSavedModules(),this.requestUpdate())}}customElements.define("html-pro-card-editor",HtmlTemplateCardEditor);class HtmlTemplateCard extends HTMLElement{static get properties(){return{hass:{type:Object},_config:{type:Object}}}static async getConfigElement(){return document.createElement("html-pro-card-editor")}static preProcessScripts(e){return"string"==typeof e.scripts&&(e.scripts=e.scripts.split("\n").filter(e=>""!==e.trim())),e}static getStubConfig(){return{content:"<style>\n.pro{padding:20px}\n.pro-h{display:flex;align-items:center;gap:16px;margin-bottom:12px}\n.pro-icon{width:36px;height:36px;color:var(--primary-color)}\n.pro-t{font-size:14px;font-weight:500;color:var(--primary-text-color)}\n.pro-sub{font-size:13px;color:var(--secondary-text-color);opacity:0.7}\n.pro-c{font-size:12px;color:var(--secondary-text-color);line-height:1.6}\n</style>\n<div class=\"pro\">\n<div class=\"pro-h\">\n<svg class=\"pro-icon\" viewBox=\"0 0 24 24\" fill=\"currentColor\"><path d=\"M13 2V3H12V9H11V10H9V11H8V12H7V13H5V12H4V11H3V9H2V15H3V16H4V17H5V18H6V22H8V21H7V20H8V19H9V18H10V19H11V22H13V21H12V17H13V16H14V15H15V12H16V13H17V11H15V9H20V8H17V7H22V3H21V2M14 3H15V4H14Z\"/></svg>\n<div><span class=\"pro-t\">HTML Pro Card</span><div class=\"pro-sub\" id=\"pro-sub\"></div></div>\n</div>\n<div class=\"pro-c\" id=\"pro-desc\"></div>\n</div>\n<script>\nvar hass = document.querySelector('home-assistant')?.hass;\nvar lang = (hass?.language || navigator.language || '').toLowerCase();\nvar desc = {\n  'zh-cn': '是一款专为 Home Assistant 设计的高级 HTML 卡片组件。它支持完整的 Jinja2 模板语法，让您可以动态获取任意实体的状态、属性和历史数据。通过内置的服务调用接口，您可以直接在卡片中控制灯光、开关、空调等设备。卡片支持自定义 CSS 样式和外部 JavaScript 脚本，让您能够创建独一无二的交互式仪表盘。',\n  'zh-hk': '是一款專為 Home Assistant 設計的高級 HTML 卡片組件。它支持完整的 Jinja2 模板語法，讓您可以動態獲取任意實體的狀態、屬性和歷史數據。通過內置的服務調用接口，您可以直接在卡片中控制燈光、開關、空調等設備。卡片支持自定義 CSS 樣式和外部 JavaScript 腳本，讓您能夠創建獨一無二的交互式儀表盤。',\n  'ja': 'Home Assistant 向けに設計された高度な HTML カードコンポーネントです。完全な Jinja2 テンプレート構文をサポートし、任意のエンティティの状態、属性、履歴データを動的に取得できます。組み込みのサービス呼び出しにより、照明、スイッチ、エアコンなどのデバイスをカードから直接制御できます。カスタム CSS と外部 JavaScript により、ユニークなインタラクティブダッシュボードを作成できます。',\n  'de': 'ist eine erweiterte HTML-Kartenkomponente für Home Assistant. Sie unterstützt die vollständige Jinja2-Vorlagensyntax und ermöglicht den dynamischen Zugriff auf Entitätszustände, Attribute und Verlaufsdaten. Mit integrierten Serviceaufrufen können Sie Lichter, Schalter und Klimageräte direkt steuern. Benutzerdefiniertes CSS und externe JS-Skripte ermöglichen einzigartige interaktive Dashboards.',\n  'en': 'is an advanced HTML card component designed for Home Assistant. It supports full Jinja2 template syntax, allowing you to dynamically access any entity state, attributes and history. With built-in service calls, you can control lights, switches, climate devices directly. Custom CSS and external JS scripts enable unique interactive dashboards.'\n};\nvar text = desc[lang] || (lang.startsWith('zh-tw') || lang.startsWith('zh-hk') ? desc['zh-tw'] : lang.startsWith('zh') ? desc['zh-cn'] : lang.startsWith('ja') ? desc['ja'] : lang.startsWith('de') ? desc['de'] : desc['en']);\n$('#pro-sub').textContent = 'By knoop7';\n$('#pro-desc').textContent = text;\n<\/script>",update_interval:1e4,do_not_parse:!1,ignore_line_breaks:!0,scripts:[]}}connectedCallback(){this._instanceId||(this._instanceId="hpc_"+Math.random().toString(36).slice(2,9)),this._createRootElement(),this._setupEventListeners(),this._config&&this._hass&&this._processAndRender()}disconnectedCallback(){if(this._timeUpdateInterval&&(clearInterval(this._timeUpdateInterval),this._timeUpdateInterval=null),this._removeEventListeners(),this._templateSubscription){try{this._templateSubscription()}catch{}this._templateSubscription=null}const e=window._htmlProCardOverlay;e&&this._instanceId&&e.querySelectorAll(`[data-hpc-owner="${this._instanceId}"]`).forEach(e=>e.remove())}_createRootElement(){this._rootElement&&this.contains(this._rootElement)||(this._rootElement=document.createElement("ha-card"),this._rootElement.style.borderRadius="10px",this._rootElement.style.overflow="hidden",this.appendChild(this._rootElement))}_setupEventListeners(){this._rootElement&&(this._boundHandlers||(this._boundHandlers={touchStart:this._handleTouchStart.bind(this),touchEnd:this._handleTouchEnd.bind(this),mouseDown:this._handleMouseDown.bind(this),mouseUp:this._handleMouseUp.bind(this),click:this._handleClick.bind(this)},this._rootElement.addEventListener("touchstart",this._boundHandlers.touchStart,{passive:!0}),this._rootElement.addEventListener("touchend",this._boundHandlers.touchEnd),this._rootElement.addEventListener("touchcancel",this._boundHandlers.touchEnd),this._rootElement.addEventListener("mousedown",this._boundHandlers.mouseDown),this._rootElement.addEventListener("mouseup",this._boundHandlers.mouseUp),this._rootElement.addEventListener("click",this._boundHandlers.click)))}_removeEventListeners(){this._rootElement&&this._boundHandlers&&(this._rootElement.removeEventListener("touchstart",this._boundHandlers.touchStart),this._rootElement.removeEventListener("touchend",this._boundHandlers.touchEnd),this._rootElement.removeEventListener("touchcancel",this._boundHandlers.touchEnd),this._rootElement.removeEventListener("mousedown",this._boundHandlers.mouseDown),this._rootElement.removeEventListener("mouseup",this._boundHandlers.mouseUp),this._rootElement.removeEventListener("click",this._boundHandlers.click),this._boundHandlers=null)}_handleTouchStart(e){const t=e.target.closest("[data-long-press]");if(!t)return;const o=t.dataset.entity;o&&(this._longPressTimeout=setTimeout(()=>{this._showMoreInfo(o),this._longPressTimeout=null},500))}_handleTouchEnd(){this._longPressTimeout&&(clearTimeout(this._longPressTimeout),this._longPressTimeout=null)}_handleMouseDown(e){const t=e.target.closest("[data-long-press]");if(!t)return;const o=t.dataset.entity;o&&(this._longPressTimeout=setTimeout(()=>{this._showMoreInfo(o),this._longPressTimeout=null},500))}_handleMouseUp(){this._longPressTimeout&&(clearTimeout(this._longPressTimeout),this._longPressTimeout=null)}_handleClick(e){if(this._longPressTimeout)return clearTimeout(this._longPressTimeout),void(this._longPressTimeout=null);const t=e.target.closest("[data-action]");if(t){const e=t.dataset.entity||t.closest("[data-entity]")?.dataset.entity,o=t.dataset.action;if(!e||!o)return;if("toggle"===o)this._callService(e,"toggle");else if("turn_on"===o)this._callService(e,"turn_on");else if("turn_off"===o)this._callService(e,"turn_off");else if("more-info"===o)this._showMoreInfo(e);else{const[t]=e.split(".");this._hass?.callService(t,o,{entity_id:e})}return}}_showMoreInfo(e){if(!e)return;const t=new CustomEvent("hass-more-info",{detail:{entityId:e},bubbles:!0,composed:!0});this.dispatchEvent(t)}_toggle(e){if(!e||!this._hass?.states[e])return;const t=e.split(".")[0];["light","switch","fan","input_boolean","automation","script","cover","lock","media_player"].includes(t)?this._hass.callService(t,"toggle",{entity_id:e}):this._showMoreInfo(e)}set hass(e){const t=this._hass;if(this._hass=e,this._rootElement&&(this._rootElement.hass=e),!this._config)return;this._entities||this._calculateEntities();if(this._shouldUpdate(t)&&(this._config.do_not_parse?this._updateStates():this._processAndRender(),this._rootElement&&"function"==typeof this._rootElement._onHassUpdate))try{this._rootElement._onHassUpdate(e)}catch{}}_setupTimeUpdate(){if(this._timeUpdateInterval&&clearInterval(this._timeUpdateInterval),this._config.update_interval&&this._config.update_interval>0){const e=Math.max(this._config.update_interval,1e3);this._timeUpdateInterval=setInterval(()=>{this._config.do_not_parse?this._updateStates():this._processAndRender()},e)}}_processAndRender(){this._rootElement&&this._config&&this._hass&&(this._renderDebounce&&clearTimeout(this._renderDebounce),this._renderDebounce=setTimeout(()=>{try{this._renderContent()}catch{this._renderFallback()}},50))}_renderContent(){let e=this._config.content||"";if(this._config.ignore_line_breaks||(e=e.replace(/\r?\n|\r/g,"")),this._config.do_not_parse)this._render(e);else{if(this._templateSubscription){try{this._templateSubscription()}catch{}this._templateSubscription=null}try{this._hass.connection.subscribeMessage(e=>{try{this._render(e.result)}catch(e){this._renderError("Render error: "+(e.message||e))}},{type:"render_template",template:e}).then(e=>{this._templateSubscription=e}).catch(e=>{this._renderError("Template error: "+(e.message||e))})}catch(e){this._renderError("Template error: "+(e.message||e))}}}async _loadExternalScripts(e){const t=e.map(e=>this._loadScript(e));return Promise.all(t)}async _loadScript(e){_globalLoadedScripts.has(e)||(_globalLoadedScripts.add(e),await new Promise((t,o)=>{const s=document.createElement("script");s.async=!0,s.src=e,s.onload=t,s.onerror=()=>{_globalLoadedScripts.delete(e),o(new Error("Failed: "+e))},document.body.appendChild(s)}))}_render(e){if(this._rootElement&&this._hass&&(this._lastContent!==e||!this._rendered)){this._lastContent=e;try{if(window.hassTemplateCard={hass:this._hass,config:this._config,root:this._rootElement},window._htmlProCardRoots.add(this._rootElement),this._rootElement.innerHTML=e,this._setupClickHandlers(this._rootElement),!this._rendered){this._rendered=!0;this._config.scripts&&Array.isArray(this._config.scripts)&&this._config.scripts.length>0?this._loadExternalScripts(this._config.scripts).then(()=>{setTimeout(()=>this._executeInlineScripts(),200)}).catch(()=>{setTimeout(()=>this._executeInlineScripts(),200)}):setTimeout(()=>this._executeInlineScripts(),0)}this._validateRendered(),this.dispatchEvent(new CustomEvent("content-rendered",{bubbles:!0,composed:!0,detail:{hass:this._hass,config:this._config}}))}catch(e){this._renderError("Render error: "+(e.message||e))}}}_isEditorPreview(){try{let e=this.parentElement;for(let t=0;t<5&&e;t++){if("hui-card"===e.localName&&e.hasAttribute("preview"))return!0;if("hui-card-preview"===e.localName)return!0;e=e.parentElement||e.getRootNode()?.host}}catch{}return!1}_renderError(e){this._rootElement&&this._isEditorPreview()&&(this._rootElement.innerHTML="",this._clearErrorBanners(),this.appendChild(this._createErrorCard(e,"error")),console.error("[html-pro-card]",e))}_validateRendered(){if(!this._rootElement||!this._hass||!this._entities)return;if(!this._isEditorPreview())return;this._clearErrorBanners();const e=[];for(const t of this._entities)this._hass.states[t]||e.push(t);0!==e.length&&this.appendChild(this._createErrorCard("Entity not found: "+e.join(", "),"warning"))}_clearErrorBanners(){this.querySelectorAll(":scope > .hpc-error-banner").forEach(e=>e.remove())}_createErrorCard(e,t){const o=document.createElement("div");o.className="hpc-error-banner",o.dataset.severity=t||"error";const s="warning"===t,i=s?"var(--warning-color,#ffa726)":"var(--error-color,#db4437)",r=s?'<path d="M1,21H23L12,2Zm12-3H11V16h2Zm0-4H11V10h2Z"/>':'<path d="M11,15H13V17H11V15M11,7H13V13H11V7M12,2C6.47,2 2,6.5 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20Z"/>';return o.style.cssText="position:relative;border-radius:var(--ha-card-border-radius,12px);overflow:hidden;margin:4px 0;",o.innerHTML='<div style="position:absolute;inset:0;background:'+i+';opacity:0.12;pointer-events:none;border-radius:inherit"></div><div style="display:flex;align-items:center;gap:8px;padding:12px 16px;position:relative"><svg viewBox="0 0 24 24" style="width:24px;height:24px;flex-shrink:0;fill:'+i+'">'+r+'</svg><span style="font-size:13px;font-weight:500;color:var(--primary-text-color,#212121);overflow:hidden;text-overflow:ellipsis;word-break:break-word;line-height:1.4">'+e.replace(/</g,"&lt;").replace(/>/g,"&gt;")+"</span></div>",o}_executeInlineScripts(){if(!this._rootElement)return;const e=Array.from(this._rootElement.querySelectorAll("script")),t=this._rootElement,o=this,s=window._htmlProCardOverlay,i=o._instanceId,r=new Proxy(s,{get(e,t){if("appendChild"===t||"append"===t||"prepend"===t)return(...o)=>(o.forEach(e=>{e?.setAttribute&&e.setAttribute("data-hpc-owner",i)}),e[t](...o));const o=e[t];return"function"==typeof o?o.bind(e):o}});e.forEach(e=>{if(e.src){const t=document.createElement("script");return t.src=e.src,void document.body.appendChild(t)}const s=e.textContent.trim();s&&setTimeout(()=>{(async()=>{try{const i="text/typescript"===e.type||"application/typescript"===e.type?await window.claw.ts.transpile(s):s,n=new Function("root","card","$","$$","hass","config","overlay",i),a=new Proxy({},{get:(e,t)=>{const s=o._hass[t];return"function"==typeof s?s.bind(o._hass):s}});n(t,t,e=>t.querySelector(e),e=>t.querySelectorAll(e),a,o._config,r)}catch(e){console.error("[html-pro-card] script error:",e)}})()},100)})}_setupClickHandlers(e){const t=this;e.querySelectorAll("[data-entity]").forEach(e=>{const o=e.dataset.entity,[s]=o.split(".");e.querySelectorAll("[data-action]").forEach(e=>{e.onclick=i=>{i.stopPropagation();const r=e.dataset.action;"toggle"===r?t._callService(o,"toggle"):"turn_on"===r?t._callService(o,"turn_on"):"turn_off"===r?t._callService(o,"turn_off"):"more-info"===r?t._showMoreInfo(o):t._hass.callService(s,r,{entity_id:o})}}),e.querySelectorAll('input[type="range"]').forEach(e=>{e.oninput=e=>e.stopPropagation(),e.onchange=s=>{s.stopPropagation();const i=parseFloat(s.target.value);void 0!==e.dataset.brightness?t._hass.callService("light","turn_on",{entity_id:o,brightness:Math.round(255*i/100)}):void 0!==e.dataset.temperature?t._hass.callService("climate","set_temperature",{entity_id:o,temperature:i}):void 0!==e.dataset.volume?t._hass.callService("media_player","volume_set",{entity_id:o,volume_level:i/100}):void 0!==e.dataset.position?t._hass.callService("cover","set_cover_position",{entity_id:o,position:i}):void 0!==e.dataset.speed&&t._hass.callService("fan","set_percentage",{entity_id:o,percentage:i}),setTimeout(()=>t._updateStates(),100)}}),e.querySelectorAll("select[data-option]").forEach(e=>{e.onchange=e=>{e.stopPropagation(),t._hass.callService("input_select","select_option",{entity_id:o,option:e.target.value}),setTimeout(()=>t._updateStates(),100)}}),e.querySelectorAll('input[type="number"][data-value]').forEach(e=>{e.onchange=e=>{e.stopPropagation(),t._hass.callService("input_number","set_value",{entity_id:o,value:parseFloat(e.target.value)}),setTimeout(()=>t._updateStates(),100)}})})}_callService(e,t){if(!this._hass)return;const[o]=e.split("."),s=this._hass.states[e];let i=o,r=t;"button"===o?r="press":"script"===o?(i="script",r=e.split(".")[1]):"scene"===o?r="turn_on":"automation"===o?r="toggle"===t?"toggle":"turn_off"===t?"turn_off":"trigger":"input_button"===o?r="press":"lock"===o?r="toggle"===t?"locked"===s?.state?"unlock":"lock":t:"cover"===o?r="toggle"===t?"open"===s?.state||"opening"===s?.state?"close_cover":"open_cover":t:"toggle"===t&&s&&(r="on"===s.state?"turn_off":"turn_on"),"script"===o?this._hass.callService(i,r,{}):this._hass.callService(i,r,{entity_id:e}),setTimeout(()=>this._updateStates(),100)}_renderFallback(){if(!this._rootElement||!this._hass)return;const e=(this._entities||[]).map(e=>{const t=this._hass.states[e];return t?`<div class="entity" data-entity="${e}"><div class="entity-name">${t.attributes.friendly_name||e}</div><div class="state-text">${t.state}</div></div>`:""}).join("");this._rootElement.innerHTML=e,this._processStyles(),this._setupEventListeners()}_updateStates(){if(this._entities&&this._hass&&this._rootElement)try{this._entities.forEach(e=>{const t=this._hass.states[e];if(!t)return;this._rootElement.querySelectorAll(`[data-entity="${e}"]`).forEach(o=>{try{o.dataset.state=t.state,o.querySelectorAll("[data-state-text]").forEach(e=>{const o=e.dataset.map;if(o)try{e.textContent=JSON.parse(o)[t.state]||t.state}catch{e.textContent=t.state}else e.textContent=t.state}),o.querySelectorAll("[data-attr]").forEach(e=>{const o=e.dataset.attr;e.textContent=t.attributes[o]??""}),o.querySelectorAll("[data-brightness]").forEach(e=>{const o=t.attributes.brightness;"INPUT"===e.tagName?e.value=o?Math.round(100*o/255):0:e.textContent=o?Math.round(100*o/255)+"%":"0%"}),o.querySelectorAll("[data-temperature]").forEach(e=>{e.textContent=t.attributes.temperature??t.attributes.current_temperature??""}),o.querySelectorAll("[data-friendly-name]").forEach(o=>{o.textContent=t.attributes.friendly_name||e})}catch{}})})}catch{}}_resolveWatchList(){const e=this._rootElement._watchedEntities,t=[],o=Object.keys(this._hass.states);for(const s of e)if(s.endsWith("."))for(const e of o)e.startsWith(s)&&t.push(e);else t.push(s);this._resolvedWatch={src:e,ids:t,count:o.length}}_shouldUpdate(e){if(!this._rendered)return!0;if(!e)return!1;if(this._config.always_update)return!0;if(!this._entities||0===this._entities.length){if(this._hasScript&&this._rootElement?._watchedEntities){const t=Object.keys(this._hass.states).length;this._resolvedWatch&&this._resolvedWatch.src===this._rootElement._watchedEntities&&this._resolvedWatch.count===t||this._resolveWatchList();const o=this._resolvedWatch?.ids;return!(!o||0===o.length)&&o.some(t=>e.states[t]!==this._hass.states[t])}return!1}return this._entities.some(t=>{const o=e.states[t],s=this._hass.states[t];return!(!o||!s)&&(o.state!==s.state||JSON.stringify(o.attributes)!==JSON.stringify(s.attributes))})}setConfig(e){const t=this._config;if(e={content:"",update_interval:1e4,do_not_parse:!1,ignore_line_breaks:!0,scripts:[],...e},!(e=this.constructor.preProcessScripts(e)).content)throw new Error("Content must be defined");if(e.scripts&&!Array.isArray(e.scripts))throw new Error("Scripts must be an array");const o=!t||t.content!==e.content||t.do_not_parse!==e.do_not_parse;this._hasScript=e.content.includes("<script"),this._config=e,o&&(this._rendered=!1,this._lastContent=null),this._calculateEntities(),this._rootElement||this._createRootElement(),this._setupEventListeners(),this._setupTimeUpdate(),this._hass&&this._rootElement&&this._processAndRender()}_calculateEntities(){this._entities=new Set,this._config.entities?.length&&this._config.entities.forEach(e=>this._entities.add(e));(this._config.content.match(/\b(?:light|switch|sensor|binary_sensor|climate|media_player|fan|cover|input_boolean|input_number|input_select|input_text|input_button|button|scene|script|automation|person|zone|weather|camera|vacuum|lock|number|select|text|timer|counter|group|device_tracker|water_heater|humidifier|siren|update|event|image|lawn_mower|valve|todo|date|time|datetime|schedule|notify|tts|remote|alarm_control_panel)\.[a-z][a-z0-9]*(?:_[a-z0-9]+)+\b/g)||[]).forEach(e=>this._entities.add(e)),this._entities=Array.from(this._entities)}_processStyles(){const e=document.createElement("style");e.textContent='[data-entity]{cursor:pointer;-webkit-tap-highlight-color:transparent}input[type="range"]{-webkit-appearance:none;width:100%;background:transparent}input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none}',this._rootElement.insertBefore(e,this._rootElement.firstChild)}getCardSize(){return 1}}customElements.define("html-pro-card",HtmlTemplateCard),window.customCards=window.customCards||[],window.customCards.push({type:"html-pro-card",name:"HTML Pro Card",preview:!0,description:"Advanced HTML card with Jinja2 template support"}),function(){if(window.claw)return;const e=()=>document.querySelector("home-assistant")?.hass,t=(window._htmlProCardOverlay||(()=>{const e=document.createElement("div");e.id="html-pro-card-overlay",e.style.cssText="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:2147483647;",document.body.appendChild(e)})(),{hass:()=>e(),callService:(t,o,s)=>{const i=e();if(!i)throw new Error("hass not available");return i.callService(t,o,s||{})},state:t=>{const o=e();return o?.states?.[t]||null},states:t=>{const o=e();if(!o?.states)return{};if(!t)return o.states;const s={};for(const[e,i]of Object.entries(o.states))(e.startsWith(t)||e.includes(t))&&(s[e]=i);return s},toggle:e=>{const o=t.state(e);if(!o)return;const[s]=e.split("."),i="on"===o.state?"turn_off":"turn_on";return t.callService(s,i,{entity_id:e})},press:e=>{const[o]=e.split(".");return"button"===o||"input_button"===o?t.callService(o,"press",{entity_id:e}):"scene"===o?t.callService("scene","turn_on",{entity_id:e}):"script"===o?t.callService("script",e.split(".")[1],{}):"automation"===o?t.callService("automation","trigger",{entity_id:e}):t.toggle(e)},navigate:e=>{history.pushState(null,"",e),window.dispatchEvent(new CustomEvent("location-changed"))},moreInfo:e=>{const t=new Event("hass-more-info",{bubbles:!0,composed:!0});t.detail={entityId:e},document.querySelector("home-assistant")?.dispatchEvent(t)},fire:(t,o)=>{const s=e();s?.connection&&s.connection.sendMessage({type:"fire_event",event_type:t,event_data:o||{}})},ws:t=>{const o=e();if(!o?.connection)throw new Error("ws not available");return o.connection.sendMessagePromise(t)},el:(e,t,o)=>{const s=document.createElement(e);return"string"==typeof t?s.style.cssText=t:t&&Object.entries(t).forEach(([e,t])=>"style"===e?s.style.cssText=t:"text"===e?s.textContent=t:s.setAttribute(e,t)),o?o.appendChild(s):document.body.appendChild(s),s},remove:e=>{const t="string"==typeof e?document.getElementById(e):e;t&&t.remove()},inject:e=>{const t=document.createElement("style");return t.textContent=e,document.head.appendChild(t),{remove:()=>t.remove()}},wait:e=>new Promise(t=>setTimeout(t,e)),deepQuery:e=>{const t=o=>{if(!o)return null;let s=o.querySelector?.(e);if(s)return s;const i=o.querySelectorAll?.("*")||[];for(const e of i)if(e.shadowRoot&&(s=t(e.shadowRoot),s))return s;return null};return t(document)},deepQueryAll:e=>{const t=[],o=s=>{s&&(s.querySelectorAll?.(e)?.forEach(e=>t.push(e)),s.querySelectorAll?.("*")?.forEach(e=>{e.shadowRoot&&o(e.shadowRoot)}))};return o(document),t}}),o=(()=>{let e;return()=>window.ts?.transpileModule?Promise.resolve(window.ts):e||(e=new Promise((e,t)=>{const o=document.querySelector("script[data-html-pro-ts]");if(o)return o.addEventListener("load",()=>e(window.ts),{once:!0}),void o.addEventListener("error",t,{once:!0});const s=document.createElement("script");s.src="https://cdn.jsdelivr.net/npm/typescript@5.6.3/lib/typescript.js",s.async=!0,s.dataset.htmlProTs="1",s.onload=()=>window.ts?.transpileModule?e(window.ts):t(new Error("TypeScript compiler not available")),s.onerror=()=>t(new Error("Failed to load TypeScript compiler")),document.head.appendChild(s)}),e)})(),s=async(e,t={})=>{const s=await o(),i=s.transpileModule(e,{compilerOptions:{target:s.ScriptTarget.ES2020,module:s.ModuleKind.None,useDefineForClassFields:!1,importsNotUsedAsValues:s.ImportsNotUsedAsValues?.Remove,...t},reportDiagnostics:!0}),r=(i.diagnostics||[]).filter(e=>e.category===s.DiagnosticCategory.Error);if(r.length){const e=r.map(e=>s.flattenDiagnosticMessageText(e.messageText,"\n")).join("\n");throw new Error(e)}return i.outputText};t.options={list:async()=>e().callWS({type:"config_entries/get"}),async find(e){return(await this.list()).find(t=>t.domain===e||t.title===e||t.entry_id===e)},async dialog(o,s){const i="string"==typeof o?await this.find(o):o;if(!i)throw new Error("Entry not found: "+o);const r=document.querySelector("home-assistant"),n=e(),a=i.domain;await Promise.all([new Promise(e=>{if(customElements.get("dialog-data-entry-flow"))return void e();const o=customElements.define.bind(customElements);customElements.define=function(t,s,i){o(t,s,i),"dialog-data-entry-flow"===t&&(customElements.define=o,e())},t.navigate("/config/integrations"),setTimeout(()=>{customElements.define=o,e()},5e3)}),n.loadFragmentTranslation("config"),n.loadBackendTranslation("options",a),n.loadBackendTranslation("selector",a)]),((e,t,o)=>{const s=new Event(t,{bubbles:!0,cancelable:!1,composed:!0});s.detail=o||{},e.dispatchEvent(s)})(r,"show-dialog",{dialogTag:"dialog-data-entry-flow",dialogImport:()=>Promise.resolve(),dialogParams:{startFlowHandler:i.entry_id,domain:a,manifest:null,dialogClosedCallback:s,flowConfig:{flowType:"options_flow",showDevices:!1,createFlow:(e,t)=>e.callApi("POST","config/config_entries/options/flow",{handler:t}),fetchFlow:(e,t)=>e.callApi("GET",`config/config_entries/options/flow/${t}`),handleFlowStep:(e,t,o)=>e.callApi("POST",`config/config_entries/options/flow/${t}`,o),deleteFlow:(e,t)=>e.callApi("DELETE",`config/config_entries/options/flow/${t}`),renderAbortDescription:(e,t)=>e.localize(`component.${t.translation_domain||a}.options.abort.${t.reason}`,t.description_placeholders)||t.reason,renderShowFormStepHeader:(e,t)=>e.localize(`component.${t.translation_domain||a}.options.step.${t.step_id}.title`,t.description_placeholders)||e.localize("ui.dialogs.options_flow.form.header"),renderShowFormStepDescription:(e,t)=>e.localize(`component.${t.translation_domain||a}.options.step.${t.step_id}.description`,t.description_placeholders)||"",renderShowFormStepFieldLabel:(e,t,o,s)=>{const i=s?.path?.[0]?`sections.${s.path[0]}.`:"";return e.localize(`component.${a}.options.step.${t.step_id}.${i}data.${o.name}`,t.description_placeholders)||o.name},renderShowFormStepFieldHelper:(e,t,o,s)=>{const i=s?.path?.[0]?`sections.${s.path[0]}.`:"";return e.localize(`component.${t.translation_domain||a}.options.step.${t.step_id}.${i}data_description.${o.name}`,t.description_placeholders)||""},renderShowFormStepFieldError:(e,t,o)=>e.localize(`component.${t.translation_domain||a}.options.error.${o}`,t.description_placeholders)||o,renderShowFormStepFieldLocalizeValue:(e,t,o)=>e.localize(`component.${a}.selector.${o}`),renderShowFormStepSubmitButton:(e,t)=>e.localize(`component.${a}.options.step.${t.step_id}.submit`)||e.localize("ui.panel.config.integrations.config_flow."+(!1===t.last_step?"next":"submit")),renderExternalStepHeader:()=>"",renderExternalStepDescription:()=>"",renderCreateEntryDescription:e=>e.localize("ui.dialogs.options_flow.success.description"),renderShowFormProgressHeader:(e,t)=>e.localize(`component.${a}.options.step.${t.step_id}.title`)||e.localize(`component.${a}.title`),renderShowFormProgressDescription:(e,t)=>e.localize(`component.${t.translation_domain||a}.options.progress.${t.progress_action}`,t.description_placeholders)||"",renderMenuHeader:(e,t)=>e.localize(`component.${a}.options.step.${t.step_id}.title`)||e.localize(`component.${a}.title`),renderMenuDescription:(e,t)=>e.localize(`component.${t.translation_domain||a}.options.step.${t.step_id}.description`,t.description_placeholders)||"",renderMenuOption:(e,t,o)=>e.localize(`component.${t.translation_domain||a}.options.step.${t.step_id}.menu_options.${o}`,t.description_placeholders)||o,renderMenuOptionDescription:(e,t,o)=>e.localize(`component.${t.translation_domain||a}.options.step.${t.step_id}.menu_option_descriptions.${o}`,t.description_placeholders)||"",renderLoadingDescription:(e,t)=>e.localize(`component.${a}.options.loading`)||e.localize(`ui.dialogs.options_flow.loading.${t}`)||""}}})},async read(t){const o=e(),s=await o.callApi("POST","config/config_entries/options/flow",{handler:t});return await o.callApi("DELETE",`config/config_entries/options/flow/${s.flow_id}`),s},async update(t,o){const s=e(),i=await s.callApi("POST","config/config_entries/options/flow",{handler:t});return s.callApi("POST",`config/config_entries/options/flow/${i.flow_id}`,o)}};const i=o=>{const s=document.querySelector("home-assistant"),i={...e(),...o};s._updateHass?s._updateHass(o):s.hass=i;const r=t.deepQuery("ha-sidebar");r&&(r.hass=i,r.requestUpdate&&r.requestUpdate());const n=t.deepQuery("home-assistant-main");n&&(n.hass=i,n.requestUpdate&&n.requestUpdate())};t.sidebar={get:()=>e().panels,add(t,o){const s={...e().panels,[t]:{component_name:o.component||"iframe",config:o.config||{url:o.url},icon:o.icon||"mdi:application",title:o.title||t,url_path:t,show_in_sidebar:!1!==o.showInSidebar,require_admin:o.requireAdmin||!1}};return i({panels:s}),s[t]},remove(t){const o=e(),{[t]:s,...r}=o.panels;i({panels:r})},update(t,o){const s=e();if(!s.panels[t])return null;const r={...s.panels,[t]:{...s.panels[t],...o}};return i({panels:r}),r[t]},hide(e){return this.update(e,{show_in_sidebar:!1})},show(e){return this.update(e,{show_in_sidebar:!0})}},t.ui={get root(){return document.querySelector("home-assistant")},get main(){return t.deepQuery("home-assistant-main")},get sidebar(){return t.deepQuery("ha-sidebar")},get drawer(){return t.deepQuery("ha-drawer")},get appLayout(){return t.deepQuery("ha-app-layout")},get topBar(){return t.deepQuery("app-toolbar")||t.deepQuery("ha-top-app-bar-fixed")},get panel(){return t.deepQuery("[id^='panel-']")||t.deepQuery("partial-panel-resolver")},immersive(e=!0){const t=this.sidebar,o=this.topBar,s=this.drawer;e?(t&&(t.style.display="none"),o&&(o.style.display="none"),s&&s.setAttribute("narrow",""),document.body.style.setProperty("--ha-sidebar-width","0px")):(t&&(t.style.display=""),o&&(o.style.display=""),s&&s.removeAttribute("narrow"),document.body.style.removeProperty("--ha-sidebar-width"))},kiosk(e=!0){i({kioskMode:e})}},t.hook={_hooks:{},on(e,t){return this._hooks[e]||(this._hooks[e]=[]),this._hooks[e].push(t),()=>this.off(e,t)},off(e,t){this._hooks[e]&&(this._hooks[e]=this._hooks[e].filter(e=>e!==t))},emit(e,t){this._hooks[e]&&this._hooks[e].forEach(e=>e(t))},element(e,o){const s=customElements.define.bind(customElements);customElements.define=function(t,i,r){if(t===e){s(t,class extends i{connectedCallback(){super.connectedCallback?.(),o(this)}},r),customElements.define=s}else s(t,i,r)},customElements.get(e)&&t.deepQueryAll(e).forEach(e=>o(e))},hass(e){const t=document.querySelector("home-assistant");if(!t)return;let o=t.hass;Object.defineProperty(t,"hass",{get:()=>o,set(t){const s=o;o=t,e(t,s)},configurable:!0})}},t.ws={send:t=>e().connection.sendMessage(t),call:t=>e().connection.sendMessagePromise(t),subscribe:(t,o)=>e().connection.subscribeEvents(o,t),subscribeMessage:(t,o)=>e().connection.subscribeMessage(o,t)},t.api={get:t=>e().callApi("GET",t),post:(t,o)=>e().callApi("POST",t,o),put:(t,o)=>e().callApi("PUT",t,o),delete:t=>e().callApi("DELETE",t),fetch:(t,o)=>e().fetchWithAuth(t,o)},t.ts={load:()=>o(),transpile:(e,t)=>s(e,t),async run(o,i={}){const r=await s(o),n=Object.keys(i),a=n.map(e=>i[e]);return new Function("claw","hass",...n,r)(t,e(),...a)},async card(o,i={}){const r=await s(o);return new Function("root","card","$","$$","hass","config","overlay","claw",r)(i.root,i.card||i.root,i.$||(e=>i.root?.querySelector(e)),i.$$||(e=>i.root?.querySelectorAll(e)),i.hass||e(),i.config||{},i.overlay||window._htmlProCardOverlay,t)},async module(o,i={}){const r=await s(o,{module:window.ts.ModuleKind.ES2020}),n=new Blob([r],{type:"text/javascript"}),a=URL.createObjectURL(n);try{const o=await import(a);return"function"==typeof o.default?o.default({claw:t,hass:e(),...i}):o}finally{URL.revokeObjectURL(a)}}},t.config={entries:async t=>e().callWS({type:"config_entries/get",...t}),entry:async t=>(await e().callWS({type:"config_entries/get_single",entry_id:t})).config_entry,update:async(t,o)=>e().callWS({type:"config_entries/update",entry_id:t,...o}),delete:async e=>t.api.delete(`config/config_entries/entry/${e}`),reload:async e=>t.api.post(`config/config_entries/entry/${e}/reload`),disable:async t=>e().callWS({type:"config_entries/disable",entry_id:t,disabled_by:"user"}),enable:async t=>e().callWS({type:"config_entries/disable",entry_id:t,disabled_by:null}),subscribe:t=>e().connection.subscribeMessage(t,{type:"config_entries/subscribe"}),flow:{create:async(e,o)=>t.api.post("config/config_entries/flow",{handler:e,entry_id:o}),get:async e=>t.api.get(`config/config_entries/flow/${e}`),submit:async(e,o)=>t.api.post(`config/config_entries/flow/${e}`,o),delete:async e=>t.api.delete(`config/config_entries/flow/${e}`),progress:async()=>e().connection.sendMessagePromise({type:"config_entries/flow/progress"}),subscribe:t=>e().connection.subscribeMessage(t,{type:"config_entries/flow/subscribe"})},options:t.options},t.panels={get:async()=>e().connection.sendMessagePromise({type:"get_panels"}),subscribe(t){return e().connection.subscribeEvents(()=>{this.get().then(t)},"panels_updated")}},t.states={get:t=>t?e().states[t]:e().states,set:async(t,o,s)=>e().callApi("POST","states/"+t,{state:o,attributes:s}),subscribe:e=>t.hook.hass((t,o)=>{t.states!==o?.states&&e(t.states)})},t.services={get(t){const o=e().services;return t?o[t]:o},call:async(t,o,s,i)=>e().callService(t,o,s,i)},t.areas={get:async()=>e().callWS({type:"config/area_registry/list"}),create:async(t,o)=>e().callWS({type:"config/area_registry/create",name:t,...o}),update:async(t,o)=>e().callWS({type:"config/area_registry/update",area_id:t,...o}),delete:async t=>e().callWS({type:"config/area_registry/delete",area_id:t})},t.devices={get:async()=>e().callWS({type:"config/device_registry/list"}),update:async(t,o)=>e().callWS({type:"config/device_registry/update",device_id:t,...o})},t.entities={get:async()=>e().callWS({type:"config/entity_registry/list"}),getEntry:async t=>e().callWS({type:"config/entity_registry/get",entity_id:t}),update:async(t,o)=>e().callWS({type:"config/entity_registry/update",entity_id:t,...o}),remove:async t=>e().callWS({type:"config/entity_registry/remove",entity_id:t})},t.automations={get:async()=>t.api.get("config/automation/config"),getConfig:async e=>t.api.get(`config/automation/config/${e}`),create:async e=>t.api.post("config/automation/config",e),update:async(e,o)=>t.api.put(`config/automation/config/${e}`,o),delete:async e=>t.api.delete(`config/automation/config/${e}`),trigger:async e=>t.services.call("automation","trigger",{entity_id:e})},t.scripts={get:async()=>t.api.get("config/script/config"),getConfig:async e=>t.api.get(`config/script/config/${e}`),create:async e=>t.api.post("config/script/config",e),update:async(e,o)=>t.api.put(`config/script/config/${e}`,o),delete:async e=>t.api.delete(`config/script/config/${e}`),run:async(e,o)=>t.services.call("script",e.replace("script.",""),o)},t.scenes={get:async()=>t.api.get("config/scene/config"),create:async e=>t.api.post("config/scene/config",e),update:async(e,o)=>t.api.put(`config/scene/config/${e}`,o),delete:async e=>t.api.delete(`config/scene/config/${e}`),activate:async e=>t.services.call("scene","turn_on",{entity_id:e})},t.lovelace={getConfig:async()=>e().callWS({type:"lovelace/config"}),saveConfig:async t=>e().callWS({type:"lovelace/config/save",config:t}),getDashboards:async()=>e().callWS({type:"lovelace/dashboards/list"}),createDashboard:async t=>e().callWS({type:"lovelace/dashboards/create",...t}),updateDashboard:async(t,o)=>e().callWS({type:"lovelace/dashboards/update",dashboard_id:t,...o}),deleteDashboard:async t=>e().callWS({type:"lovelace/dashboards/delete",dashboard_id:t}),getResources:async()=>e().callWS({type:"lovelace/resources"}),createResource:async t=>e().callWS({type:"lovelace/resources/create",...t}),updateResource:async(t,o)=>e().callWS({type:"lovelace/resources/update",resource_id:t,...o}),deleteResource:async t=>e().callWS({type:"lovelace/resources/delete",resource_id:t})},t.users={get:async()=>e().callWS({type:"config/auth/list"}),create:async t=>e().callWS({type:"config/auth/create",...t}),delete:async t=>e().callWS({type:"config/auth/delete",user_id:t})},t.system={info:async()=>e().callWS({type:"config/core/info"}),restart:async()=>t.services.call("homeassistant","restart"),stop:async()=>t.services.call("homeassistant","stop"),checkConfig:async()=>t.services.call("homeassistant","check_config"),reloadCore:async()=>t.services.call("homeassistant","reload_core_config")},window.claw=t}();
